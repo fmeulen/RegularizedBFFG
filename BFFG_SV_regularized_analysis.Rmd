@@ -1,0 +1,303 @@
+---
+title: "BFFG for SV Model -- 'Simple' regularization"
+output: pdf_document
+date: "2024-03-07"
+---
+
+```{r packages loading, include = FALSE}
+library(viridis)
+library(FKF)
+library(extraDistr)
+library(matrixStats)
+```
+
+# Model Simulation
+The model parameters  are as in Andersen et al. (1999), page 70 (first parameter set). 
+The initial value for $X$ is sampled from the stationary distribution (see Harvey et al. (1994), 
+page 249). Simulation sanity checks are available in the `.R` files for BFFG.
+```{r}
+### Parameters for X
+omega <- -0.736
+psi <- 0.9
+eta <- 0.363
+# Sample x_0 from the stationary distribution 
+set.seed(123)
+x_0 <- rnorm(1, mean = omega/(1 - psi), sd = sqrt((eta^2)/(1 - psi^2)))
+
+### Parameters for U
+mu <- -1.27
+sig <- sqrt((pi^2)/2)
+mult_var <- 3
+mod_sig <- sqrt(mult_var * (pi^2)/2)
+
+## Simulation
+# Time steps
+tot_steps <- 500
+tot_steps <- tot_steps + 1 # Correct for time 0
+
+# Simulation of X, R, V and U
+x_sim <- function(x_0, tot_steps, omega, psi, eta){
+  x <- numeric(tot_steps)
+  x[1] <- x_0
+  for(i in 2:tot_steps){
+    x[i] <- omega + psi * x[i - 1] + eta * rnorm(1)
+  }
+  x
+}
+
+set.seed(72)
+x_input <- x_sim(x_0, tot_steps, omega, psi, eta)
+r_input <- exp(x_input[-1]/2) * rnorm(tot_steps - 1)
+v_input <- log(r_input^2)
+u_input <- v_input - x_input[-1]
+```
+# Backward Filtering
+## Coefficients for leaf messages
+```{r}
+## Coefficients for leaf messages
+leaf_coefficients <- function(v_input, tot_steps, mu, sig){
+  # Note: last observation is used first
+  rev_v <- rev(v_input)
+  l_c <- matrix(NA, nrow = tot_steps - 1, ncol = 3)
+  colnames(l_c) <- c("c", "F", "H")
+  rownames(l_c) <- c(paste0((tot_steps - 1), " = n   |"), 
+                     paste0((tot_steps - 2):1, " = ", "n-", 1:(tot_steps - 2), " |"))
+  l_c[, "c"] <- dnorm(rev_v, mean = mu, sd = sig, log = TRUE)
+  l_c[, "F"] <- (rev_v - mu)/(sig^2)
+  l_c[, "H"] <- sig^(-2)
+  l_c
+}
+leaf_coeffs <- leaf_coefficients(v_input, tot_steps, mu, sig)
+
+# With modified  sigma
+leaf_coeffs_mod_sig <- leaf_coefficients(v_input, tot_steps, mu, mod_sig)
+```
+
+## Coefficients for $g$ functions (*star* coefficients) and pullbacks (*bar* coefficients)
+Here, the coefficients are normalized by default (see function arguments). For the 
+other case and the computation of $\log(\varpi)$, the `.R` files for BFFG.
+```{r}
+# Auxiliary function for bar coefficients
+bar_coefficients <- function(star_coeffs, omega, psi, eta){
+  capital_C <- unname(eta^2 + star_coeffs["H_star"]^(-1))
+  c_bar <- star_coeffs["c_star"] -
+    dnorm(0, mean = star_coeffs["F_star"]/star_coeffs["H_star"],
+          sd = sqrt(1/star_coeffs["H_star"]), log = TRUE) +
+    dnorm(omega, mean = star_coeffs["F_star"]/star_coeffs["H_star"],
+          sd = sqrt(capital_C), log = TRUE)
+  F_bar <- psi * (star_coeffs["F_star"]/star_coeffs["H_star"] - omega)/capital_C
+  H_bar <- (psi^2)/capital_C
+  c(c_bar, F_bar, H_bar)
+}
+
+g_pull_coefficients <- function(v_input, tot_steps, omega, psi, eta, 
+                                leaf_coeffs, renorm = TRUE){
+  g_c <- matrix(NA, nrow = tot_steps - 1, ncol = 3)
+  p_c <- matrix(NA, nrow = tot_steps - 1, ncol = 3)
+  colnames(g_c) <- paste(c("c", "F", "H"), "star", sep = "_")
+  colnames(p_c) <- paste(c("c", "F", "H"), "bar", sep = "_")
+  rownames(g_c) <- c(paste0((tot_steps - 1), " = n   |"), 
+                     paste0((tot_steps - 2):1, " = ", "n-", 1:(tot_steps - 2), " |"))
+  rownames(p_c) <- c(paste0((tot_steps - 1), " = n   |"), 
+                     paste0((tot_steps - 2):1, " = ", "n-", 1:(tot_steps - 2), " |"))
+  # Initialization
+  g_c[1, ] <- leaf_coeffs[1, ]
+  p_c[1, ] <- bar_coefficients(star_coeffs = g_c[1, ], omega, psi, eta)
+  for(i in 2:nrow(g_c)){
+    # Fusion
+    g_c[i, ] <- leaf_coeffs[i, ] + p_c[i - 1, ]
+    if(renorm){
+      # Normalization to 'density'
+      g_c[i, "c_star"] <- dnorm(0, mean = g_c[i, "F_star"]/g_c[i, "H_star"],
+                                  sd = g_c[i, "H_star"]^(-1/2), log = TRUE)
+    }
+    p_c[i, ] <- bar_coefficients(star_coeffs = g_c[i, ], omega, psi, eta)
+  }
+  list(g_coeffs = g_c, p_coeffs = p_c)
+}
+g_pull_coeffs <- g_pull_coefficients(v_input, tot_steps, omega, psi, eta, 
+                                     leaf_coeffs, renorm = TRUE)
+g_coeffs <- g_pull_coeffs$g_coeffs
+p_coeffs <- g_pull_coeffs$p_coeffs
+
+# With modified sigma
+g_pull_coeffs_mod_sig <- g_pull_coefficients(v_input, tot_steps, omega, psi, eta, 
+                                     leaf_coeffs_mod_sig, renorm = TRUE)
+g_coeffs_mod_sig <- g_pull_coeffs_mod_sig$g_coeffs
+p_coeffs_mod_sig <- g_pull_coeffs_mod_sig$p_coeffs
+```
+
+# Forward Guiding
+## Forward simulation of the guided process (with $\epsilon$-regularization)
+To check if coefficients are or not the same with resp. without regularization (they 
+are), the `if` statement (checking if $\epsilon \neq 0$) is necessary. Otherwise, even with 
+the same seed, they could not be the same: this is because using the RNG to sample 
+the indicator would 'move' the seed used then for path sampling.
+```{r}
+## U function
+U <- function(x, c_coef, F_coef, H_coef){
+  exp(c_coef + F_coef * x - 0.5 * H_coef * x^2)
+}
+
+### Function for forward guiding (with regularization)
+x_circ_sim_reg <- function(x_0, fixed_x_0, r_input, tot_steps, g_coeffs, p_coeffs, 
+                           omega, psi, eta, epsilon){
+  x <- rep(NA, tot_steps)
+  if(fixed_x_0){
+    x[1] <- x_0
+  } else {
+    # Note: stationary distribution
+    x[1] <- rnorm(1, mean = omega/(1 - psi), sd = sqrt((eta^2)/(1 - psi^2)))
+  }
+  used_guided <- NULL
+  for(i in 2:tot_steps){
+    c_bar <- p_coeffs[tot_steps - i + 1, "c_bar"]
+    F_bar <- p_coeffs[tot_steps - i + 1, "F_bar"]
+    H_bar <- p_coeffs[tot_steps - i + 1, "H_bar"]
+    c_star <- g_coeffs[tot_steps - i + 1, "c_star"]
+    F_star <- g_coeffs[tot_steps - i + 1, "F_star"]
+    H_star <- g_coeffs[tot_steps - i + 1, "H_star"]
+    
+    # Sampling from guided or unconditional?
+    k_g <- U(x[i - 1], c_bar, F_bar, H_bar)
+    lambda <- k_g/(k_g + epsilon)
+    
+    # If statement: regularization to be used?
+    if(epsilon != 0){
+      use_guided <- sample(c(TRUE, FALSE), 1, prob = c(lambda, 1 - lambda))
+    }else{
+      use_guided <- TRUE
+    }
+    
+    used_guided <- c(used_guided, use_guided)
+    if(use_guided){
+      mu_g <- F_star/H_star
+      sigma_g <- (H_star)^(-1/2)
+      mu_x <- omega + psi * x[i - 1]
+      mu_tilde <- (mu_x * sigma_g^2 + mu_g * eta^2)/(eta^2 + sigma_g^2)
+      sig_tilde <- sqrt((eta^2 * sigma_g^2)/(eta^2 + sigma_g^2))
+      x[i] <- rnorm(1, mean = mu_tilde, sd = sig_tilde)
+    } else {
+      x[i] <- omega + psi * x[i - 1] + eta * rnorm(1)
+    }
+  }
+  list(x = x, used_guided = used_guided)
+}
+
+### Density function for log-chi-squared distribution
+logchisq_density <- function(x_q, n_df){
+  (2^(n_df/2) * gamma(n_df/2))^(-1) * exp(0.5 * n_df * x_q - 0.5 * exp(x_q))
+}
+
+### Weight function for simple twist
+log_simple_twist_weights <- function(x_circ, r_input, v_input, 
+                                     g_coeffs, p_coeffs, epsilon){
+  p_vx <- logchisq_density(v_input - x_circ[-1], n_df = 1)
+  # The following uses x_{i - 1}
+  brack <- U(x_circ[-length(x_circ)], rev(p_coeffs[, 1]), 
+             rev(p_coeffs[, 2]), rev(p_coeffs[, 3])) + epsilon
+  num <- p_vx * brack
+  # The following uses x_i
+  den <- U(x_circ[-1], rev(g_coeffs[, 1]), 
+           rev(g_coeffs[, 2]), rev(g_coeffs[, 3])) + epsilon
+  log(num) - log(den)
+}
+```
+
+```{r, include = FALSE, echo = FALSE, fig.align = 'center', fig.width = 12, fig.height = 6}
+cols <- plasma(5)
+fixed_x_0_flag <- TRUE
+epsilons <- c(0, 0.05, 0.1, 0.5, 1)
+plot(x_input, ylim = c(-11, -4), type = "l", ylab = "", xlab = "", lwd = 2,
+     main = bquote(paste("Sample Trajectory of Guided Process for Different Values of ", 
+                         epsilon)))
+for(i in 1:length(epsilons)){
+  set.seed(12345)
+  x_circ_reg <- x_circ_sim_reg(x_0, fixed_x_0 = fixed_x_0_flag, r_input, 
+                                          tot_steps, g_coeffs, p_coeffs, omega, 
+                                          psi, eta, epsilon = epsilons[i])
+  lines(x_circ_reg$x, col = cols[i], lwd = 2)
+}
+legend("top", legend = epsilons, col = cols, lwd = 2, bty = "n", horiz = TRUE)
+```
+
+```{r, echo = FALSE, fig.align = 'center', fig.width = 12, fig.height = 16}
+par(mfrow = c(5, 1))
+log_reg_w <- list()
+log_reg_w_mod_sig <- list()
+for(i in 1:length(epsilons)){
+  set.seed(12345)
+  x_circ_reg <- x_circ_sim_reg(x_0, fixed_x_0 = fixed_x_0_flag, r_input, 
+                                          tot_steps, g_coeffs, p_coeffs, omega, 
+                                          psi, eta, epsilon = epsilons[i])
+  log_reg_w[[i]] <- log_simple_twist_weights(x_circ_reg$x, r_input, v_input, 
+                                         g_coeffs, p_coeffs, epsilons[i])
+  
+  # With modified sigma
+  set.seed(12345)
+  x_circ_reg_mod_sig <- x_circ_sim_reg(x_0, fixed_x_0 = fixed_x_0_flag, r_input, 
+                                       tot_steps, g_coeffs_mod_sig, p_coeffs_mod_sig, 
+                                       omega, psi, eta, epsilon = epsilons[i])
+  log_reg_w_mod_sig[[i]] <- log_simple_twist_weights(x_circ_reg$x, r_input, v_input, 
+                                                     g_coeffs_mod_sig, p_coeffs_mod_sig, 
+                                                     epsilons[i])
+  plot(x_input, ylim = c(-11, -4), type = "l", ylab = "", xlab = "", lwd = 2,
+     main =  bquote(paste(epsilon, " = ", .(epsilons[i]))))
+  lines(x_circ_reg$x, col = cols[3], lwd = 2)
+  lines(x_circ_reg_mod_sig$x, col = cols[4], lwd = 1)
+  time_idx <- 2:tot_steps
+  used_guided <- time_idx[x_circ_reg$used_guided]
+  used_guided_mod_sig <- time_idx[x_circ_reg_mod_sig$used_guided]
+  rug(used_guided, ticksize = 0.1, col = cols[3])
+  rug(used_guided_mod_sig, ticksize = 0.1, col = cols[4], side = 3)
+}
+```
+
+```{r, echo = FALSE, fig.align = 'center', fig.width = 12, fig.height = 6}
+par(mfrow = c(1, 3))
+for(i in c(1, floor(length(epsilons)/2), length(epsilons))){
+  plot(log_reg_w[[i]], pch = 20, xlab = "", ylab = "Log Weights", 
+       ylim = range(c(unlist(log_reg_w), unlist(log_reg_w_mod_sig))), 
+       main = bquote(paste(epsilon, " = ", .(epsilons[i]))))
+  points(log_reg_w_mod_sig[[i]], col = cols[3], pch = 4)
+}
+```
+
+```{r, echo = FALSE, fig.align = 'center', fig.width = 12, fig.height = 6}
+par(mfrow = c(1, 3))
+for(i in c(1, floor(length(epsilons)/2), length(epsilons))){
+  reg_w <- lapply(log_reg_w, function(lw) exp(lw - max(lw))/sum(exp(lw - max(lw))))
+  reg_w_mod_sig <- lapply(log_reg_w_mod_sig, function(lw) 
+    exp(lw - max(lw))/sum(exp(lw - max(lw))))
+  plot(reg_w[[i]], pch = 20, xlab = "", ylab = "Weights", 
+       ylim = range(c(unlist(reg_w), unlist(reg_w_mod_sig))), 
+       main = bquote(paste(epsilon, " = ", .(epsilons[i]))))
+  points(reg_w_mod_sig[[i]], col = cols[3], pch = 4)
+}
+```
+
+# Monte Carlo Estimate of *star* process
+
+```{r, echo = FALSE, fig.align = 'center', fig.width = 12, fig.height = 16}
+n_sims <- 10^2
+par(mfrow = c(5, 1))
+for(i in 1:length(epsilons)){
+  x_circ_reg_mat <- matrix(NA, nrow = n_sims, ncol = tot_steps)
+  set.seed(12345)
+  for(j in 1:n_sims){
+    x_circ_reg_mat[j, ] <- x_circ_sim_reg(x_0, fixed_x_0 = fixed_x_0_flag, r_input, 
+                                          tot_steps, g_coeffs, p_coeffs, omega, 
+                                          psi, eta, epsilon = epsilons[i])$x
+  }
+  log_reg_psis <- apply(x_circ_reg_mat, 1, function(x) 
+    sum(log_simple_twist_weights(x, r_input, v_input, g_coeffs, p_coeffs, epsilons[i])))
+  # Using exp normalize trick
+  reg_psi_weights <- exp(log_reg_psis - max(log_reg_psis))/sum(exp(log_reg_psis - max(log_reg_psis)))
+  
+  # Star process
+  x_reg_star <- apply(x_circ_reg_mat, 2, weighted.mean, w = reg_psi_weights)
+  plot(x_input, ylim = c(-11, -4), type = "l", 
+       ylab = "", xlab = "", main = bquote(paste(epsilon, " = ", .(epsilons[i]))))
+  lines(x_reg_star, col = cols[3], lwd = 2)
+}
+```
