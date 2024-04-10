@@ -17,11 +17,12 @@ forward(x, p, z) = p.ω + p.ψ *x + p.η * z
 
 function xsim(x0, S, p, Z)
   @assert length(Z)==S "length of innovations should equal S"
-  x = fill(x0, S+1)
-  for i ∈ 2:S+1
-    x[i] = forward(x[i-1], p, Z[i-1])
+  x = fill(x0, S)
+  x[1] = forward(x0, p, Z[1])
+  for i ∈ 2:S
+    x[i] = forward(x[i-1], p, Z[i])
   end
-  x[2:end]
+  x
 end
 
 Random.seed!(10)
