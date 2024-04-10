@@ -91,7 +91,10 @@ end
 
 logweight(x, m::Message) = m.c + m.F * x + 0.5*x*m.H*x
 
+robustify(m::Message, ϵ) = Message(m.c + log(ϵ),m.F, m.H)
+
 function forwardguide(x0, bf, p; ϵ=0.1)
+    @assert ϵ>0 "ϵ should be strictly positive"
     x = x0
     xs = [x]
     S = length(bf)
@@ -99,9 +102,13 @@ function forwardguide(x0, bf, p; ϵ=0.1)
          # Sampling from guided or unconditional?
         kg = exp(logweight(x,bf[i]))
         λ = kg/(kg + ϵ)
-        x = rand()<λ ? guide(x, bf[i], p) : forward(x, p)  
+        m = robustify(bf[i], ϵ)
+        x = rand()<λ ? guide(x, m, p) : forward(x, p)  
         push!(xs, x)
         # also compute logweight and save
     end
     xs
 end
+
+xᵒ = forwardguide(x0, bf, p)
+plot!(p1, xᵒ, color="red")
