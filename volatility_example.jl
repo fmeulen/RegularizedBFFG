@@ -5,6 +5,7 @@ using Random
 using Distributions
 using Plots
 using UnPack
+using SpecialFunctions
 
 include("bffg.jl")
 
@@ -35,9 +36,23 @@ plot(p1, p2)
 bf = backwardfilter(V, p)
 bf_mv = backwardfilter(V, p_mv)
 
+ϵ = 0.01
+
 Zᵒ = randn(S)
-Xᵒ = forwardguide(x0, bf, p, Zᵒ)
-Xᵒmv = forwardguide(x0, bf, p_mv, Zᵒ)
+Xᵒ, λs = forwardguide(x0, bf, p, Zᵒ; ϵ)
+Xᵒmv, λs_mv = forwardguide(x0, bf, p_mv, Zᵒ; ϵ)
+
+
+lw = logweights(x0, Xᵒ, V, p, bf; ϵ)
+lw0 = logweights(x0, Xᵒ, V, p, bf; ϵ=0.0)
+#lw_mv = logweights(x0, Xᵒmv, V, p_mv, bf_mv; ϵ)
+
 
 plot!(p1, Xᵒ, color="red", label="Xᵒ")
 plot!(p1, Xᵒmv, color="green", label="Xᵒmv")
+
+plot(λs)
+plot!(λs_mv, col="red")
+
+plot(lw)
+plot!(lw0)
