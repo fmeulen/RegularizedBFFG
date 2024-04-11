@@ -1,9 +1,9 @@
 # Forward simulate (z ~ N(0,1))
-forward(x, p, z) = p.ω + p.ψ *x + p.η * z
+forward(x, p, z) = p.ω + p.ψ * x + p.η * z
 
 function forward(x0, S, p, Z)
   @assert length(Z)==S "length of innovations should equal S"
-  x = fill(x0, S)
+  x = Vector{typeof(x0)}(undef,S)# fill(x0, S)
   x[1] = forward(x0, p, Z[1])
   for i ∈ 2:S
     x[i] = forward(x[i-1], p, Z[i])
@@ -58,9 +58,9 @@ function guide(x, m::Message, p, z)
     σg2 = H^(-1)
     η2 = η^2
     μx = ω + ψ * x
-    μ̃ = (μx*σg2 + μg*η2)/(η2 + σg2)
-    σ̃ = sqrt((η2*σg2)/(η2+σg2))
-    μ̃ + σ̃ * z
+    μᵒ = (μx*σg2 + μg*η2)/(η2 + σg2)
+    σᵒ= sqrt((η2*σg2)/(η2+σg2))
+    μᵒ + σᵒ * z
 end
 
 g(x, m::Message) = exp(m.c + m.F * x - 0.5*x*m.H*x)
@@ -75,7 +75,7 @@ logchisq_density(x, ndf) =
 # log_simple_twist_weights <- function(x_circ, r_input, v_input, 
 #                                      g_coeffs, p_coeffs, epsilon){
   
-function logweights(x0, Xᵒ, V, p, bf; ϵ=0.1)
+function logweights(x0, Xᵒ, V, p, bf, ϵ)
     m = bf[1]
     W = [log((g(x0,pullback(m, p)) + ϵ)/(g(Xᵒ[1], m)+ ϵ)) + logchisq_density(V[1]-Xᵒ[1],1)]
     S = length(V)
@@ -88,7 +88,7 @@ function logweights(x0, Xᵒ, V, p, bf; ϵ=0.1)
 end
 
   
-function forwardguide(x0, bf, p, Z; ϵ=0.1)
+function forwardguide(x0, bf, p, Z, ϵ)
     #@assert ϵ>0 "ϵ should be strictly positive"
     S = length(bf)
     @assert S==length(Z) "length of innovations should equal S"
@@ -97,12 +97,14 @@ function forwardguide(x0, bf, p, Z; ϵ=0.1)
     λs = Float64[]
     for i in 1:S
          # Sampling from guided or unconditional?
-        kg = exp(logweight(x,bf[i]))
-        λ = kg/(kg + ϵ) # prob to sample from guided
+        m = bf[i]
+        κg = g(x,m)
+        λ = κg/(κg + ϵ) # prob to sample from guided
         z = Z[i]
         x = rand()<λ ? guide(x, m, p, z) : forward(x, p, z)  
         push!(xs, x)
         push!(λs, λ)
     end
-    xs, λs
+    lw = logweights(x0, Xᵒ, V, p, bf; ϵ=0.1)
+    xs, λs, lw
 end

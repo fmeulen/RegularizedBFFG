@@ -39,8 +39,8 @@ bf_mv = backwardfilter(V, p_mv)
 ϵ = 0.01
 
 Zᵒ = randn(S)
-Xᵒ, λs = forwardguide(x0, bf, p, Zᵒ; ϵ)
-Xᵒmv, λs_mv = forwardguide(x0, bf, p_mv, Zᵒ; ϵ)
+Xᵒ, λs, lw = forwardguide(x0, bf, p, Zᵒ, ϵ)
+Xᵒmv, λs_mv, lw_mv = forwardguide(x0, bf, p_mv, Zᵒ, ϵ)
 
 
 lw = logweights(x0, Xᵒ, V, p, bf; ϵ)
@@ -56,3 +56,23 @@ plot!(λs_mv, col="red")
 
 plot(lw)
 plot!(lw0)
+
+
+# Monte Carlo study
+bf = backwardfilter(V, p)
+
+Zᵒ = randn(S)
+Xᵒ, λs, lw = forwardguide(x0, bf, p, Zᵒ, 0.15)
+Xᵒ0, λs0, lw0 = forwardguide(x0, bf, p, Zᵒ, 0.0)
+
+pX = plot(X)
+plot!(pX, Xᵒ, color="red", label="Xᵒ")
+plot!(pX, Xᵒ0, color="green", label="Xᵒ0")
+
+plw = plot(lw, color="red", label="logweigth")
+plot!(plw, lw0, color="green", label="logweigth, ϵ=0")
+
+plλ = plot(λs, color="red", label="λ")
+plot!(plλ, λs0, color="green", label="λ, ϵ=0")
+
+plot(pX, plw, plλ)
