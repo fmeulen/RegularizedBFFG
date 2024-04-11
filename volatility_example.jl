@@ -83,3 +83,7 @@ Zᵒ = randn(S)
 ϵs = 0.0:0.01:10.0
 sumlw = sumlogweights(x0, bf, p, Zᵒ, V).(ϵs) 
 plot(ϵs, sumlw)
+
+savefig(pX, "paths.png")
+savefig(plw, "weights.png")
+savefig(plλ, "lambdas.png")

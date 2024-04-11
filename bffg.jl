@@ -71,23 +71,29 @@ logchisq_density(x, ndf) =
       (2^(ndf/2) * gamma(ndf/2))^(-1) * exp(0.5 * ndf * x - 0.5 * exp(x))
 
 
+logpdf_logχ2(x) = x + logpdf(Chisq(1), exp(x))   
+
+x= 0.5
+logchisq_density(x, 1) 
+logpdf_logχ2(x)
+
 ### Weight function for simple twist
 # log_simple_twist_weights <- function(x_circ, r_input, v_input, 
 #                                      g_coeffs, p_coeffs, epsilon){
   
 function logweights(x0, Xᵒ, V, p, bf, ϵ)
     m = bf[1]
-    W = [log((g(x0,pullback(m, p)) + ϵ)/(g(Xᵒ[1], m)+ ϵ)) + logchisq_density(V[1]-Xᵒ[1],1)]
+    W = [log((g(x0,pullback(m, p)) + ϵ)/(g(Xᵒ[1], m)+ ϵ)) + logpdf_logχ2(V[1]-Xᵒ[1])]
     S = length(V)
     for i ∈ 2:S
         m = bf[i]
-        w = log((g(Xᵒ[i-1],pullback(m, p)) + ϵ)/(g(Xᵒ[i], m)+ ϵ)) + logchisq_density(V[i]-Xᵒ[i],1)
+        w = log((g(Xᵒ[i-1],pullback(m, p)) + ϵ)/(g(Xᵒ[i], m)+ ϵ)) + logpdf_logχ2(V[i]-Xᵒ[i])
         push!(W, w)
     end
     W
 end
 
-sumlogweights(x0, bf, p, Z, V) = (ϵ) -> sum(forwardguide(x0, bf, p, Z,V, ϵ)[3])
+sumlogweights(x0, bf, p, Z, V) = (ϵ) -> sum(forwardguide(x0, bf, p, Z, V, ϵ)[3])
 
   
 
