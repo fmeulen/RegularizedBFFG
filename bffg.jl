@@ -87,8 +87,11 @@ function logweights(x0, Xᵒ, V, p, bf, ϵ)
     W
 end
 
+sumlogweights(x0, bf, p, Z, V) = (ϵ) -> sum(forwardguide(x0, bf, p, Z,V, ϵ)[3])
+
   
-function forwardguide(x0, bf, p, Z, ϵ)
+
+function forwardguide(x0, bf, p, Z, V, ϵ)
     #@assert ϵ>0 "ϵ should be strictly positive"
     S = length(bf)
     @assert S==length(Z) "length of innovations should equal S"
@@ -105,6 +108,6 @@ function forwardguide(x0, bf, p, Z, ϵ)
         push!(xs, x)
         push!(λs, λ)
     end
-    lw = logweights(x0, Xᵒ, V, p, bf; ϵ=0.1)
+    lw = logweights(x0, xs, V, p, bf, ϵ)
     xs, λs, lw
 end
