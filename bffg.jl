@@ -102,18 +102,33 @@ function forwardguide(x0, bf, p, Z, V, ϵ)
     S = length(bf)
     @assert S==length(Z) "length of innovations should equal S"
     x = x0
-    xs = [x]
+    xs = typeof(x0)[] #Vector{typeof(x0)}(undef,S) 
     λs = Float64[]
+    guids = Bool[]
     for i in 1:S
          # Sampling from guided or unconditional?
         m = bf[i]
         κg = g(x,m)
         λ = κg/(κg + ϵ) # prob to sample from guided
         z = Z[i]
-        x = rand()<λ ? guide(x, m, p, z) : forward(x, p, z)  
+        guid = rand()<λ
+        x = guid ? guide(x, m, p, z) : forward(x, p, z)  
         push!(xs, x)
         push!(λs, λ)
+        push!(guids, guid)
     end
     lw = logweights(x0, xs, V, p, bf, ϵ)
-    xs, λs, lw
+    (Xᵒ=xs, λs=λs, lw=lw, guids=guids)
+end
+
+
+
+function smc_ess(weights)
+    # Normalize weights
+    normalized_weights = weights / sum(weights)
+    
+    # Compute effective sample size
+    ess = 1.0 / sum(normalized_weights.^2)
+    
+    return ess
 end
