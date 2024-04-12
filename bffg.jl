@@ -74,8 +74,8 @@ logchisq_density(x, ndf) =
 logpdf_logχ2(x) = x + logpdf(Chisq(1), exp(x))   
 
 x= 0.5
-logchisq_density(x, 1) 
-logpdf_logχ2(x)
+@test (log(logchisq_density(x, 1) ) - logpdf_logχ2(x)) < 10-6
+
 
 ### Weight function for simple twist
 # log_simple_twist_weights <- function(x_circ, r_input, v_input, 

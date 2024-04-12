@@ -6,6 +6,7 @@ using Distributions
 using Plots
 using UnPack
 using SpecialFunctions
+using Test
 
 include("bffg.jl")
 
@@ -73,3 +74,27 @@ plot(ϵs, sumlw)
 
 @show std(exp.(lw)), smc_ess(exp.(lw))
 @show std(exp.(lw0)), smc_ess(exp.(lw0))
+
+# Monte Carlo
+ϵ = 0.05
+B = 1000
+lws = []
+lws0 = []
+for _ in 1:B
+    Zᵒ = randn(S)
+    Xᵒ, λs, lw, guids = forwardguide(x0, bf, p, Zᵒ, V, ϵ)
+    Xᵒ0, λs0, lw0, guids0 = forwardguide(x0, bf, p, Zᵒ,V, 0.0)
+    push!(lws, [sum(lw), smc_ess(exp.(lw))])
+    push!(lws0, [sum(lw0), smc_ess(exp.(lw0))])
+    
+end
+
+plot(first.(lws), color="red", title="total loglik over $B replications",
+    label="ϵ=$ϵ", xlabel="replication id", ylabel="total loglikelihood")
+plot!(first.(lws0), color="green",label="ϵ=0")
+savefig("montecarlo_loglik.png")
+
+plot(last.(lws), color="red", title="SMC-ESS over $B replications",
+    label="ϵ=$ϵ", xlabel="replication id", ylabel="SMC-ESS")
+plot!(last.(lws0), color="green",label="ϵ=0")
+savefig("montecarlo_smc_ess.png")
