@@ -77,9 +77,6 @@ x= 0.5
 @test (log(logchisq_density(x, 1) ) - logpdf_logχ2(x)) < 10-6
 
 
-### Weight function for simple twist
-# log_simple_twist_weights <- function(x_circ, r_input, v_input, 
-#                                      g_coeffs, p_coeffs, epsilon){
   
 function logweights(x0, Xᵒ, V, p, bf, ϵ)
     m = bf[1]

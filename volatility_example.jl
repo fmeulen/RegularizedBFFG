@@ -23,7 +23,7 @@ p_mv = (ω =  0.0, ψ = 0.9, η=0.363,μ=-1.27, σ = √(mult_var*(π^2)/2))
 
 #Random.seed!(10)
 x0 = samplefromstationary(p) # Sample x0 from the stationary distribution 
-S = 500 # Correct for time 0 (called tot_steps)  (Time steps)
+S = 100 # Correct for time 0 (called tot_steps)  (Time steps)
 
 Z = randn(S)
 X = forward(x0, S, p, Z)
@@ -45,15 +45,17 @@ bf = backwardfilter(V, p)
 Zᵒ = randn(S)
 ϵ = 0.002
 
-Xᵒ, λs, lw, guids = forwardguide(x0, bf, p, Zᵒ,V, ϵ)
+Xᵒ, λs, lw, guids = forwardguide(x0, bf, p, Zᵒ, V, ϵ)
 Xᵒ0, λs0, lw0, guids0 = forwardguide(x0, bf, p, Zᵒ,V, 0.0)
+Xᵒmv, λs_mv, lw_mv, guids_mv = forwardguide(x0, bf, p_mv, Zᵒ,V, 0.0)
 
 pX = plot(X,legend = :outertop, label="X")
 plot!(pX, Xᵒ, color="red", label="Xᵒ")
 plot!(pX, Xᵒ0, color="green", label="Xᵒ0")
+# plot!(pX, Xᵒmv, color="orange", label="Xᵒ0_mv")
 
 plw = plot(lw0, color="green", label="logweigth, ϵ=0",legend = :outertop)
-plw = plot!(plw, lw, color="red", label="logweigth")
+plot!(plw, lw, color="red", label="logweigth")
 
 plλ = plot(guids, color="blue", label="guids")
 plot!(plλ, λs, color="red", label="λ",legend = :outertop)
@@ -76,7 +78,8 @@ plot(ϵs, sumlw)
 @show std(exp.(lw0)), smc_ess(exp.(lw0))
 
 # Monte Carlo
-ϵ = 0.05
+ϵ = 0.1
+
 B = 1000
 lws = []
 lws0 = []
@@ -98,3 +101,33 @@ plot(last.(lws), color="red", title="SMC-ESS over $B replications",
     label="ϵ=$ϵ", xlabel="replication id", ylabel="SMC-ESS")
 plot!(last.(lws0), color="green",label="ϵ=0")
 savefig("montecarlo_smc_ess.png")
+
+# mcmc
+
+iter = 10000
+Z = randn(S)
+Xᵒ, λs, lw, guids = forwardguide(x0, bf, p, Z, V, ϵ)
+ℓ = sum(lw)
+Xs = [Xᵒ]
+ρ = 0.95
+acc = 0
+
+for _ in 1:iter
+    W = randn(S)
+    Znew = ρ * Z + √(1-ρ^2) * W
+    Xnew, _, lwnew, _ = forwardguide(x0, bf, p, Znew, V, ϵ)
+    ℓnew = sum(lwnew)
+    if log(rand()) < ℓnew - ℓ
+        ℓ = ℓnew
+        Z .= Znew
+        Xᵒ .= Xnew
+        acc += 1
+    end
+    push!(Xs, copy(Xᵒ))
+end
+@show round(100*acc/iter;digits=2)
+
+plot(X)
+plot!(Xs[end-500], color="red")
+plot!(Xs[end], color="red")
+#plot!(mean(Xs), color="black")
