@@ -13,8 +13,6 @@ end
 
 samplefromstationary(p) = rand(Normal(p.ω/(1.0 - p.ψ), sqrt(p.η^2 / (1 - p.ψ^2))))    
 
-
-
 # Backward filtering
 struct Message{Tc, TF, TH}
     c::Tc
@@ -26,16 +24,18 @@ fuse(m1::Message, m2::Message) = Message(m1.c+m2.c, m1.F+m2.F, m1.H+m2.H)
 
 function pullback(m::Message, p)
     @unpack c, F, H = m
-    @unpack ω, ψ, η, μ, σ = p
+    @unpack ω, ψ, η = p
     C = η^2 + 1/H 
     Hnew = ψ^2 / C
     Fnew = ψ * (F/H - ω)/C
-    cnew = 0.0#c - logpdf(NormalCanon(F,H),0) + logpdf(Normal(F/H,C),ω)
+    cnew = c - logpdf(NormalCanon(F,H),0) + logpdf(Normal(F/H,C),ω)
     Message(cnew, Fnew, Hnew)
 end   
 
-leaf_coefs(V, p) = [Message(logpdf(Normal(p.μ, p.σ), v), (v-p.μ)/p.σ^2, p.σ^(-2)) for v in V]
-                                
+function leaf_coefs(V, p) 
+    @unpack μ, σ = p
+    [Message(logpdf(Normal(μ, σ), v), (v-μ)/σ^2, σ^(-2)) for v in V]
+end
 
 function backwardfilter(V, p)
     leafmessages = leaf_coefs(V, p)
@@ -49,34 +49,20 @@ function backwardfilter(V, p)
     ms
 end
 
-
-
 function guide(x, m::Message, p, z) 
-    @unpack c, F, H = m
-    @unpack ω, ψ, η, μ, σ = p
-    μg = F/H
-    σg2 = H^(-1)
-    η2 = η^2
-    μx = ω + ψ * x
-    μᵒ = (μx*σg2 + μg*η2)/(η2 + σg2)
-    σᵒ= sqrt((η2*σg2)/(η2+σg2))
-    μᵒ + σᵒ * z
+    @unpack F, H = m
+    @unpack ω, ψ, η = p
+    # pars for canonical normal distribution
+    ν = F + (ω + ψ*x)/η^2
+    P = H + η^(-2)
+    ℱ = NormalCanon(ν, P)
+    mean(ℱ) + std(ℱ) * z
 end
+
 
 g(x, m::Message) = exp(m.c + m.F * x - 0.5*x*m.H*x)
 
-#robustify(m::Message, ϵ) = Message(m.c + log(ϵ),m.F, m.H)
-
-logchisq_density(x, ndf) = 
-      (2^(ndf/2) * gamma(ndf/2))^(-1) * exp(0.5 * ndf * x - 0.5 * exp(x))
-
-
 logpdf_logχ2(x) = x + logpdf(Chisq(1), exp(x))   
-
-x= 0.5
-@test (log(logchisq_density(x, 1) ) - logpdf_logχ2(x)) < 10-6
-
-
   
 function logweights(x0, Xᵒ, V, p, bf, ϵ)
     m = bf[1]
@@ -90,7 +76,7 @@ function logweights(x0, Xᵒ, V, p, bf, ϵ)
     W
 end
 
-sumlogweights(x0, bf, p, Z, V) = (ϵ) -> sum(forwardguide(x0, bf, p, Z, V, ϵ)[3])
+sumlogweights(x0, bf, p, Z, V) = (ϵ) -> sum(forwardguide(x0, bf, p, Z, V, ϵ).lw)
 
   
 

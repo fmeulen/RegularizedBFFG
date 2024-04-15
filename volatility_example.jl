@@ -18,17 +18,16 @@ include("bffg.jl")
 ### Parameters
 p = (ω =  0.0, ψ = 0.9, η=0.163, μ=-1.27, σ=√((π^2)/2))
 # with larger variance
-mult_var = 3.0
-p_mv = (ω =  0.0, ψ = 0.9, η=0.363,μ=-1.27, σ = √(mult_var*(π^2)/2))
+mv = 5.0
+p_mv = (ω =  p.ω, ψ = p.ψ, η=p.η, μ=p.μ, σ = p.σ * √(mv))
 
 #Random.seed!(10)
 x0 = samplefromstationary(p) # Sample x0 from the stationary distribution 
-S = 100 # Correct for time 0 (called tot_steps)  (Time steps)
+S = 75 # Correct for time 0 (called tot_steps)  (Time steps)
 
 Z = randn(S)
 X = forward(x0, S, p, Z)
-R = exp.(X/2) .* randn(S)
-V = log.(R.^2)
+V =  X + log.(randn(S).^2)
 
 # plotting
 p1 = plot(X, label="X", title="latent")
@@ -40,10 +39,12 @@ plot(p1, p2)
 
 # assess effect of ϵ
 
-bf = backwardfilter(V, p)
+bf_ = backwardfilter(V, p)
+
+bf = [Message(0.0, m.F, m.H) for m in bf_]
 
 Zᵒ = randn(S)
-ϵ = 0.002
+ϵ = 0.1
 
 Xᵒ, λs, lw, guids = forwardguide(x0, bf, p, Zᵒ, V, ϵ)
 Xᵒ0, λs0, lw0, guids0 = forwardguide(x0, bf, p, Zᵒ,V, 0.0)
@@ -103,10 +104,11 @@ plot!(last.(lws0), color="green",label="ϵ=0")
 savefig("montecarlo_smc_ess.png")
 
 # mcmc
+#p = p_mv
 
 iter = 10000
-Z = randn(S)
-Xᵒ, λs, lw, guids = forwardguide(x0, bf, p, Z, V, ϵ)
+Zᵒ = randn(S)
+Xᵒ, λs, lw, guids = forwardguide(x0, bf, p, Zᵒ, V, ϵ)
 ℓ = sum(lw)
 Xs = [Xᵒ]
 ρ = 0.95
@@ -114,12 +116,12 @@ acc = 0
 
 for _ in 1:iter
     W = randn(S)
-    Znew = ρ * Z + √(1-ρ^2) * W
+    Znew = ρ * Zᵒ + √(1-ρ^2) * W
     Xnew, _, lwnew, _ = forwardguide(x0, bf, p, Znew, V, ϵ)
     ℓnew = sum(lwnew)
     if log(rand()) < ℓnew - ℓ
         ℓ = ℓnew
-        Z .= Znew
+        Zᵒ .= Znew
         Xᵒ .= Xnew
         acc += 1
     end
@@ -128,6 +130,9 @@ end
 @show round(100*acc/iter;digits=2)
 
 plot(X)
-plot!(Xs[end-500], color="red")
-plot!(Xs[end], color="red")
+for i in 1:100:iter
+    plot!(Xs[i], color="red", alpha=0.2, label="")
+end
+plot!(X, color="blue")
+savefig("mcmc.png")
 #plot!(mean(Xs), color="black")
