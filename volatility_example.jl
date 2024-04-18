@@ -160,7 +160,7 @@ V =  X + log.(randn(S).^2)
 iter = 25_000
 ϵ = 0.01
 bf = backwardfilter(V, p)
-Xs, Zs, lls, accperc = mcmc(x0, bf, p, V, ϵ; iter=iter, ρ_pcn = 0.5)
+Xs, Zs, lls, accperc = mcmc(x0, bf, p, V, ϵ; iter=iter, ρ_pcn = 0.8)
 @show accperc
 
 plot(X)
