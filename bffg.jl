@@ -39,11 +39,11 @@ end
 
 function backwardfilter(V, p)
     leafmessages = leaf_coefs(V, p)
-    m = leafmessages[end]
+    m = normalize(leafmessages[end])
     ms = [m]
     S = length(V)
     for i in S-1:-1:1
-        m = fuse(pullback(m, p), leafmessages[i])
+        m = normalize(fuse(pullback(m, p), leafmessages[i]))
         pushfirst!(ms, m)
     end
     ms
@@ -62,6 +62,8 @@ end
 
 g(x, m::Message) = exp(m.c + m.F * x - 0.5*x*m.H*x)
 
+normalize(m::Message) = Message(logpdf(Normal(m.F, m.H),0), m.F, m.H) 
+
 logpdf_logχ2(x) = x + logpdf(Chisq(1), exp(x))   
   
 function logweights(x0, Xᵒ, V, p, bf, ϵ)
@@ -78,8 +80,17 @@ end
 
 sumlogweights(x0, bf, p, Z, V) = (ϵ) -> sum(forwardguide(x0, bf, p, Z, V, ϵ).lw)
 
-  
 
+function loglik(X, V, p)
+    # only if ϵ=0
+    @unpack μ, σ = p
+    ll = 0.0
+    for i ∈ eachindex(V)
+        ll += logpdf_logχ2(V[i]-X[i]) - logpdf(Normal(X[i] + μ, σ), V[i])
+    end
+    ll
+end
+    
 function forwardguide(x0, bf, p, Z, V, ϵ)
     #@assert ϵ>0 "ϵ should be strictly positive"
     S = length(bf)
@@ -90,7 +101,8 @@ function forwardguide(x0, bf, p, Z, V, ϵ)
     guids = Bool[]
     for i in 1:S
          # Sampling from guided or unconditional?
-        m = bf[i]
+        # m = bf[i]  # originally, but i think it is wrong
+        m = pullback(bf[i],p)
         κg = g(x,m)
         λ = κg/(κg + ϵ) # prob to sample from guided
         z = Z[i]
@@ -107,11 +119,6 @@ end
 
 
 function smc_ess(weights)
-    # Normalize weights
     normalized_weights = weights / sum(weights)
-    
-    # Compute effective sample size
-    ess = 1.0 / sum(normalized_weights.^2)
-    
-    return ess
+    1.0 / sum(normalized_weights.^2)
 end

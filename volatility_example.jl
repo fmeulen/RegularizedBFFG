@@ -16,14 +16,14 @@ include("bffg.jl")
 # Xᵢ = ω + ψ X_{i-1} + η Wᵢ, where Wᵢ ~ N(0,1)
 
 ### Parameters
-p = (ω =  0.0, ψ = 0.9, η=0.163, μ=-1.27, σ=√((π^2)/2))
+p = (ω =  0.0, ψ = 0.9, η=0.1, μ=-1.27, σ=√((π^2)/2))
 # with larger variance
 mv = 5.0
 p_mv = (ω =  p.ω, ψ = p.ψ, η=p.η, μ=p.μ, σ = p.σ * √(mv))
 
 #Random.seed!(10)
 x0 = samplefromstationary(p) # Sample x0 from the stationary distribution 
-S = 75 # Correct for time 0 (called tot_steps)  (Time steps)
+S = 270 # Correct for time 0 (called tot_steps)  (Time steps)
 
 Z = randn(S)
 X = forward(x0, S, p, Z)
@@ -37,14 +37,21 @@ plot(p1, p2)
 
 ########################################################
 
+# test for correct loglik
+# out = forwardguide(x0, bf, p, Z, V, 0.0)
+# @show sum(out.lw)
+# ll = loglik(out.Xᵒ, V, p)
+
+
+
 # assess effect of ϵ
 
 bf_ = backwardfilter(V, p)
 
-bf = [Message(0.0, m.F, m.H) for m in bf_]
+bf = bf_ # [Message(0.0, m.F, m.H) for m in bf_]
 
 Zᵒ = randn(S)
-ϵ = 0.1
+ϵ = 0.01
 
 Xᵒ, λs, lw, guids = forwardguide(x0, bf, p, Zᵒ, V, ϵ)
 Xᵒ0, λs0, lw0, guids0 = forwardguide(x0, bf, p, Zᵒ,V, 0.0)
@@ -130,7 +137,8 @@ end
 @show round(100*acc/iter;digits=2)
 
 plot(X)
-for i in 1:100:iter
+bi = iter ÷ 2
+for i in bi:100:iter
     plot!(Xs[i], color="red", alpha=0.2, label="")
 end
 plot!(X, color="blue")
