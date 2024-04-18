@@ -29,7 +29,7 @@ function pullback(m::Message, p)
     Hnew = ψ^2 / C
     Fnew = ψ * (F/H - ω)/C
     cnew = c - logpdf(NormalCanon(F,H),0) + logpdf(Normal(F/H,C),ω)
-    Message(cnew, Fnew, Hnew)
+    normalize(Message(cnew, Fnew, Hnew))
 end   
 
 function leaf_coefs(V, p) 
@@ -39,11 +39,11 @@ end
 
 function backwardfilter(V, p)
     leafmessages = leaf_coefs(V, p)
-    m = normalize(leafmessages[end])
+    m = leafmessages[end]
     ms = [m]
     S = length(V)
     for i in S-1:-1:1
-        m = normalize(fuse(pullback(m, p), leafmessages[i]))
+        m = fuse(pullback(m, p), leafmessages[i])
         pushfirst!(ms, m)
     end
     ms

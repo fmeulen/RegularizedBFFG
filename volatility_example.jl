@@ -113,28 +113,55 @@ savefig("montecarlo_smc_ess.png")
 # mcmc
 #p = p_mv
 
-iter = 10000
-Zᵒ = randn(S)
-Xᵒ, λs, lw, guids = forwardguide(x0, bf, p, Zᵒ, V, ϵ)
-ℓ = sum(lw)
-Xs = [Xᵒ]
-ρ = 0.95
-acc = 0
 
-for _ in 1:iter
-    W = randn(S)
-    Znew = ρ * Zᵒ + √(1-ρ^2) * W
-    Xnew, _, lwnew, _ = forwardguide(x0, bf, p, Znew, V, ϵ)
-    ℓnew = sum(lwnew)
-    if log(rand()) < ℓnew - ℓ
-        ℓ = ℓnew
-        Zᵒ .= Znew
-        Xᵒ .= Xnew
-        acc += 1
-    end
-    push!(Xs, copy(Xᵒ))
+
+function mcmc(x0, bf, p, V, ϵ; ρ_pcn = 0.9, iter=25000)
+    S = length(V)
+    Z = randn(S)
+    fg = forwardguide(x0, bf, p, Z, V, ϵ)
+    @unpack Xᵒ, lw = fg
+    ll = sum(lw)
+
+    Xs = [X]
+    Zs = [Z]
+    lls = [ll]
+    
+    acc = 0
+    ρ̄_pcn = sqrt(1.0-ρ_pcn^2)
+
+    for _ in 1:iter
+        W = randn(S)
+        Zᵒ = ρ_pcn * Z + ρ̄_pcn * W
+        fgᵒ = forwardguide(x0, bf, p, Zᵒ, V, ϵ)
+        llᵒ = sum(fgᵒ.lw)
+        if log(rand()) < llᵒ - ll
+            ll = llᵒ
+            Z .= Zᵒ
+            X .= fgᵒ.Xᵒ
+            acc += 1
+        end
+        push!(Xs, copy(X))
+        push!(Zs, copy(Z))
+        push!(lls, ll)
+    end 
+    accperc = round(100*acc/iter;digits=2)
+    Xs, Zs, lls, accperc
 end
-@show round(100*acc/iter;digits=2)
+
+
+x0 = samplefromstationary(p) # Sample x0 from the stationary distribution 
+S = 270 # Correct for time 0 (called tot_steps)  (Time steps)
+
+Z = randn(S)
+X = forward(x0, S, p, Z)
+V =  X + log.(randn(S).^2)
+
+
+iter = 25_000
+ϵ = 0.01
+bf = backwardfilter(V, p)
+Xs, Zs, lls, accperc = mcmc(x0, bf, p, V, ϵ; iter=iter, ρ_pcn = 0.5)
+@show accperc
 
 plot(X)
 bi = iter ÷ 2
@@ -144,3 +171,5 @@ end
 plot!(X, color="blue")
 savefig("mcmc.png")
 #plot!(mean(Xs), color="black")
+plot(last.(Zs))
+plot(lls)
