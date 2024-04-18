@@ -113,7 +113,11 @@ savefig("montecarlo_smc_ess.png")
 # mcmc
 #p = p_mv
 
-
+function pcn(Z, ρ)
+    ρ̄ = sqrt(1.0-ρ^2)
+    W = randn(length(Z))
+    ρ * Z + ρ̄ * W
+end
 
 function mcmc(x0, bf, p, V, ϵ; ρ_pcn = 0.9, iter=25000)
     S = length(V)
@@ -127,16 +131,16 @@ function mcmc(x0, bf, p, V, ϵ; ρ_pcn = 0.9, iter=25000)
     lls = [ll]
     
     acc = 0
-    ρ̄_pcn = sqrt(1.0-ρ_pcn^2)
+    
 
     for _ in 1:iter
-        W = randn(S)
-        Zᵒ = ρ_pcn * Z + ρ̄_pcn * W
+        Zᵒ = pcn(Z, ρ_pcn)
         fgᵒ = forwardguide(x0, bf, p, Zᵒ, V, ϵ)
         llᵒ = sum(fgᵒ.lw)
         if log(rand()) < llᵒ - ll
             ll = llᵒ
             Z .= Zᵒ
+            
             X .= fgᵒ.Xᵒ
             acc += 1
         end
@@ -156,19 +160,35 @@ Z = randn(S)
 X = forward(x0, S, p, Z)
 V =  X + log.(randn(S).^2)
 
-
-iter = 25_000
-ϵ = 0.01
 bf = backwardfilter(V, p)
-Xs, Zs, lls, accperc = mcmc(x0, bf, p, V, ϵ; iter=iter, ρ_pcn = 0.8)
+
+iter = 5_000
+bi = iter ÷ 2
+
+ϵ = 0.1
+Xs, Zs, lls, accperc = mcmc(x0, bf, p, V, ϵ; iter=iter, ρ_pcn = 0.9)
 @show accperc
 
-plot(X)
-bi = iter ÷ 2
+
+Xs0, Zs0, lls0, accperc0 = mcmc(x0, bf, p, V, 0.0; iter=iter, ρ_pcn = 0.9)
+@show accperc0
+
+
+
+p1 = plot(X, label="", ylims=(-1,1), title="ϵ=$ϵ")
 for i in bi:100:iter
     plot!(Xs[i], color="red", alpha=0.2, label="")
 end
-plot!(X, color="blue")
+plot!(X, color="blue", label="X")
+
+p2 = plot(X, label="", ylims=(-1,1), title="ϵ=0")
+for i in bi:100:iter
+    plot!(Xs0[i], color="green", alpha=0.2, label="")
+end
+plot!(X, color="blue", label="X")
+
+plot(p1, p2, layout=@layout [a;b])
+
 savefig("mcmc.png")
 #plot!(mean(Xs), color="black")
 plot(last.(Zs))
