@@ -7,6 +7,8 @@ using Plots
 using UnPack
 using SpecialFunctions
 using Test
+using StatsFuns
+using LinearAlgebra
 
 include("bffg.jl")
 
@@ -16,14 +18,14 @@ include("bffg.jl")
 # Xᵢ = ω + ψ X_{i-1} + η Wᵢ, where Wᵢ ~ N(0,1)
 
 ### Parameters
-p = (ω =  0.0, ψ = 0.9, η=0.1, μ=-1.27, σ=√((π^2)/2))
+p = (ω =  0.0, ψ = 0.8, η=0.3, μ=-1.27, σ=√((π^2)/2))
 # with larger variance
 mv = 5.0
 p_mv = (ω =  p.ω, ψ = p.ψ, η=p.η, μ=p.μ, σ = p.σ * √(mv))
 
 #Random.seed!(10)
 x0 = samplefromstationary(p) # Sample x0 from the stationary distribution 
-S = 270 # Correct for time 0 (called tot_steps)  (Time steps)
+S = 70 # Correct for time 0 (called tot_steps)  (Time steps)
 
 Z = randn(S)
 X = forward(x0, S, p, Z)
@@ -110,6 +112,41 @@ plot(last.(lws), color="red", title="SMC-ESS over $B replications",
 plot!(last.(lws0), color="green",label="ϵ=0")
 savefig("montecarlo_smc_ess.png")
 
+# estimate some functional of the path
+F(x) = mean(x.>0.5) #sum(x.>0)  # path functional
+ϵ = 0.5
+
+B = 1000
+
+Fs = Float64[]
+Fs0 = Float64[]
+ℓ = Float64[]
+ℓ0 = Float64[]
+for _ in 1:B
+    Zᵒ = randn(S)
+    Xᵒ, λs, lw, guids = forwardguide(x0, bf, p, Zᵒ, V, ϵ)
+    push!(ℓ, sum(lw))    
+    push!(Fs, F(Xᵒ))
+
+    Xᵒ0, λs0, lw0, guids0 = forwardguide(x0, bf, p, Zᵒ,V, 0.0)
+    push!(ℓ0, sum(lw0))    
+    push!(Fs0, F(Xᵒ0))
+end
+
+W = NNlib.softmax(ℓ) # weights
+smc_ess(W) # ess of the weights 
+dot(W, Fs)  # estimate
+
+W0 = NNlib.softmax(ℓ0) # weights
+smc_ess(W0) # ess of the weights 
+dot(W0, Fs0)  # estimate
+
+plot(W, label="ϵ=$ϵ")
+plot!(W0, label="ϵ=0")
+
+
+
+
 # mcmc
 #p = p_mv
 
@@ -154,7 +191,7 @@ end
 
 
 x0 = samplefromstationary(p) # Sample x0 from the stationary distribution 
-S = 270 # Correct for time 0 (called tot_steps)  (Time steps)
+S = 200 # Correct for time 0 (called tot_steps)  (Time steps)
 
 Z = randn(S)
 X = forward(x0, S, p, Z)
@@ -162,7 +199,7 @@ V =  X + log.(randn(S).^2)
 
 bf = backwardfilter(V, p)
 
-iter = 5_000
+iter = 15_000
 bi = iter ÷ 2
 
 ϵ = 0.1
@@ -174,22 +211,23 @@ Xs0, Zs0, lls0, accperc0 = mcmc(x0, bf, p, V, 0.0; iter=iter, ρ_pcn = 0.9)
 @show accperc0
 
 
-
-p1 = plot(X, label="", ylims=(-1,1), title="ϵ=$ϵ")
+c = 2
+p1 = plot(X, label="", ylims=(-c,c), title="ϵ=$ϵ")
 for i in bi:100:iter
     plot!(Xs[i], color="red", alpha=0.2, label="")
 end
 plot!(X, color="blue", label="X")
 
-p2 = plot(X, label="", ylims=(-1,1), title="ϵ=0")
+p2 = plot(X, label="", ylims=(-c,c), title="ϵ=0")
 for i in bi:100:iter
     plot!(Xs0[i], color="green", alpha=0.2, label="")
 end
 plot!(X, color="blue", label="X")
+#plot!(mean(Xs0), color="black")
 
 plot(p1, p2, layout=@layout [a;b])
 
 savefig("mcmc.png")
-#plot!(mean(Xs), color="black")
+
 plot(last.(Zs))
 plot(lls)

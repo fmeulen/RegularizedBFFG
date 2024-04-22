@@ -22,14 +22,16 @@ end
 
 fuse(m1::Message, m2::Message) = Message(m1.c+m2.c, m1.F+m2.F, m1.H+m2.H)
 
-function pullback(m::Message, p)
+function pullback(m::Message, p; add_normalization=true)
     @unpack c, F, H = m
     @unpack ω, ψ, η = p
     C = η^2 + 1/H 
     Hnew = ψ^2 / C
     Fnew = ψ * (F/H - ω)/C
     cnew = c - logpdf(NormalCanon(F,H),0) + logpdf(Normal(F/H,C),ω)
-    normalize(Message(cnew, Fnew, Hnew))
+    m = Message(cnew, Fnew, Hnew)
+    out =   add_normalization ? normalize(m) : m 
+    return out
 end   
 
 function leaf_coefs(V, p) 
@@ -62,17 +64,17 @@ end
 
 g(x, m::Message) = exp(m.c + m.F * x - 0.5*x*m.H*x)
 
-normalize(m::Message) = Message(logpdf(Normal(m.F, m.H),0), m.F, m.H) 
+normalize(m::Message) = Message(logpdf(NormalCanon(m.F, m.H),0), m.F, m.H) 
 
 logpdf_logχ2(x) = x + logpdf(Chisq(1), exp(x))   
   
 function logweights(x0, Xᵒ, V, p, bf, ϵ)
     m = bf[1]
-    W = [log((g(x0,pullback(m, p)) + ϵ)/(g(Xᵒ[1], m)+ ϵ)) + logpdf_logχ2(V[1]-Xᵒ[1])]
+    W = [log((g(x0,pullback(m, p; add_normalization=false)) + ϵ)/(g(Xᵒ[1], m)+ ϵ)) + logpdf_logχ2(V[1]-Xᵒ[1])]
     S = length(V)
     for i ∈ 2:S
         m = bf[i]
-        w = log((g(Xᵒ[i-1],pullback(m, p)) + ϵ)/(g(Xᵒ[i], m)+ ϵ)) + logpdf_logχ2(V[i]-Xᵒ[i])
+        w = log((g(Xᵒ[i-1],pullback(m, p; add_normalization=false)) + ϵ)/(g(Xᵒ[i], m)+ ϵ)) + logpdf_logχ2(V[i]-Xᵒ[i])
         push!(W, w)
     end
     W
@@ -102,7 +104,7 @@ function forwardguide(x0, bf, p, Z, V, ϵ)
     for i in 1:S
          # Sampling from guided or unconditional?
         # m = bf[i]  # originally, but i think it is wrong
-        m = pullback(bf[i],p)
+        m = pullback(bf[i],p; add_normalization=false)
         κg = g(x,m)
         λ = κg/(κg + ϵ) # prob to sample from guided
         z = Z[i]
