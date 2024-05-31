@@ -1,5 +1,7 @@
 wd = @__DIR__ 
 cd(wd)
+using Pkg
+Pkg.instantiate()
 
 using Random
 using Distributions
@@ -9,6 +11,7 @@ using SpecialFunctions
 using Test
 using StatsFuns
 using LinearAlgebra
+using NNlib
 
 include("bffg.jl")
 
@@ -18,14 +21,14 @@ include("bffg.jl")
 # Xᵢ = ω + ψ X_{i-1} + η Wᵢ, where Wᵢ ~ N(0,1)
 
 ### Parameters
-p = (ω =  0.0, ψ = 0.8, η=0.3, μ=-1.27, σ=√((π^2)/2))
+p = (ω =  0.0, ψ = 0.8, η=2.3, μ=-1.27, σ=√((π^2)/2))
 # with larger variance
 mv = 5.0
 p_mv = (ω =  p.ω, ψ = p.ψ, η=p.η, μ=p.μ, σ = p.σ * √(mv))
 
 #Random.seed!(10)
 x0 = samplefromstationary(p) # Sample x0 from the stationary distribution 
-S = 70 # Correct for time 0 (called tot_steps)  (Time steps)
+S = 50 # Correct for time 0 (called tot_steps)  (Time steps)
 
 Z = randn(S)
 X = forward(x0, S, p, Z)
@@ -40,18 +43,15 @@ plot(p1, p2)
 ########################################################
 
 # test for correct loglik
-# out = forwardguide(x0, bf, p, Z, V, 0.0)
-# @show sum(out.lw)
-# ll = loglik(out.Xᵒ, V, p)
+ out = forwardguide(x0, bf, p, Z, V, 0.0)
+ @show sum(out.lw)
+ ll = loglik(out.Xᵒ, V, x0, bf, p)
 
 
 
 # assess effect of ϵ
 
-bf_ = backwardfilter(V, p)
-
-bf = bf_ # [Message(0.0, m.F, m.H) for m in bf_]
-
+bf = backwardfilter(V, p)
 Zᵒ = randn(S)
 ϵ = 0.01
 
@@ -67,8 +67,8 @@ plot!(pX, Xᵒ0, color="green", label="Xᵒ0")
 plw = plot(lw0, color="green", label="logweigth, ϵ=0",legend = :outertop)
 plot!(plw, lw, color="red", label="logweigth")
 
-plλ = plot(guids, color="blue", label="guids")
-plot!(plλ, λs, color="red", label="λ",legend = :outertop)
+plλ = plot(λs0, color="blue", label="λ with ϵ eq 0", title="λ is prob of guiding")
+plot!(plλ, λs, color="red", label="λ with ϵ uneq 0",legend = :outertop)
 
 l = @layout [a;b;c;d]
 pall = plot(pX, plw, plλ, layout=l,size = (600, 1000))
@@ -113,8 +113,8 @@ plot!(last.(lws0), color="green",label="ϵ=0")
 savefig("montecarlo_smc_ess.png")
 
 # estimate some functional of the path
-F(x) = mean(x.>0.5) #sum(x.>0)  # path functional
-ϵ = 0.5
+FF(x) = mean(x.>0.5) #sum(x.>0)  # path functional
+ϵ = 50.5
 
 B = 1000
 
@@ -126,11 +126,11 @@ for _ in 1:B
     Zᵒ = randn(S)
     Xᵒ, λs, lw, guids = forwardguide(x0, bf, p, Zᵒ, V, ϵ)
     push!(ℓ, sum(lw))    
-    push!(Fs, F(Xᵒ))
+    push!(Fs, FF(Xᵒ))
 
     Xᵒ0, λs0, lw0, guids0 = forwardguide(x0, bf, p, Zᵒ,V, 0.0)
     push!(ℓ0, sum(lw0))    
-    push!(Fs0, F(Xᵒ0))
+    push!(Fs0, FF(Xᵒ0))
 end
 
 W = NNlib.softmax(ℓ) # weights
@@ -156,12 +156,14 @@ function pcn(Z, ρ)
     ρ * Z + ρ̄ * W
 end
 
-function mcmc(x0, bf, p, V, ϵ; ρ_pcn = 0.9, iter=25000)
+function mcmc(x0, bf, p, V, ϵ, U; ρ_pcn = 0.9, iter=25000)
     S = length(V)
+    Random.seed!(12)
     Z = randn(S)
-    fg = forwardguide(x0, bf, p, Z, V, ϵ)
-    @unpack Xᵒ, lw = fg
-    ll = sum(lw)
+    fg = forwardguide2(x0, bf, p, Z, V, ϵ, U)
+    #@unpack Xᵒ, lw = fg
+    #ll = sum(lw)
+    @unpack Xᵒ, ll = fg
 
     Xs = [X]
     Zs = [Z]
@@ -172,8 +174,9 @@ function mcmc(x0, bf, p, V, ϵ; ρ_pcn = 0.9, iter=25000)
 
     for _ in 1:iter
         Zᵒ = pcn(Z, ρ_pcn)
-        fgᵒ = forwardguide(x0, bf, p, Zᵒ, V, ϵ)
-        llᵒ = sum(fgᵒ.lw)
+        fgᵒ = forwardguide2(x0, bf, p, Zᵒ, V, ϵ, U)
+        #llᵒ = sum(fgᵒ.lw)
+        llᵒ = sum(fgᵒ.ll)
         if log(rand()) < llᵒ - ll
             ll = llᵒ
             Z .= Zᵒ
@@ -181,15 +184,15 @@ function mcmc(x0, bf, p, V, ϵ; ρ_pcn = 0.9, iter=25000)
             X .= fgᵒ.Xᵒ
             acc += 1
         end
-        push!(Xs, copy(X))
-        push!(Zs, copy(Z))
+        push!(Xs, deepcopy(X))
+        push!(Zs, deepcopy(Z))
         push!(lls, ll)
     end 
     accperc = round(100*acc/iter;digits=2)
     Xs, Zs, lls, accperc
 end
 
-
+Random.seed!(5)
 x0 = samplefromstationary(p) # Sample x0 from the stationary distribution 
 S = 200 # Correct for time 0 (called tot_steps)  (Time steps)
 
@@ -202,23 +205,29 @@ bf = backwardfilter(V, p)
 iter = 15_000
 bi = iter ÷ 2
 
-ϵ = 0.1
-Xs, Zs, lls, accperc = mcmc(x0, bf, p, V, ϵ; iter=iter, ρ_pcn = 0.9)
+ϵ = 0.5
+
+
+U = rand(S)
+Xs, Zs, lls, accperc = mcmc(x0, bf, p, V, ϵ, U; iter=iter, ρ_pcn = 0.9)
 @show accperc
 
 
-Xs0, Zs0, lls0, accperc0 = mcmc(x0, bf, p, V, 0.0; iter=iter, ρ_pcn = 0.9)
+Xs0, Zs0, lls0, accperc0 = mcmc(x0, bf, p, V, 0.0, U; iter=iter, ρ_pcn = 0.9)
 @show accperc0
 
 
-c = 2
+c = 15
 p1 = plot(X, label="", ylims=(-c,c), title="ϵ=$ϵ")
-for i in bi:100:iter
+for i in bi:10:iter
     plot!(Xs[i], color="red", alpha=0.2, label="")
 end
 plot!(X, color="blue", label="X")
 
 p2 = plot(X, label="", ylims=(-c,c), title="ϵ=0")
+for i in 1:100:bi
+    plot!(Xs0[i], color="magenta", alpha=0.05, label="")
+end
 for i in bi:100:iter
     plot!(Xs0[i], color="green", alpha=0.2, label="")
 end
@@ -231,3 +240,6 @@ savefig("mcmc.png")
 
 plot(last.(Zs))
 plot(lls)
+
+
+fg = forwardguide2(x0, bf, p, Z, V, ϵ, U)
