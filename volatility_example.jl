@@ -42,22 +42,16 @@ plot(p1, p2)
 
 ########################################################
 
-# test for correct loglik
- out = forwardguide(x0, bf, p, Z, V, 0.0)
- @show sum(out.lw)
- ll = loglik(out.Xᵒ, V, x0, bf, p)
-
-
-
 # assess effect of ϵ
 
 bf = backwardfilter(V, p)
 Zᵒ = randn(S)
-ϵ = 0.01
+U = rand(S)
+ϵ = 0.001
 
-Xᵒ, λs, lw, guids = forwardguide(x0, bf, p, Zᵒ, V, ϵ)
-Xᵒ0, λs0, lw0, guids0 = forwardguide(x0, bf, p, Zᵒ,V, 0.0)
-Xᵒmv, λs_mv, lw_mv, guids_mv = forwardguide(x0, bf, p_mv, Zᵒ,V, 0.0)
+Xᵒ, λs, ll, guids = forwardguide2(x0, bf, p, Zᵒ, V, ϵ, U)
+Xᵒ0, λs0, ll0, guids0 = forwardguide2(x0, bf, p, Zᵒ,V, 0.0, U)
+Xᵒmv, λs_mv, lw_mv, guids_mv = forwardguide2(x0, bf, p_mv, Zᵒ,V, 0.0, U)
 
 pX = plot(X,legend = :outertop, label="X")
 plot!(pX, Xᵒ, color="red", label="Xᵒ")
@@ -79,28 +73,32 @@ savefig(plλ, "lambdas.png")
 savefig(pall, "all.png")
 
 # sum of logweights is decreasing in ϵ:
-Zᵒ = randn(S)
-ϵs = 0.0:0.01:10.0
-sumlw = sumlogweights(x0, bf, p, Zᵒ, V).(ϵs) 
-plot(ϵs, sumlw)
+# Zᵒ = randn(S)
+# ϵs = 0.0:0.01:10.0
+# sumlw = sumlogweights(x0, bf, p, Zᵒ, V).(ϵs) 
+# plot(ϵs, sumlw)
 
 @show std(exp.(lw)), smc_ess(exp.(lw))
 @show std(exp.(lw0)), smc_ess(exp.(lw0))
 
 # Monte Carlo
-ϵ = 0.1
+ϵ = 0.5
 
 B = 1000
-lws = []
-lws0 = []
-for _ in 1:B
+lls = zeros(B)
+ll0s = zeros(B)
+for i in 1:B
     Zᵒ = randn(S)
-    Xᵒ, λs, lw, guids = forwardguide(x0, bf, p, Zᵒ, V, ϵ)
-    Xᵒ0, λs0, lw0, guids0 = forwardguide(x0, bf, p, Zᵒ,V, 0.0)
-    push!(lws, [sum(lw), smc_ess(exp.(lw))])
-    push!(lws0, [sum(lw0), smc_ess(exp.(lw0))])
-    
+    Uᵒ = rand(S)
+    Xᵒ, λs, ll, guids = forwardguide2(x0, bf, p, Zᵒ, V, ϵ, Uᵒ)
+    Xᵒ0, λs0, ll0, guids0 = forwardguide2(x0, bf, p, Zᵒ,V, 0.0, Uᵒ)
+    lls[i] = ll
+    ll0s[i] = ll0
 end
+
+plot(NNlib.softmax(lls), label="ϵ = $ϵ")
+plot!(NNlib.softmax(ll0s), label="ϵ=0")
+
 
 plot(first.(lws), color="red", title="total loglik over $B replications",
     label="ϵ=$ϵ", xlabel="replication id", ylabel="total loglikelihood")
@@ -114,7 +112,7 @@ savefig("montecarlo_smc_ess.png")
 
 # estimate some functional of the path
 FF(x) = mean(x.>0.5) #sum(x.>0)  # path functional
-ϵ = 50.5
+ϵ = 2.5
 
 B = 1000
 
@@ -124,12 +122,13 @@ Fs0 = Float64[]
 ℓ0 = Float64[]
 for _ in 1:B
     Zᵒ = randn(S)
-    Xᵒ, λs, lw, guids = forwardguide(x0, bf, p, Zᵒ, V, ϵ)
-    push!(ℓ, sum(lw))    
+    Uᵒ = rand(S)
+    Xᵒ, λs, ll, guids = forwardguide2(x0, bf, p, Zᵒ, V, ϵ, Uᵒ)
+    push!(ℓ, ll)    
     push!(Fs, FF(Xᵒ))
 
-    Xᵒ0, λs0, lw0, guids0 = forwardguide(x0, bf, p, Zᵒ,V, 0.0)
-    push!(ℓ0, sum(lw0))    
+    Xᵒ0, λs0, ll0, guids0 = forwardguide2(x0, bf, p, Zᵒ,V, 0.0, Uᵒ)
+    push!(ℓ0, ll0)    
     push!(Fs0, FF(Xᵒ0))
 end
 
@@ -208,7 +207,8 @@ bi = iter ÷ 2
 ϵ = 0.5
 
 
-U = rand(S)
+U = zeros(S)#rand(S)
+U = ones(S)
 Xs, Zs, lls, accperc = mcmc(x0, bf, p, V, ϵ, U; iter=iter, ρ_pcn = 0.9)
 @show accperc
 
@@ -218,13 +218,16 @@ Xs0, Zs0, lls0, accperc0 = mcmc(x0, bf, p, V, 0.0, U; iter=iter, ρ_pcn = 0.9)
 
 
 c = 15
-p1 = plot(X, label="", ylims=(-c,c), title="ϵ=$ϵ")
-for i in bi:10:iter
-    plot!(Xs[i], color="red", alpha=0.2, label="")
+p1 = plot(X, label="", ylims=(-c,c), title="ϵ=$ϵ", size=(700, 500))
+for i in 1:100:bi
+    plot!(Xs[i], color="magenta", alpha=0.05, label="")
+end
+for i in bi:100:iter
+    plot!(Xs[i], color="green", alpha=0.2, label="")
 end
 plot!(X, color="blue", label="X")
 
-p2 = plot(X, label="", ylims=(-c,c), title="ϵ=0")
+p2 = plot(X, label="", ylims=(-c,c), title="ϵ=0", size=(700, 500))
 for i in 1:100:bi
     plot!(Xs0[i], color="magenta", alpha=0.05, label="")
 end

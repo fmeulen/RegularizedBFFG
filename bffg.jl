@@ -115,7 +115,7 @@ function forwardguide(x0, bf, p, Z, V, ϵ, U)
         κg = g(x,m)
         λ = κg/(κg + ϵ) # prob to sample from guided
         z = Z[i]
-        guid = U[i] ≤ λ
+        guid = U[i] < λ
         x = ( guid ? guide(x, m, p, z) : forward(x, p, z)  )
         push!(xs, x)
         push!(λs, λ)
@@ -147,11 +147,11 @@ function forwardguide2(x0, bf, p, Z, V, ϵ, U)
         m = pullback(bf[i],p; add_normalization=false)
         ξ = g(x,m)
         λ = ξ/(ξ + ϵ) # prob to sample from guided
-        guid = U[i] ≤ λ  
-        
+        guid = U[i] < λ  
+
         if guid
             x = guide(x, bf[i], p, Z[i])
-            ll += log_g(x, bf[i]) - log(ξ + ϵ)
+            ll += - log_g(x, bf[i]) + log(ξ + ϵ)
         else
             x = forward(x, p, Z[i])
         end
