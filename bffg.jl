@@ -45,11 +45,13 @@ end
 function backwardfilter(V, p)
     S = length(V)
     leafmessages = leaf_coefs(V, p)
+    #m = normalize(leafmessages[end])
     m = leafmessages[end]
     ms = fill(m, S) # elements 1...S-1 get overwritten in the loop below
     for i in S-1:-1:1
-        m = fuse(pullback(m, p), leafmessages[i])
-        ms[i] = m
+     #   m = normalize(fuse(pullback(m, p), leafmessages[i]))
+     m = fuse(pullback(m, p), leafmessages[i]) # pullback by default normalizes
+     ms[i] = m
     end
     ms
 end
@@ -72,14 +74,18 @@ normalize(m::Message) = Message(logpdf(NormalCanon(m.F, m.H),0), m.F, m.H)
 
 logpdf_logχ2(x) = x + logpdf(Chisq(1), exp(x))   
   
-function logweights(x0, Xᵒ, V, p, bf, ϵ)
+function logweights(x0, Xᵒ, V, p, bf, ϵ) # double checked, this one is correct 
     m = bf[1]
-    W = [log((g(x0,pullback(m, p; add_normalization=false)) + ϵ)/(g(Xᵒ[1], m)+ ϵ)) +
+    pullback_m = pullback(m, p; add_normalization=false)
+    ϵᵢ = ϵ * exp(m.c)
+    W = [log( g(x0,pullback_m) + ϵᵢ) - log( g(Xᵒ[1], m) + ϵᵢ) +
          logpdf_logχ2(V[1]-Xᵒ[1])]
     S = length(V)
     for i ∈ 2:S
         m = bf[i]
-        w = log((g(Xᵒ[i-1],pullback(m, p; add_normalization=false)) + ϵ)/(g(Xᵒ[i], m)+ ϵ)) +
+        ϵᵢ = ϵ * exp(m.c)
+        pullback_m = pullback(m, p; add_normalization=false)
+        w = log(g(Xᵒ[i-1],pullback_m) + ϵᵢ) - log( g(Xᵒ[i], m)+ ϵᵢ) +
              logpdf_logχ2(V[i]-Xᵒ[i])
         push!(W, w)
     end
@@ -89,41 +95,41 @@ end
 sumlogweights(x0, bf, p, Z, V) = (ϵ) -> sum(forwardguide(x0, bf, p, Z, V, ϵ).lw)
 
 
-function loglik(X, V, x0, bf, p) # must be wrong, log g(0,x_0) is missing
-    # only if ϵ=0
-    @unpack μ, σ = p
-    ll = 0.0
-    for i ∈ eachindex(V)
-        ll += logpdf_logχ2(V[i]-X[i]) - logpdf(Normal(X[i] + μ, σ), V[i])
-    end
-    m = pullback(bf[1], p; add_normalization=false)
-    ll + log(g(x0, m))
-end
+# function loglik(X, V, x0, bf, p) # must be wrong, log g(0,x_0) is missing
+#     # only if ϵ=0
+#     @unpack μ, σ = p
+#     ll = 0.0
+#     for i ∈ eachindex(V)
+#         ll += logpdf_logχ2(V[i]-X[i]) - logpdf(Normal(X[i] + μ, σ), V[i])
+#     end
+#     m = pullback(bf[1], p; add_normalization=false)
+#     ll + log(g(x0, m))
+# end
     
-function forwardguide(x0, bf, p, Z, V, ϵ, U)
-    #@assert ϵ>0 "ϵ should be strictly positive"
-    S = length(bf)
-    @assert S==length(Z) "length of innovations should equal S"
-    x = x0
-    xs = typeof(x0)[] #Vector{typeof(x0)}(undef,S) 
-    λs = Float64[]
-    guids = Bool[]
-    for i in 1:S
-         # Sampling from guided or unconditional?
-        # m = bf[i]  # originally, but i think it is wrong
-        m = pullback(bf[i],p; add_normalization=false)
-        κg = g(x,m)
-        λ = κg/(κg + ϵ) # prob to sample from guided
-        z = Z[i]
-        guid = U[i] < λ
-        x = ( guid ? guide(x, m, p, z) : forward(x, p, z)  )
-        push!(xs, x)
-        push!(λs, λ)
-        push!(guids, guid)
-    end
-    lw = logweights(x0, xs, V, p, bf, ϵ)
-    (Xᵒ=xs, λs=λs, lw=lw, guids=guids)
-end
+# function forwardguide(x0, bf, p, Z, V, ϵ, U)
+#     #@assert ϵ>0 "ϵ should be strictly positive"
+#     S = length(bf)
+#     @assert S==length(Z) "length of innovations should equal S"
+#     x = x0
+#     xs = typeof(x0)[] #Vector{typeof(x0)}(undef,S) 
+#     λs = Float64[]
+#     guids = Bool[]
+#     for i in 1:S
+#          # Sampling from guided or unconditional?
+#         # m = bf[i]  # originally, but i think it is wrong
+#         m = pullback(bf[i],p; add_normalization=false)
+#         κg = g(x,m)
+#         λ = κg/(κg + ϵ) # prob to sample from guided
+#         z = Z[i]
+#         guid = U[i] < λ
+#         x = ( guid ? guide(x, m, p, z) : forward(x, p, z)  )
+#         push!(xs, x)
+#         push!(λs, λ)
+#         push!(guids, guid)
+#     end
+#     lw = logweights(x0, xs, V, p, bf, ϵ)
+#     (Xᵒ=xs, λs=λs, lw=lw, guids=guids)
+# end
 
 
 
@@ -133,7 +139,7 @@ function smc_ess(weights)
 end
 
 
-function forwardguide2(x0, bf, p, Z, V, ϵ, U)
+function forwardguide2(x0, bf, p, Z, V, ϵ, U) # sample from either guided or forward
     #@assert ϵ>0 "ϵ should be strictly positive"
     S = length(bf)
     @assert S==length(Z) "length of innovations should equal S"
@@ -144,25 +150,71 @@ function forwardguide2(x0, bf, p, Z, V, ϵ, U)
     ll = 0.0
     for i in 1:S
     # Sampling from guided or unconditional?
-        m = pullback(bf[i],p; add_normalization=false)
-        ξ = g(x,m)
-        λ = ξ/(ξ + ϵ) # prob to sample from guided
+        m =bf[i]
+        pullback_m = pullback(bf[i],p; add_normalization=false)
+        ϵᵢ = ϵ * exp(m.c)
+        ξ = g(x,pullback_m)
+        λ = ξ/(ξ + ϵᵢ) # prob to sample from guided
         guid = U[i] < λ  
-
         if guid
             x = guide(x, bf[i], p, Z[i])
-            ll += - log_g(x, bf[i]) + log(ξ + ϵ)
         else
             x = forward(x, p, Z[i])
         end
-        ll += logpdf_logχ2(V[i]-x)
+  
 
         push!(xs, x)
         push!(λs, λ)
         push!(guids, guid)
     end
+    ll = logweights(x0, xs, V, p, bf, ϵ)
     (Xᵒ=xs, λs=λs, ll=ll, guids=guids)
 end
 
+# mcmc
+
+
+function pcn(Z, ρ)
+    ρ̄ = sqrt(1.0-ρ^2)
+    W = randn(length(Z))
+    ρ * Z + ρ̄ * W
+end
+
+function mcmc(x0, bf, p, V, ϵ, U; ρ_pcn = 0.9, iter=25000, seed=12)
+    Random.seed!(seed)
+
+    S = length(V)
+    Z = randn(S)
+    fg = forwardguide2(x0, bf, p, Z, V, ϵ, U)
+    #@unpack Xᵒ, lw = fg
+    #ll = sum(lw)
+    @unpack Xᵒ, ll = fg
+
+    Xs = [X]
+    Zs = [Z]
+    lls = [ll]
+    
+    acc = 0
+    
+
+    for _ in 1:iter
+        Zᵒ = pcn(Z, ρ_pcn)
+        fgᵒ = forwardguide2(x0, bf, p, Zᵒ, V, ϵ, U)
+        #llᵒ = sum(fgᵒ.lw)
+        llᵒ = sum(fgᵒ.ll)
+        if log(rand()) < llᵒ - ll
+            ll = llᵒ
+            Z .= Zᵒ
+            
+            X .= fgᵒ.Xᵒ
+            acc += 1
+        end
+        push!(Xs, deepcopy(X))
+        push!(Zs, deepcopy(Z))
+        push!(lls, ll)
+    end 
+    accperc = round(100*acc/iter;digits=2)
+    Xs, Zs, lls, accperc
+end
 
 
