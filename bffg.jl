@@ -28,7 +28,8 @@ function pullback(m::Message, p; add_normalization=true)
     C = η^2 + 1/H 
     Hnew = ψ^2 / C
     Fnew = ψ * (F/H - ω)/C
-    cnew = c - logpdf(NormalCanon(F,H),0) + logpdf(Normal(F/H,C),ω)
+    #cnew = c - logpdf(NormalCanon(F,H),0) + logpdf(Normal(F/H,C),ω)
+    cnew = c - logpdf(NormalCanon(F,H),0) + logpdf(Normal(F/H,sqrt(C)),ω)
     m = Message(cnew, Fnew, Hnew)
     if add_normalization
         return(normalize(m))
@@ -92,7 +93,7 @@ function logweights(x0, Xᵒ, V, p, bf, ϵ) # double checked, this one is correc
     W
 end
 
-sumlogweights(x0, bf, p, Z, V) = (ϵ) -> sum(forwardguide(x0, bf, p, Z, V, ϵ).lw)
+#sumlogweights(x0, bf, p, Z, V) = (ϵ) -> sum(forwardguide(x0, bf, p, Z, V, ϵ).lw)
 
 
 # function loglik(X, V, x0, bf, p) # must be wrong, log g(0,x_0) is missing
