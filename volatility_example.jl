@@ -48,7 +48,7 @@ plot(p1, p2)
 bf = backwardfilter(V, p)
 Zᵒ = randn(S)
 U = rand(S)
-ϵ = 0.1
+ϵ = 0.002 #18
 
 Xᵒ, λs, ll, guids = forwardguide2(x0, bf, p, Zᵒ, V, ϵ, U)
 Xᵒ0, λs0, ll0, guids0 = forwardguide2(x0, bf, p, Zᵒ,V, 0.0, U)
@@ -66,6 +66,10 @@ plλ = plot(λs0, color="blue", label="λ with ϵ eq 0", title="λ is prob of gu
 plot!(plλ, λs, color="red", label="λ with ϵ uneq 0",legend = :outertop)
 
 
+@show std(exp.(ll)), smc_ess(exp.(ll))
+@show std(exp.(ll0)), smc_ess(exp.(ll0))
+
+
 l = @layout [a;b;c;d]
 pall = plot(pX, plw, plλ, layout=l,size = (600, 1000))
 
@@ -80,18 +84,19 @@ savefig(pall, "all.png")
 # sumlw = sumlogweights(x0, bf, p, Zᵒ, V).(ϵs) 
 # plot(ϵs, sumlw)
 
-@show std(exp.(ll)), smc_ess(exp.(ll))
-@show std(exp.(ll0)), smc_ess(exp.(ll0))
 
-# Monte Carlo
-ϵ = 0.5
+# Monte Carlo study, fix observations v
+# Repeated simulation, each particle is a sampled path togeter with loglikelihood
+# One would hope that with ϵ>0, the ess is larger than with ϵ=0
+
+ϵ = 2.5
 
 B = 1000
 lls = zeros(B)
 ll0s = zeros(B)
 for i in 1:B
     Zᵒ = randn(S)
-    Uᵒ = rand(S)
+    Uᵒ = rand(S)    
     Xᵒ, λs, ll, guids = forwardguide2(x0, bf, p, Zᵒ, V, ϵ, Uᵒ)
     Xᵒ0, λs0, ll0, guids0 = forwardguide2(x0, bf, p, Zᵒ,V, 0.0, Uᵒ)
     lls[i] = sum(ll)
@@ -172,11 +177,11 @@ bf = backwardfilter(V, p)
 iter = 15_000
 bi = iter ÷ 2
 
-ϵ = 2.5
+ϵ = 180.5
 
 
-U = zeros(S)#rand(S)
-U = 0.5*ones(S)
+# U = zeros(S)#rand(S)
+# U = 0.5*ones(S)
 U = rand(S)
 Xs, Zs, lls, accperc = mcmc(x0, bf, p, V, ϵ, U; iter=iter, ρ_pcn = 0.999)
 @show accperc

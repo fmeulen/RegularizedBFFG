@@ -187,13 +187,16 @@ function mcmc(x0, bf, p, V, ϵ, U; ρ_pcn = 0.9, iter=25000, seed=12)
     S = length(V)
     Z = randn(S)
     fg = forwardguide2(x0, bf, p, Z, V, ϵ, U)
+    
+
     #@unpack Xᵒ, lw = fg
     #ll = sum(lw)
     @unpack Xᵒ, ll = fg
+    sumll = sum(ll)
 
     Xs = [X]
     Zs = [Z]
-    lls = [ll]
+    sumlls = [sumll]
     
     acc = 0
     
@@ -202,9 +205,9 @@ function mcmc(x0, bf, p, V, ϵ, U; ρ_pcn = 0.9, iter=25000, seed=12)
         Zᵒ = pcn(Z, ρ_pcn)
         fgᵒ = forwardguide2(x0, bf, p, Zᵒ, V, ϵ, U)
         #llᵒ = sum(fgᵒ.lw)
-        llᵒ = sum(fgᵒ.ll)
-        if log(rand()) < llᵒ - ll
-            ll = llᵒ
+        sumllᵒ = sum(fgᵒ.ll)
+        if log(rand()) < sumllᵒ - sumll
+            sumll = sumllᵒ
             Z .= Zᵒ
             
             X .= fgᵒ.Xᵒ
@@ -212,10 +215,10 @@ function mcmc(x0, bf, p, V, ϵ, U; ρ_pcn = 0.9, iter=25000, seed=12)
         end
         push!(Xs, deepcopy(X))
         push!(Zs, deepcopy(Z))
-        push!(lls, ll)
+        push!(sumlls, sumll)
     end 
     accperc = round(100*acc/iter;digits=2)
-    Xs, Zs, lls, accperc
+    Xs, Zs, sumlls, accperc
 end
 
 
