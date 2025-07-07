@@ -48,7 +48,7 @@ plot(p1, p2)
 bf = backwardfilter(V, p)
 Zᵒ = randn(S)
 U = rand(S)
-ϵ = 0.002 #18
+ϵ = 0.001 
 
 Xᵒ, λs, ll, guids = forwardguide2(x0, bf, p, Zᵒ, V, ϵ, U)
 Xᵒ0, λs0, ll0, guids0 = forwardguide2(x0, bf, p, Zᵒ,V, 0.0, U)
@@ -89,7 +89,7 @@ savefig(pall, "all.png")
 # Repeated simulation, each particle is a sampled path togeter with loglikelihood
 # One would hope that with ϵ>0, the ess is larger than with ϵ=0
 
-ϵ = 2.5
+ϵ = 0.05
 
 B = 1000
 lls = zeros(B)
@@ -177,7 +177,7 @@ bf = backwardfilter(V, p)
 iter = 15_000
 bi = iter ÷ 2
 
-ϵ = 180.5
+ϵ = 0.05
 
 
 # U = zeros(S)#rand(S)

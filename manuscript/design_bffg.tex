@@ -1,0 +1,384 @@
+\documentclass[11pt,reqno]{amsart}
+
+%\usepackage{stix}
+% -----------------------------------------------------------------------
+\usepackage[english]{babel}
+\usepackage{color}
+\usepackage{amsmath, latexsym, amsthm, amsfonts,bm,amssymb,mathscinet} 
+\usepackage{natbib}
+\usepackage[text={5.8in,8.3in},centering]{geometry}
+\usepackage{epsfig}
+\usepackage[colorlinks,linkcolor=blue, citecolor=blue,urlcolor=blue]{hyperref}
+\usepackage[dvipsnames]{xcolor}
+\usepackage{mathtools}
+\usepackage{nicefrac}
+% -----------------------------------------------------------------------
+\pagestyle{plain}
+
+% -----------------------------------------------------------------------
+\newcommand{\dd}{{\,\mathrm d}}
+\newcommand{\si}{\sigma}
+\renewcommand{\a}{\alpha}
+\renewcommand{\b}{\beta}
+\renewcommand{\th}{\theta}
+\newcommand{\la}{\lambda}
+\newcommand{\ga}{\gamma}
+\newcommand{\ka}{\kappa}
+\newcommand{\legeregel}{\par\vspace{1ex}\noindent}
+\newcommand{\isd}{\stackrel{d}{=}}
+\newcommand\Sgn{\mathop{\mathrm{Sgn}}\nolimits}
+\newcommand{\eps}{\varepsilon}
+\newcommand{\nphi}{\phi}
+\renewcommand{\phi}{\varphi}
+\newcommand{\asnaar}{\stackrel{\mathrm{a.s.}}{\longrightarrow}}
+\newcommand{\pto}{\stackrel{\mathrm{p}}{\longrightarrow}}
+\newcommand{\wto}{\rightsquigarrow}
+\newcommand{\asto}{\stackrel{\mathrm{a.s.}}{\longrightarrow}}
+\newcommand{\dto}{\stackrel{\mathrm{\scr{D}}}{\longrightarrow}}
+\renewcommand{\scr}[1]{{\mathcal #1}}
+\newcommand{\argmin}{\operatornamewithlimits{argmin}}
+\newcommand{\argmax}{\operatornamewithlimits{argmax}}
+\newcommand{\EE}{\mathbb{E}}
+\newcommand{\FF}{\mathbb{F}}
+\newcommand{\GG}{\mathbb{G}}
+\newcommand{\PP}{\mathbb{P}}
+\newcommand{\ind}{\mathbf{1}}
+\newcommand{\RR}{\mathbb{R}}
+\newcommand{\ZZ}{\mathbb{Z}}
+\newcommand{\QQ}{\mathbb{Q}}
+\newcommand{\CC}{\text{I\!\!\!C}}  
+\newcommand{\NN}{\text{I\!N}}
+\renewcommand{\vec}[1]{\underline{ #1}}
+\newcommand{\ra}{\rightarrow}
+\newcommand{\ua}{\uparrow}
+\newcommand{\da}{\downarrow}
+\renewcommand{\Pr}{\mathrm{Pr}}
+\newcommand{\M}{\scr{M}}
+\newcommand{\D}{\scr{D}}
+\newcommand{\mb}[1]{\mathbf{ #1}}
+\newcommand{\ft}[1]{\frametitle{#1}}
+\newcommand{\Bm}{\begin{bmatrix}}
+\newcommand{\Em}{\end{bmatrix}}
+\newcommand{\bs}[1]{{\boldsymbol #1}}
+\newcommand{\T}{{\prime}}
+
+\DeclareMathOperator{\tr}{tr}
+% -----------------------------------------------------------------------
+% My definitions for theorems etc.
+\theoremstyle{definition}
+\newtheorem{thm}{Theorem}
+\newtheorem{prop}[thm]{Proposition}
+\newtheorem{lem}[thm]{Lemma}
+\newtheorem{cor}[thm]{Corollary}
+\newtheorem{rem}[thm]{Remark}
+\newtheorem{ex}[thm]{Example}
+\newtheorem{defn}[thm]{Definition}
+\newtheorem{ass}[thm]{Assumption}
+\newtheorem{exer}{Exercise}
+% -----------------------------------------------------------------------
+\newcommand{\pr}{\ensuremath{{\rm P}}}
+\newcommand{\prob}[1]{\ensuremath{{\rm P}\!\left( #1 \right)}}
+\newcommand{\prc}[2]{\ensuremath{{\rm P}( #1 \, |\, #2)}}
+\newcommand{\expec}[1]{\ensuremath{{\rm E}\mspace{-1mu}\left[#1\right]}}
+\newcommand{\var}[1]{\ensuremath{{\rm Var}\!\left( #1 \right)}}
+\newcommand{\cov}[2]{\ensuremath{{\rm Cov}\!\left( #1 , #2 \right)}}
+\newcommand{\corr}[2]{\ensuremath{{\rho}\mspace{-1mu}\left( #1 , #2 \right)}}
+\newcommand{\mean}[1]{\ensuremath{\bar{#1}}}
+
+\newcommand{\simind}{\stackrel{\rm ind}{\sim}}
+\newcommand{\simiid}{\stackrel{\rm iid}{\sim}}
+\newcommand{\pa}{\mathrm{pa}}
+\newcommand{\KL}[2]{\mathrm{KL}\left(#1 \| #2\right)}
+
+% Paper-specific definitions for TeX shortcuts
+\def \ptil {\tilde{p}}
+\def \pcirc {p^\circ}
+\def \pstar {p^\star}
+\def \Var {\text{Var}}
+\def \R {\mathbb{R}}
+\def \E {\mathbb{E}}
+\def \Ncal {\mathcal{N}}
+
+% g functions
+\newcommand{\gfun}[3]{g_{#2}\left(#1_{#3}\right)}
+\newcommand{\gfunx}[2]{g_{#1}\left(x_{#2}\right)}
+% r functions
+\newcommand{\rfun}[3]{r_{#2}\left(#1_{#3}\right)}
+\newcommand{\rfunx}[2]{r_{#1}\left(x_{#2}\right)}
+% U functions (nothing and *)
+\newcommand{\Ufun}[3]{U\left(c_{#1}^{#2}, F_{#1}^{#2}, H_{#1}^{#2}\right)(#3)}
+\newcommand{\Ufunx}[2]{U\left(c_{#1}^{#2}, F_{#1}^{#2}, H_{#1}^{#2}\right)(x)}
+% U functions (bar)
+\newcommand{\Ubar}[3]{U\left(\bar{c}_{#1}^{#2}, \bar{F}_{#1}^{#2}, \bar{H}_{#1}^{#2}\right)(#3)}
+\newcommand{\Ubarx}[2]{U\left(\bar{c}_{#1}^{#2}, \bar{F}_{#1}^{#2}, \bar{H}_{#1}^{#2}\right)(x)}
+% Kernels
+\newcommand{\pullback}[2]{\left(\kappa_{#1, #2}, g_{#2}\right)(x)}
+\newcommand{\pullbacktil}[2]{\left(\tilde{\kappa}_{#1, #2}, g_{#2}\right)(x)}
+
+
+%% add notes via
+\newcommand{\note}[1]{{\color{Violet} #1}}
+
+%---------------------------------------------------------------------------------------
+\title{On the design of BFFG}
+\author{Camilla \& Frank (VU Amsterdam)}
+\date{\today}
+
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%5
+\begin{document}
+ \maketitle\tableofcontents
+
+\begin{abstract}
+Backward Filtering Forward Guiding is an algorithm for obtaining (weighted) samples of a partially observed stochastic process on a directed acyclic graph. For simplicity, we assume the state-space setting. The backward filtering step yields a sequence of {\it likelihood potentials} $\{g_i\}$ which are used in forward stochastic simulation of a {\it guided process} that is informed by these potentials. In this paper we investigate how properties of $\{g_i\}$ affect the efficiency of stochastic simulation of the guided process. 
+\end{abstract}
+
+\section{Introduction}
+
+We consider a latent discrete-time Markov process $(x_1,\ldots, x_n)$. The edge from $0$ to $1$ fixes a prior on the initial state $x_1$.  At times $i=1,\ldots, n$ we assume an observation $v_i \mid x_i$ is generated from a distribution with density $k(x_i, v_i)$. We aim to sample from $x_{1:n} \mid v_{1:n}$. Let $h_i(x_i)$ be the density of $v_{i:n} \mid x_i$. The Markov process that is conditioned on $v_{1:n}$ is a Markov process with transition densities
+\[ p^\star(x_i\mid x_{i-1})=  \frac{p(x_i\mid x_{i-1}) h_i(x_i)}{\int p(x_i\mid x_{i-1}) h_i(x_i)\dd x_i}.\]
+ As the sequence of functions $\{h_i\}$ is often not available in closed form, we replace it with a sequence of {\it guiding} functions $\{g_i\}$. The resulting {\it guided} process has transition densities
+\[ p^\circ(x_i\mid x_{i-1})=  \frac{p(x_i\mid x_{i-1}) g_i(x_i)}{\int p(x_i\mid x_{i-1}) g_i(x_i)\dd x_i}\]
+
+
+The smoothing density is given by 
+\begin{align*}
+	p^\star(x_{0:n}) & = \prod_{i=0}^n p^\star(x_i\mid x_{i-1})= \prod_{i=0}^n \frac{p(x_i\mid x_{i-1}) h_i(x_i)}{\int p(x_i\mid x_{i-1}) h_i(x_i)\dd x_i}\\ &= \frac1{h_0(x_0)}\left[ \prod_{i=1}^n k(x_i, v_i)\right] \prod_{i=0}^n p(x_i \mid x_{i-1}), 
+\end{align*} 
+where $p(x_0 \mid x_{-1})\equiv p(x_0)$. The final equality is shown in Theorem 6 in \cite{bffg}. 
+Under the guided process, we have 
+\[ p^\circ(x_{0:n})= \prod_{i=0}^n p^\circ(x_i\mid x_{i-1}) = \prod_{i=0}^n \frac{p(x_i\mid x_{i-1}) g_i(x_i)}{\int p(x_i\mid x_{i-1}) g_i(x_i)\dd x_i}, \]
+Therefore
+\[ \frac{p^\star(x_{0:n})}{ p^\circ(x_{0:n})}=\frac1{h_0(x_0)} \Psi(x_{0:n}), \] where  \[ \Psi(x_{0:n})=\left[\prod_{i=1}^n k(x_i, v_i)\right]
+ \prod_{i=0}^n \frac{\int p(x_i\mid x_{i-1}) g_i(x_i)\dd x_i}{g_i(x_i)}. \]
+In particular, the likelihood is given by 
+\begin{equation}\label{eq:likelihood}
+	h_0(x_0) = \EE^\circ  \Psi(x_{0:n}). 
+\end{equation} 
+
+\subsection{Research questions / goals}
+\begin{enumerate}
+	\item Bound $\KL{\PP^\star}{\PP^\circ}$ by a discrepancy measure between $\{g_i\}$ and $\{h_i\}$. The behaviour of this KL-divergence characterises the quality of $\PP^\circ$ as importance sampling distribution to sample from $\PP^\star$ (Cf.\ \cite{chatterjee2018sample}).  
+	\item The right-hand-side of \eqref{eq:likelihood} can be approximated by Monte-Carlo simulation from samples of the guided process.  Under which conditions is this estimator of finite variance? If we have a candidate $\{g_i\}$  which is not guaranteed to have this property, can we fix this by transforming each $g_i$?
+	\item As we can view the guided process as a proposal in a guided Feynman-Kac model, can we use general results from particle filtering to study the quality of the guided process?
+\end{enumerate}
+
+
+\section{Formulation as guided Feynman-Kac model} 
+In the notation of Chapter 5 in \cite{smcbook}, we have a guided Feynman-Kac model with 
+\begin{align*}
+\mathbb{M}_0(\dd x_0)&= p^\circ(x_0) \dd x_0 \\
+ M_t(x_{t-1}, \dd x_t) &= p^\circ(x_t \mid x_{t-1}) \dd x_t \\
+ f_t(v_t \mid x_t) &= k(x_t, v_t) \\
+ G_t(x_{t-1}, x_t) &= \frac{k(x_t, v_t) p(x_t \mid x_{t-1})}{p^\circ(x_t\mid x_{t-1})}=k(x_t, v_t) \frac{\int p(x_t\mid x_{t-1}) g_t(x_t) \dd x_t}{g_t(x_t)}. 
+\end{align*}
+In a generic particle filtering algorithm, Cf.\ Algorithm 10.1 in \cite{smcbook}, the unnormalised weight is given by 
+\[ w_t^n = G_t(X_{t-1}^{A_n}, X_t^n). \]
+For particle filtering, by Proposition 11.3 in \cite{smcbook}, if the potentials $G_t$ are all upper bounded, then there exist constants $c_t'$ such that 
+\[ \EE \left[ \frac1{N} \sum_{n=1}^N W_t^n \phi(X_t^n) - \mathbb{Q}_t(\phi)\right)^2 \le c'_t \frac{\|\phi\|^2_\infty}{N}, \]
+where $W_t^n = w_t^n/\sum_{m=1}^N w_t^m$. 
+
+The numerator of the expression for $G_t(x_{t-1},x_t)$ is bounded provided $k$ and $g_t$ are, which is a reasonable assumption in applications. However, the denominator, $g_t(x_t)$, is typically not bounded away from zero. For that reason, we think of {\it transforming} the maps $\{g_t\}$ to ensure this. For example via
+\begin{itemize}
+	\item[(A)] mapping $g_t(x)$ to $g_t(x)+\epsilon_t$;
+	\item[(B)] mapping $g_t(x)$ to $\sqrt{g_t(x)^2+\epsilon_t}$,
+\end{itemize}
+where $\{\eps_t\}$ is a sequence of strictly positive numbers bounded away from zero. 
+While such transformations on $g_t$ are simple, for BFFG to be efficient, at the same time we need that
+\begin{enumerate}
+	\item sampling under $p^\circ$ is simple;
+	\item evaluation of $\int p(x_t\mid x_{t-1}) g_t(x_t) \dd x_t$ is simple. \note{I think a positive unbiased estimator would suffice.}
+\end{enumerate}
+Option (A) ensures (1) as
+\begin{align*}
+	 p^\circ(x_t \mid x_{t-1}) &=\frac{p(x_t \mid x_{t-1})(g_t(x_t)+\epsilon_t)}{\int p(x_t \mid x_{t-1})(g_t(x_t)+\epsilon_t) \dd x_t}\\& = \lambda_t(x_{t-1})\frac{p(x_t\mid x_{t-1}) g_t(x_t)}{\int p(x_t\mid x_{t-1}) g_t(x_t) \dd x_t}  + (1-\lambda_t(x_{t-1})) p(x_t\mid x_{t-1}), 
+\end{align*}
+where 
+\[\lambda_t(x_{t-1})= \frac{\int p(x_t\mid x_{t-1}) g_t(x_t) \dd x_t}{\int p(x_t\mid x_{t-1}) g_t(x_t) \dd x_t+\epsilon_t}.\]
+Hence, the guided process is a mixture distribution of the original guided process and the unconditional process.  \note{use rejection sampling for option (B)?}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
+
+\section{KL-bounds}
+
+Let  $\mathbb{P}_T^*$ and $\mathbb{P}_T^\circ$ denote the laws of  $X_{0:T}^*$ and  $X_{0:T}^\circ$ respectively. 
+According to results in \cite{chatterjee2018sample}, the quality of an importance sampling distribution, which is $\PP^\circ_T$ here, is dictated by $\text{KL}(\mathbb{P}_T^*, \mathbb{P}_T^\circ)$ given by
+\[
+ \KL{\mathbb{P}_T^*}{\mathbb{P}_T^\circ)} = \int p^*(x_{0:T}) \log \left(\frac{\pstar(x_{0:T})}{\pcirc(x_{0:T})}\right) dx_{0:T} \, .
+\]
+We would like to bound this by a discrepancy measure between $\{h_i\}$ and $\{g_i\}$. \footnote{We should keep in mind that the effect of $h_i$ or $g_i$ is invariant under multiplying with a positive constant.} The following lemma is adapted from Proposition 3.1 in \cite{ju2021sequential}. 
+\begin{lem} Define $\xi_t(x)=\log h_t(x)-\log g_t(x)$. Then 
+\begin{align*}
+	\log \left(\frac{\pstar(x_{0:T})}{\pcirc(x_{0:T})}\right)&\le  \sum_{t = 0}^T \xi_t(x_t)  -  
+\sum_{t = 0}^T\int \pcirc(x_t \mid x_{t - 1}) \xi_t(x_t) dx_t 
+\end{align*}
+	\end{lem}
+\begin{proof}
+We have 
+\begin{align}\label{logratiosums}
+\log \left(\frac{\pstar(x_{0:T})}{\pcirc(x_{0:T})}\right) &= \log \left(\prod_{t = 0}^T \frac{\pstar(x_t \mid x_{t-1})}{\pcirc(x_t \mid x_{t-1})}\right) = \log \left(\prod_{t = 0}^T \frac{h_t(x_t)}{g_t(x_t)} \frac{\int p(x_t \mid x_{t - 1}) g_t(x_t) dx_t}{\int p(x_t \mid x_{t - 1}) h_t(x_t) dx_t}\right) \notag\\
+&= \sum_{t = 0}^T \log\left(\frac{h_t(x_t)}{g_t(x_t)} \right) + \sum_{t = 0}^T \log\left( \frac{\int p(x_t \mid x_{t - 1}) g_t(x_t) dx_t}{\int p(x_t \mid x_{t - 1}) h_t(x_t) dx_t}\right) \, \notag
+%&= \sum_{t = 0}^T \log\left(\frac{h_t(x_t)}{g_t(x_t)} \right) + 
+%\log\left( \frac{\int p(x_0) g_0(x_0) dx_0}{\int p(x_0) h_0(x_0) dx_0}\right) +
+%\sum_{t = 1}^T \log\left( \frac{\int p(x_t \mid x_{t - 1}) g_t(x_t) dx_t}{\int p(x_t \mid x_{t - 1}) h_t(x_t) dx_t}\right),
+\end{align}
+using the convention $\pstar(x_0 \mid x_{-1}) = p(x_0)$ (and analogously for $\pcirc$).
+Therefore, each  summand in the second summation of satisfies:
+\begin{align*}
+\log & \left(\frac{\int p(x_t \mid x_{t - 1}) g_t(x_t) dx_t}{\int p(x_t \mid x_{t - 1}) h_t(x_t) dx_t}\right) = \frac{\int p(x_t \mid x_{t - 1}) g_t(x_t) dx_t}{\int p(x_t \mid x_{t - 1}) g_t(x_t) dx_t} \cdot \log\left( \frac{\int p(x_t \mid x_{t - 1}) g_t(x_t) dx_t}{\int p(x_t \mid x_{t - 1}) h_t(x_t) dx_t}\right) \\ &\leq \frac{1}{\int p(x_t \mid x_{t - 1}) g_t(x_t) dx_t} 
+\int p(x_t \mid x_{t - 1}) g_t(x_t) \log\left( \frac{p(x_t \mid x_{t - 1}) g_t(x_t)}{p(x_t \mid x_{t - 1}) h_t(x_t)}\right) dx_t \\
+&=  
+\int \frac{p(x_t \mid x_{t - 1}) g_t(x_t)}{\int p(x_t \mid x_{t - 1}) g_t(x_t) dx_t} \log\left( \frac{g_t(x_t)}{ h_t(x_t)}\right) dx_t \\&= \int \pcirc(x_t \mid x_{t - 1}) \log\left( \frac{g_t(x_t)}{ h_t(x_t)}\right) dx_t \, ,
+\end{align*}
+where the inequality follows from the logsum-inequality given in Lemma \ref{lem:logsumineq}. 
+\end{proof}
+
+
+\begin{cor}
+	If $c_t \le \xi_t(x) \le C_t$, then 
+	\[ \text{KL}(\mathbb{P}_T^*, \mathbb{P}_T^\circ) \le \sum_{t=0}^T (C_t-c_t). \]
+\end{cor}
+The condition in this corollary is admittedly very strong. 
+
+\begin{rem}
+We have
+\[ \KL{\mathbb{P}_T^*}{\mathbb{P}_T^\circ)} \le \sum_{t = 0}^T \EE^\star \xi_t(x_t)  -  
+\sum_{t = 0}^T\int \int  \pcirc(x_t \mid x_{t - 1}) \xi_t(x_t) \dd x_t p^\star(x_{t-1}) d x_{t-1}, \] $p^\star(x_{t-1})$ denoting the marginal density of $x_{t-1}$ under $\PP^\star_T$.
+The integral in the second term an be written as
+\[ -	\int \int \frac{p^\star(x_{t-1})}{p^\circ(x_{t-1})} p^\circ(x_{t-1}, x_t) \xi_t(x_t) \dd x_t \dd x_{t-1}. \]
+{\it If} $\xi_t(x)\le 0$, then this can be further bounded above by 
+\[ \sup_{x_{t-1}}\frac{p^\star(x_{t-1})}{p^\circ(x_{t-1})} \int p^\circ(x_t) (-\xi(x_t)) \dd x_t. \]
+It is unclear whether $\xi_t(x)\le 0$ is valid,  though it  appears to be used in the bound in Equation (79) in \cite{ju2021sequential}. 
+\end{rem}
+
+
+In specific cases where $\PP^\star_T$ is tractable, we may obtain sharper bounds.
+\begin{ex}
+	Gaussian case...
+\end{ex}
+
+
+
+\section{A toy example: Stochastic Volatility Model}
+Consider a state-space model where the observations are given by the random sequence
+\begin{equation}\label{r_obs}
+    R_i = \exp\left(\frac{X_i}{2}\right) U_i, \quad 1 \leq i \leq n,
+\end{equation}
+and the latent states by
+\begin{equation}\label{latent}
+    X_i = \omega + \psi X_{i - 1} + \eta W_i, \quad 1 \leq i \leq n,
+\end{equation}
+where $(U_i)_{i = 1}^n$, $(W_i)_{i = 1}^n$ are independent random sequences of i.i.d.\ standard normal variates and $X$ has initial distribution $X_0 \sim \Ncal\left(\frac{\omega}{1 - \psi}, \frac{\eta^2}{1 - \psi^2}\right)$. We impose the parameter constraints $\omega \in \R$, $-1 < \psi < 1$ and $\eta > 0$.
+
+
+We consider the following transformed version of the observation equation \eqref{r_obs}
+\begin{equation}\label{v_obs}
+    V_i \coloneqq \log\left(R_i^2\right) = X_i + U'_i, \quad 1 \leq i \leq n,
+\end{equation}
+where $U'_i \coloneqq \log\left(U_i^2\right)$, $i = 1, \dots, n$.
+
+\subsection{Backward Filtering}
+The proposed model is simple in the sense that the latent process is linear Gaussian. 
+If the distribution of $U_i'$ would be Gaussian, the backward information filter provides a recursion that allows exact computation of $\{h_i\}$. This is unfortunately not the case, though can  obtain guiding functions  $\{g_i\}$ by backward filtering under the assumption
+\begin{equation}\label{approx_cond_obs}
+    V_i \mid X_i\sim \Ncal\left(\mu + X_i, \sigma^2\right)
+\end{equation}
+ with $\mu \coloneqq \E\left(U'_i\right) \approx -1.27$ and $\sigma^2 \coloneqq \Var\left(U'_i\right) = \nicefrac{\pi^2}{2}$.
+In that case, the derivations are simple. It turns out to be useful to introduce the notation
+\begin{equation}\label{Ufun}
+    \Ufunx{}{} = \exp\left(c + Fx - \frac{1}{2}Hx^2\right).
+\end{equation}
+It turns out that \eqref{approx_cond_obs} implies any $g_i$ can expressed in this form for a triplet $(c_i, F_i, H_i)$. 
+
+\begin{itemize}
+	\item {\it Leaf Messages} From Theorem 6.1 (ii) in \cite{bffg}, if $v_n$ is observed at a leaf, then $\gfunx{n}{} = \Ufunx{n}{}$ with $c_n = \log\left(\varphi(v_n; \mu, \sigma^2)\right)$, $F_n = (v_n - \mu) \sigma^{-2}$ and $H_n = \sigma^{-2}$.
+	\item {\it Pullback Kernels} By statement (iii) of the same theorem, we have for the pullback $\pullbacktil{n - 1}{n} = \Ubarx{n}{}$ with 
+ \begin{align*}
+	 \bar{H}_n &= \psi^2 / C_n \\ \bar{F}_n &= \psi (F_n/H_n - \omega) C_n^{-1} \\ \bar{c}_n &= c_n - \log\left(\varphi^{\text{can}}(0; F_n, H_n)\right) + \log\left(\varphi(\omega; F_n/H_n, C_n)\right),
+	\end{align*}
+	where $	C_n = \eta^2 + H_n^{-1}$.
+\end{itemize}
+
+
+Here 
+\[ k(x,v)= \exp\left(v-x\right) f_{\chi^2(1)}(\exp(v-x)). \]
+This is bounded since for $u>0$, the density of $u f_{\chi^2(1)}(u)$ behaves like 
+$u u^{-1/2} e^{-u/2}$ which is bounded.
+%\subsubsection*{Parametrization of $g$ functions} At time index $n$, we have
+%\begin{equation}\label{gn}
+%    \gfunx{n}{n} = \Ufunx{n}{\star},
+%\end{equation}
+%where $c_n^\star = c_n = \log\left(\varphi(v_n; \mu, \sigma^2)\right)$, $F_n^\star = F_n = (v_n - \mu) \sigma^{-2}$ and $H_n^\star = H_n = \sigma^{-2}$.
+%
+%For $i = 2, \dots, n$, we have the recursion
+%\begin{equation}\label{grec}
+%    \gfunx{i - 1}{i - 1} = \Ufunx{i - 1}{\star},
+%\end{equation}
+%where $c_{i - 1}^\star = c_{i - 1} + \bar{c}_n$, $F_{i - 1}^\star = F_{i - 1} + \bar{F}_n$ and $H_{i - 1}^\star = H_{i - 1} + \bar{H}_n$.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%5
+\appendix
+\section{Some results}
+
+\begin{lem}\label{lem:logsumineq}
+Writing $a = \int a(x) dx$ and $b = \int b(x) dx$, the integral analogue of the log-sum inequality is
+\[
+ a \log\left(\frac{a}{b}\right) \leq \int a(x) \log \left(\frac{a(x)}{b(x)}\right) dx  \, ,
+\]
+	\end{lem}
+Ssee e.g. its use in \cite{csiszar2004information}, Lemma 7.4.
+
+
+
+\section{Feynman-Kac models}
+\subsection{Classical Feynman-Kac models (on chains)}
+
+In the classical setting, a Feynman-Kac model describes a sequence of random variables \((X_0, X_1, \dots, X_n)\) evolving according to:
+
+\begin{itemize}
+  \item Markov transitions: \(X_{k+1} \sim M_k(X_k, \cdot)\)
+  \item Potential functions: \(G_k(x_{k-1},x_k)\)
+\end{itemize}
+
+The associated Feynman-Kac measure on paths is defined as:
+\[
+\mathbb{Q}_n(dx_{0:n}) = \frac{1}{Z_n} \left[ \prod_{k=0}^n G_k(x_{k-1},x_k) \right] \mathbb{M}(dx_{0:n})
+\]
+where \(\mathbb{M}(dx_{0:n})\) is the law of the Markov chain, and \(Z_n\) is the normalizing constant.
+
+\subsection*{Feynman-Kac models on directed trees}
+
+In a directed tree, the process evolves on a rooted tree \(T\), where:
+
+\begin{itemize}
+  \item Each node \(t \in V(T)\) corresponds to a random variable \(X_t\)
+  \item Each node \(t\) (except the root) has a parent \(\pa(t)\), and a transition kernel \(M_t(x_{\pa(t)}, \cdot)\)
+  \item Each node has a potential function \(G_t(x_{\pa(t)}, x_t)\)
+\end{itemize}
+
+The root \(r\) has an initial distribution: \(X_r \sim \mu_r\)
+
+\subsection*{Definition}
+
+The Feynman-Kac measure \(\mathbb{Q}_T\) on the state space \(\{X_t \colon t \in T\}\) is given by:
+\[
+\mathbb{Q}_T(\dd\mathbf{x}) = \frac{1}{Z_T} \left[ \prod_{t \in T} G_t(x_{\pa(t)}, x_t) \right] \mathbb{M}_T(\dd\mathbf{x})
+\]
+where \(\mathbb{M}_T\) is the law of the Markov process over the tree:
+\[
+\mathbb{M}_T(d\mathbf{x}) = \mu_r(\dd x_r) \prod_{t \neq r} M_t(x_{\pa(t)}, \dd x_t)
+\]
+and \(Z_T\) is the normalizing constant (partition function):
+\[
+Z_T = \int \left[ \prod_{t \in T} G_t(x_{\pa(t)}, x_t) \right] \mathbb{M}_T(\dd\mathbf{x})
+\]
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\bibliographystyle{alpha}
+\bibliography{literature.bib}
+
+\end{document}

@@ -71,20 +71,21 @@ end
 g(x, m::Message) = exp(m.c + m.F * x - 0.5*x*m.H*x)
 log_g(x, m::Message) = m.c + m.F * x - 0.5*x*m.H*x
 
-normalize(m::Message) = Message(logpdf(NormalCanon(m.F, m.H),0), m.F, m.H) 
+#normalize(m::Message) = Message(logpdf(NormalCanon(m.F, m.H),0), m.F, m.H) 
+normalize(m::Message) = Message(-0.5*m.F^2 / m.H, m.F, m.H) # this ensures $g_i(x)≤ 1$ for all $x$ and $i$.
 
 logpdf_logχ2(x) = x + logpdf(Chisq(1), exp(x))   
   
 function logweights(x0, Xᵒ, V, p, bf, ϵ) # double checked, this one is correct 
     m = bf[1]
     pullback_m = pullback(m, p; add_normalization=false)
-    ϵᵢ = ϵ * exp(m.c)
+    ϵᵢ = ϵ #* exp(m.c)
     W = [log( g(x0,pullback_m) + ϵᵢ) - log( g(Xᵒ[1], m) + ϵᵢ) +
          logpdf_logχ2(V[1]-Xᵒ[1])]
     S = length(V)
     for i ∈ 2:S
         m = bf[i]
-        ϵᵢ = ϵ * exp(m.c)
+        ϵᵢ = ϵ #* exp(m.c)
         pullback_m = pullback(m, p; add_normalization=false)
         w = log(g(Xᵒ[i-1],pullback_m) + ϵᵢ) - log( g(Xᵒ[i], m)+ ϵᵢ) +
              logpdf_logχ2(V[i]-Xᵒ[i])
@@ -142,6 +143,7 @@ end
 
 function forwardguide2(x0, bf, p, Z, V, ϵ, U) # sample from either guided or forward
     #@assert ϵ>0 "ϵ should be strictly positive"
+    
     S = length(bf)
     @assert S==length(Z) "length of innovations should equal S"
     x = x0
@@ -153,7 +155,7 @@ function forwardguide2(x0, bf, p, Z, V, ϵ, U) # sample from either guided or fo
     # Sampling from guided or unconditional?
         m =bf[i]
         pullback_m = pullback(bf[i],p; add_normalization=false)
-        ϵᵢ = ϵ * exp(m.c)
+        ϵᵢ = ϵ #* exp(m.c)
         ξ = g(x,pullback_m)
         λ = ξ/(ξ + ϵᵢ) # prob to sample from guided
         guid = U[i] < λ  
@@ -203,12 +205,14 @@ function mcmc(x0, bf, p, V, ϵ, U; ρ_pcn = 0.9, iter=25000, seed=12)
 
     for _ in 1:iter
         Zᵒ = pcn(Z, ρ_pcn)
-        fgᵒ = forwardguide2(x0, bf, p, Zᵒ, V, ϵ, U)
+        #Uᵒ = rand(S)  # test
+        fgᵒ = forwardguide2(x0, bf, p, Zᵒ, V, ϵ, U) # test Uᵒ rather than U
         #llᵒ = sum(fgᵒ.lw)
         sumllᵒ = sum(fgᵒ.ll)
         if log(rand()) < sumllᵒ - sumll
             sumll = sumllᵒ
             Z .= Zᵒ
+#            U .= Uᵒ # test
             
             X .= fgᵒ.Xᵒ
             acc += 1
