@@ -244,16 +244,35 @@ where the inequality follows from the logsum-inequality given in Lemma \ref{lem:
 \end{cor}
 The condition in this corollary is admittedly very strong. 
 
-\begin{rem}
+\begin{cor}
 We have
+\[ \KL{\mathbb{P}_T^*}{\mathbb{P}_T^\circ)} \le  \sum_{t = 0}^T \left(\EE^\star \xi_t(X_t)-\sup_{x_{t-1}}\frac{p^\star(x_{t-1})}{p^\circ(x_{t-1})}  \EE^\circ \left[\min(\xi_t(X_t),0) \right]  \right), 
+\]
+where $p^\star(x_{t-1})$ and $p^\circ(x_{t-1})$ denote the marginal densities of $x_{t-1}$ under $\PP^\star_T$ and $\PP^\circ_T$ respectively.
+\end{cor}
+\begin{proof}
+	We have
 \[ \KL{\mathbb{P}_T^*}{\mathbb{P}_T^\circ)} \le \sum_{t = 0}^T \EE^\star \xi_t(x_t)  -  
-\sum_{t = 0}^T\int \int  \pcirc(x_t \mid x_{t - 1}) \xi_t(x_t) \dd x_t p^\star(x_{t-1}) d x_{t-1}, \] $p^\star(x_{t-1})$ denoting the marginal density of $x_{t-1}$ under $\PP^\star_T$.
-The integral in the second term an be written as
-\[ -	\int \int \frac{p^\star(x_{t-1})}{p^\circ(x_{t-1})} p^\circ(x_{t-1}, x_t) \xi_t(x_t) \dd x_t \dd x_{t-1}. \]
-{\it If} $\xi_t(x)\le 0$, then this can be further bounded above by 
-\[ \sup_{x_{t-1}}\frac{p^\star(x_{t-1})}{p^\circ(x_{t-1})} \int p^\circ(x_t) (-\xi(x_t)) \dd x_t. \]
-It is unclear whether $\xi_t(x)\le 0$ is valid,  though it  appears to be used in the bound in Equation (79) in \cite{ju2021sequential}. 
-\end{rem}
+\sum_{t = 0}^T\int \int  \pcirc(x_t \mid x_{t - 1}) \xi_t(x_t) \dd x_t p^\star(x_{t-1}) d x_{t-1}. \] 
+The integral in the second term an be written as (divide and multiply by $p^\circ(x_{t-1})$ in the integral)
+\[ C:=-	\int \int \frac{p^\star(x_{t-1})}{p^\circ(x_{t-1})} p^\circ(x_{t-1}, x_t) \xi_t(x_t) \dd x_t \dd x_{t-1}. \]
+
+
+Let 
+\[ A=\{x_t \colon \xi_t(x_t)\ge 0\}.\]
+We have
+\[ C \le \int_{x_{t-1}} \int_{x_t \in A^c} p^\circ(x_{t-1}, x_t) (-\xi_t(x_t)) \dd x_t \frac{p^\star(x_{t-1})}{p^\circ(x_{t-1})} \dd x_{t-1} \]
+as the integral will be negative when $x_t \in A$. 
+Using Fubini, This leads to
+\begin{align*}
+	C &\le \sup_{x_{t-1}}\frac{p^\star(x_{t-1})}{p^\circ(x_{t-1})} \int_{x_t \in A^c} p^\circ(x_t)  (-\xi_t(x_t)) \dd x_t\\ &=\sup_{x_{t-1}}\frac{p^\star(x_{t-1})}{p^\circ(x_{t-1})} \EE^\circ \left[-\xi_t(X_t) \ind_{\{-\xi_t(X_t)>0\}}\right]\\
+	&= -\sup_{x_{t-1}}\frac{p^\star(x_{t-1})}{p^\circ(x_{t-1})}  \EE^\circ \left[\min(\xi_t(X_t),0) \right] . 
+\end{align*} 
+
+\note{In \cite{ju2021sequential} it seems that $A=\emptyset$ is assumed. In that case, the term $\EE^\circ \min(\xi_t(X_t),0)$ can be replaced by $\EE^\circ \xi_t(X_t)$. }
+
+\end{proof}
+
 
 
 In specific cases where $\PP^\star_T$ is tractable, we may obtain sharper bounds.
