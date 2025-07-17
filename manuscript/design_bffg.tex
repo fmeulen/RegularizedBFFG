@@ -117,7 +117,7 @@
 
 
 %% add notes via
-\newcommand{\note}[1]{{\color{Violet} #1}}
+\newcommand{\note}[1]{{\color{Red} #1}}
 
 %---------------------------------------------------------------------------------------
 \title{On the design of BFFG}
@@ -152,12 +152,19 @@ where $p(x_0 \mid x_{-1})\equiv p(x_0)$. The final equality is shown in Theorem 
 Under the guided process, we have 
 \[ p^\circ(x_{0:n})= \prod_{i=0}^n p^\circ(x_i\mid x_{i-1}) = \prod_{i=0}^n \frac{p(x_i\mid x_{i-1}) g_i(x_i)}{\int p(x_i\mid x_{i-1}) g_i(x_i)\dd x_i}, \]
 Therefore
-\[ \frac{p^\star(x_{0:n})}{ p^\circ(x_{0:n})}=\frac1{h_0(x_0)} \Psi(x_{0:n}), \] where  \[ \Psi(x_{0:n})=\left[\prod_{i=1}^n k(x_i, v_i)\right]
+\begin{equation}\label{eq:lr}
+	 \frac{p^\star(x_{0:n})}{ p^\circ(x_{0:n})}=\frac1{h_0(x_0)} \Psi(x_{0:n}), 
+	\end{equation}
+	 where  \[ \Psi(x_{0:n})=\left[\prod_{i=1}^n k(x_i, v_i)\right]
  \prod_{i=0}^n \frac{\int p(x_i\mid x_{i-1}) g_i(x_i)\dd x_i}{g_i(x_i)}. \]
+
+
 In particular, the likelihood is given by 
 \begin{equation}\label{eq:likelihood}
 	h_0(x_0) = \EE^\circ  \Psi(x_{0:n}). 
 \end{equation} 
+
+
 
 \subsection{Research questions / goals}
 \begin{enumerate}
@@ -246,8 +253,9 @@ The condition in this corollary is admittedly very strong.
 
 \begin{cor}
 We have
-\[ \KL{\mathbb{P}_T^*}{\mathbb{P}_T^\circ)} \le  \sum_{t = 0}^T \left(\EE^\star \xi_t(X_t)-\sup_{x_{t-1}}\frac{p^\star(x_{t-1})}{p^\circ(x_{t-1})}  \EE^\circ \left[\min(\xi_t(X_t),0) \right]  \right), 
-\]
+\begin{equation}\label{eq:klbound}
+	\KL{\mathbb{P}_T^*}{\mathbb{P}_T^\circ)} \le  \sum_{t = 0}^T \left(\EE^\star \xi_t(X_t)-\sup_{x_{t-1}}\frac{p^\star(x_{t-1})}{p^\circ(x_{t-1})}  \EE^\circ \left[\min(\xi_t(X_t),0) \right]  \right), 
+\end{equation} 
 where $p^\star(x_{t-1})$ and $p^\circ(x_{t-1})$ denote the marginal densities of $x_{t-1}$ under $\PP^\star_T$ and $\PP^\circ_T$ respectively.
 \end{cor}
 \begin{proof}
@@ -280,6 +288,20 @@ In specific cases where $\PP^\star_T$ is tractable, we may obtain sharper bounds
 	Gaussian case...
 \end{ex}
 
+
+\subsection{On the proof in appendix B2 in \cite{ju2021sequential}}
+
+This is about upper bounding $p^\star(x_t)/p^\circ(x_t)$. They argue that it suffices to bound $p^\star(x_{0:T})/p^\circ(x_{0:T})$. \note{Why does this suffice?} 
+By \eqref{eq:lr} this boils down to bounding each of the terms in $\Psi(x_{0:n})$. Their argument, translated to our notation, is that $h_t$ is bounded and then 
+$\int p(x_t \mid x_{t-1} h_t(x_t \dd x_t$ is bounded. Then, it suffices to lower bound $\int p(x_t \mid x_{t-1} g_t(x_t \dd x_t$. Their proof for this is specific to their setting.  
+
+\subsection{On the proof in appendix B3 in \cite{ju2021sequential}}
+This is about further bounding the bound in \eqref{eq:klbound}. In our notation, these bounds look like
+\begin{align*}
+	\EE^\star \log \xi_t(X_t) &\le \sum_{k=t}^{T-1} c^\star_{k+1} \sqrt{\EE^\star \phi^\star(X_t)^2} \sqrt{\EE^\star \Delta(X_t)} \\ -\EE^\circ \log \xi_t(X_t) &\le \sum_{k=t}^{T-1} c_{k+1} \sqrt{\EE^\circ\phi(X_t)^2} \sqrt{\EE^\circ \Delta(X_t)},
+\end{align*}
+where $\phi$, $\phi^\star$ and $\Delta$ are discrepancy measures of parameters in the true and approximate backward filters. 
+%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
 \section{A toy example: Stochastic Volatility Model}
