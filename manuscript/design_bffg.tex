@@ -244,6 +244,17 @@ Therefore, each  summand in the second summation of satisfies:
 where the inequality follows from the logsum-inequality given in Lemma \ref{lem:logsumineq}. 
 \end{proof}
 
+By Fubini's theorem applied to the second term we get\footnote{This is the first equation in the note by Jeremy Heng.}
+\begin{cor}
+If we define $p^{\star\circ}(x_0)=p^\circ(x_0)$ and for $t\ge 1$
+\[ p^{\star\circ}(x_t) = \int p^\star(x_{t-1}) p^\circ(x_t \mid x_{t-1}) 	\dd x_{t-1}, \]
+then
+\[	\text{KL}(\mathbb{P}_T^*, \mathbb{P}_T^\circ) \le \sum_{t=0}^T \left(\EE^\star \xi_t(X_t) - \EE^{\star\circ} \xi_t(X_t)\right)
+\]
+with $\EE^{\star\circ}$ denoting expectation under $p^{\star\circ}$. 
+\end{cor}
+Then Heng defines $e_t = - \EE^{\star\circ} \xi_t(X_t)$.... Claim $e_T=0$ is unclear to me. 
+
 
 \begin{cor}
 	If $c_t \le \xi_t(x) \le C_t$, then 
