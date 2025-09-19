@@ -1,0 +1,29 @@
+\begin{thebibliography}{VdMSS25}
+
+\bibitem[CD18]{chatterjee2018sample}
+Sourav Chatterjee and Persi Diaconis.
+\newblock The sample size required in importance sampling.
+\newblock {\em Annals of Applied Probability}, 28(2):1099--1135, 2018.
+
+\bibitem[CP20]{smcbook}
+Nicolas Chopin and Omiros Papaspiliopoulos.
+\newblock {\em An Introduction to Sequential Monte Carlo}.
+\newblock Springer Series in Statistics. Springer, Cham, 2020.
+
+\bibitem[CS04]{csiszar2004information}
+Imre Csisz{\'a}r and Paul~C Shields.
+\newblock {\em Information theory and statistics: A tutorial}.
+\newblock Now Publishers, Inc., 2004.
+
+\bibitem[JHJ21]{ju2021sequential}
+Nianqiao Ju, Jeremy Heng, and Pierre~E. Jacob.
+\newblock Sequential monte carlo algorithms for agent-based models of disease
+  transmission.
+\newblock {\em arXiv preprint arXiv:2101.12156}, 2021.
+
+\bibitem[VdMSS25]{bffg}
+Frank Van~der Meulen, Moritz Schauer, and Stefan Sommer.
+\newblock Backward filtering forward guiding.
+\newblock {\em arXiv preprint arXiv:???}, 2025.
+
+\end{thebibliography}

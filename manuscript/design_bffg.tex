@@ -218,7 +218,7 @@ According to results in \cite{chatterjee2018sample}, the quality of an importanc
  \KL{\mathbb{P}_T^*}{\mathbb{P}_T^\circ)} = \int p^*(x_{0:T}) \log \left(\frac{\pstar(x_{0:T})}{\pcirc(x_{0:T})}\right) dx_{0:T} \, .
 \]
 We would like to bound this by a discrepancy measure between $\{h_i\}$ and $\{g_i\}$. \footnote{We should keep in mind that the effect of $h_i$ or $g_i$ is invariant under multiplying with a positive constant.} The following lemma is adapted from Proposition 3.1 in \cite{ju2021sequential}. 
-\begin{lem} Define $\xi_t(x)=\log h_t(x)-\log g_t(x)$. Then 
+\begin{lem}\label{lem:kl} Define $\xi_t(x)=\log h_t(x)-\log g_t(x)$. Then 
 \begin{align*}
 	\log \left(\frac{\pstar(x_{0:T})}{\pcirc(x_{0:T})}\right)&\le  \sum_{t = 0}^T \xi_t(x_t)  -  
 \sum_{t = 0}^T\int \pcirc(x_t \mid x_{t - 1}) \xi_t(x_t) dx_t 
@@ -244,16 +244,8 @@ Therefore, each  summand in the second summation of satisfies:
 where the inequality follows from the logsum-inequality given in Lemma \ref{lem:logsumineq}. 
 \end{proof}
 
-By Fubini's theorem applied to the second term we get\footnote{This is the first equation in the note by Jeremy Heng.}
-\begin{cor}
-If we define $p^{\star\circ}(x_0)=p^\circ(x_0)$ and for $t\ge 1$
-\[ p^{\star\circ}(x_t) = \int p^\star(x_{t-1}) p^\circ(x_t \mid x_{t-1}) 	\dd x_{t-1}, \]
-then
-\[	\text{KL}(\mathbb{P}_T^*, \mathbb{P}_T^\circ) \le \sum_{t=0}^T \left(\EE^\star \xi_t(X_t) - \EE^{\star\circ} \xi_t(X_t)\right)
-\]
-with $\EE^{\star\circ}$ denoting expectation under $p^{\star\circ}$. 
-\end{cor}
-Then Heng defines $e_t = - \EE^{\star\circ} \xi_t(X_t)$.... Claim $e_T=0$ is unclear to me. 
+
+
 
 
 \begin{cor}
@@ -298,6 +290,51 @@ In specific cases where $\PP^\star_T$ is tractable, we may obtain sharper bounds
 \begin{ex}
 	Gaussian case...
 \end{ex}
+
+
+\section{Argument by Ju/Heng}
+We start from Lemma \ref{lem:kl}.
+
+By Fubini's theorem applied to the second term in Lemma \ref{lem:kl}, we get\footnote{This is the first equation in the note by Jeremy Heng.}
+\begin{cor}
+If we define $p^{\star\circ}(x_0)=p^\circ(x_0)$ and for $t\ge 1$
+\[ p^{\star\circ}(x_t) = \int p^\star(x_{t-1}) p^\circ(x_t \mid x_{t-1}) 	\dd x_{t-1}, \]
+then
+\[	\text{KL}(\mathbb{P}_T^*, \mathbb{P}_T^\circ) \le \sum_{t=0}^T \left(\EE^\star \xi_t(X_t) - \EE^{\star\circ} \xi_t(X_t)\right)
+\]
+with $\EE^{\star\circ}$ denoting expectation under $p^{\star\circ}$. 
+\end{cor}
+Then Heng defines $e_t = - \EE^{\star\circ} \xi_t(X_t)$. In his particular application apparently $g_T=h_T$ which implies   $e_T=0$.
+We can write
+\[ e_t = \EE^{\star\circ} \log \frac{g_t(X_t)}{h_t(X_t)} =\EE^{\star\circ} \log \frac{g_t(X_t)}{\tilde\psi_t(X_t)}+\EE^{\star\circ} \log \frac{\tilde\psi_t(X_t)}{h_t(X_t)}, \]
+where 
+\[ \tilde\psi(x_t) = p(y_t \mid x_t) \int p(x_{t+1}\mid x_t) g_{t+1}(x_{t+1}) \dd x_{t+1}. \]
+This is the BIF recursion, but with $p$ rather than $\tilde p$ in the pullback. 
+We have, using the logsum inequality
+\begin{align*}
+\log 	\frac{\tilde\psi_t(x_t)}{h_t(x_t)} &= \log \frac{\int p(x_{t+1}\mid x_t) g_{t+1}(x_{t+1}) \dd x_{t+1}}{\int p(x_{t+1}\mid x_t) h_{t+1}(x_{t+1}) \dd x_{t+1}}\\  & \le 
+\frac1{\int p(x_{t+1}\mid x_t) g_{t+1}(x_{t+1}) \dd x_{t+1}} {\int p(x_{t+1}\mid x_t) g_{t+1}(x_{t+1})
+\log \frac{g_{t+1}(x_{t+1})}{h_{t+1}(x_{t+1})}
+ \dd x_{t+1}}\\ & = \int p^\circ(x_{t+1}\mid x_t)  \log \frac{g_{t+1}(x_{t+1})}{h_{t+1}(x_{t+1})}\dd x_{t+1}
+\end{align*}
+This implies 
+\begin{align*}
+	\EE^{\star\circ} \log \frac{\tilde\psi(X_t)}{h_t(X_t)} & \le \int \int p^\circ(x_{t+1}\mid x_t)  \log \frac{g_{t+1}(x_{t+1})}{h_{t+1}(x_{t+1})} p^{\star\circ}(x_t) \dd x_{t+1}\dd x_t  \\ & \le 
+	M_t \int \int p^\circ(x_{t+1}\mid x_t)  \log \frac{g_{t+1}(x_{t+1})}{h_{t+1}(x_{t+1})} p^{\star}(x_t)\dd x_{t+1}  \dd x_t\\ &=
+	M_t \int p^{\star\circ}(x_{t+1})  \log \frac{g_{t+1}(x_{t+1})}{h_{t+1}(x_{t+1})} \dd x_{t+1}\\&= M_t e_{t+1},
+\end{align*}
+where 
+\[M_t = \sup_{x_t} \frac{p^{\star\circ}(x_t)}{p^\star(x_t)}.\]
+Hence we obtain 
+\[ e_t \le \EE^{\star\circ} \log \frac{g_t(X_t)}{h_t(X_t)} + M_t e_{t+1},\]
+to which we may apply Lemma \ref{lem:gronwalltype}. 
+So what remains to be shown?
+\begin{enumerate}
+	\item Control of $M_t$ (seems hard).
+	\item Bounding $\EE^\star \xi_t(X_t) = \EE^\star \log \frac{h_t(X_t)}{g_t(X_t)}$. Cf.\ Equation (40) in Ju.
+	\item Bounding $\EE^{\star\circ} \log \frac{g_t(X_t)}{\tilde\psi_t(X_t)}$. Cf.\ arguments in Equations (86) and (87) in Ju.
+\end{enumerate}
+
 
 
 \subsection{On the proof in appendix B2 in \cite{ju2021sequential}}
@@ -383,6 +420,46 @@ Writing $a = \int a(x) dx$ and $b = \int b(x) dx$, the integral analogue of the 
 \]
 	\end{lem}
 Ssee e.g. its use in \cite{csiszar2004information}, Lemma 7.4.
+
+
+
+\begin{lem}\label{lem:gronwalltype}
+Let $(e_t)_{t=1}^T$, $(f_t)_{t=1}^T$, and $(M_t)_{t=1}^{T-1}$ be sequences of nonnegative real numbers such that
+\[
+e_t \;\le\; f_t + M_t e_{t+1}, \qquad t=1,\dots,T-1,
+\]
+with terminal condition $e_T = 0$. Then
+\[
+\sum_{t=1}^T e_t 
+\;\le\; \sum_{k=1}^T \Biggl( \sum_{t=1}^k \prod_{s=t}^{k-1} M_s \Biggr) f_k,
+\]
+where the empty product (when $t=k$) is taken to be $1$.
+\end{lem}
+
+\begin{proof}
+We proceed by expanding the recursion. For $t = T-1$ we have
+\[
+e_{T-1} \le f_{T-1} + M_{T-1} e_T = f_{T-1} + M_{T-1}\cdot 0 = f_{T-1}.
+\]
+Inductively, suppose the claim holds for $e_{t+1},\dots,e_T$. Then
+\[
+e_t \;\le\; f_t + M_t e_{t+1}.
+\]
+Expanding $e_{t+1}$ gives
+\[
+e_t \;\le\; f_t + M_t f_{t+1} + M_t M_{t+1} f_{t+2} + \cdots + \Bigl(\prod_{s=t}^{T-1} M_s\Bigr) f_T.
+\]
+Summing this inequality over $t=1,\dots,T$ yields
+\[
+\sum_{t=1}^T e_t \;\le\; \sum_{t=1}^T \sum_{k=t}^T 
+\Bigl(\prod_{s=t}^{k-1} M_s\Bigr) f_k.
+\]
+Reversing the order of summation shows that each $f_k$ appears with coefficient
+\[
+\sum_{t=1}^k \prod_{s=t}^{k-1} M_s,
+\]
+giving the stated bound.
+\end{proof}
 
 
 
