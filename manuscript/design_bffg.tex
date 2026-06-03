@@ -326,16 +326,31 @@ This implies
 where 
 \[M_t = \sup_{x_t} \frac{p^{\star\circ}(x_t)}{p^\star(x_t)}.\]
 Hence we obtain 
-\[ e_t \le \EE^{\star\circ} \log \frac{g_t(X_t)}{h_t(X_t)} + M_t e_{t+1},\]
+\begin{equation}\label{eq:bound_et}
+	e_t \le \EE^{\star\circ} \log \frac{g_t(X_t)}{h_t(X_t)} + M_t e_{t+1},
+\end{equation} 
 to which we may apply Lemma \ref{lem:gronwalltype}. 
+We conclude 
+\begin{cor}
+\[ \text{KL}(\mathbb{P}_T^*, \mathbb{P}_T^\circ) \le \sum_{t=0}^T\left(\EE^\star \xi_t(X_t) + e_t \right)  \]
+where $e_t$ satisfies the bound \eqref{eq:bound_et}. 	
+\end{cor}
+
+
+
+
 So what remains to be shown?
 \begin{enumerate}
 	\item Control of $M_t$ (seems hard).
-	\item Bounding $\EE^\star \xi_t(X_t) = \EE^\star \log \frac{h_t(X_t)}{g_t(X_t)}$. Cf.\ Equation (40) in Ju.
-	\item Bounding $\EE^{\star\circ} \log \frac{g_t(X_t)}{\tilde\psi_t(X_t)}$. Cf.\ arguments in Equations (86) and (87) in Ju.
+	\item Bounding $\EE^\star \xi_t(X_t) = \EE^\star \log \frac{h_t(X_t)}{g_t(X_t)}$. Cf.\ Equation (40) in Ju. \note{I think here we have to repeat the whole argument with splitting up the term using $\tilde\psi$.}
+	\item Bounding $\EE^{\star\circ} \log \frac{g_t(X_t)}{\tilde\psi_t(X_t)}$. Cf.\ arguments in Equations (86) and (87) in Ju (here, the logsum inequality is used).
 \end{enumerate}
 
-
+Regarding (3), note that
+\begin{align*}
+	\log \frac{g_t(x_t)}{\tilde\psi_t(x_t)} & = \log \frac{\int \tilde p(x_{t+1}\mid x_t) g_{t+1}(x_{t+1}) \dd x_{t+1}}{\int p(x_{t+1}\mid x_t) g_{t+1}(x_{t+1}) \dd x_{t+1}}\\  & \le \int \frac{\tilde p(x_{t+1}\mid x_t) g_{t+1}(x_{t+1})}{\tilde p(x_{t+1}\mid x_t) g_{t+1}(x_{t+1}) \dd x_{t+1}} \log \frac{\tilde p(x_{t+1}\mid x_t)}{p(x_{t+1}\mid x_t)} \dd x_{t+1}
+\end{align*}
+by the logsum inequality. This term does not involve $h$ and should therefore by tractable in specific cases/applications. 
 
 \subsection{On the proof in appendix B2 in \cite{ju2021sequential}}
 

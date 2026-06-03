@@ -1,0 +1,507 @@
+\documentclass[11pt,reqno]{amsart}
+%\documentclass[11pt,reqno]{article}
+
+\usepackage{booktabs}
+%\usepackage[draft]{graphics}
+
+% -----------------------------------------------------------------------
+\usepackage[english]{babel}
+
+\usepackage[dvipsnames,svgnames]{xcolor}
+
+\usepackage{amsmath, latexsym, amsthm, amsfonts,bm,amssymb,mathscinet} 
+\usepackage{natbib}
+\usepackage[text={5.8in,8.3in},centering]{geometry}
+\usepackage{epsfig}
+\usepackage[colorlinks,linkcolor=blue, citecolor=blue,urlcolor=blue]{hyperref}
+
+%\usepackage[linesnumbered,ruled,vlined]{algorithm2e}
+
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+% -----------------------------------------------------------------------
+\pagestyle{plain}
+
+% -----------------------------------------------------------------------
+\newcommand{\dd}{{\,\mathrm d}}
+\newcommand{\ddd}{{\mathrm d}}
+\newcommand{\si}{\sigma}
+\renewcommand{\a}{\alpha}
+\renewcommand{\b}{\beta}
+\renewcommand{\th}{\theta}
+\newcommand{\la}{\lambda}
+\newcommand{\ga}{\gamma}
+\newcommand{\ka}{\kappa}
+\newcommand{\legeregel}{\par\vspace{1ex}\noindent}
+\newcommand{\isd}{\stackrel{d}{=}}
+\newcommand\Sgn{\mathop{\mathrm{Sgn}}\nolimits}
+\newcommand{\eps}{\varepsilon}
+\newcommand{\nphi}{\phi}
+\renewcommand{\phi}{\varphi}
+\newcommand{\asnaar}{\stackrel{\mathrm{a.s.}}{\longrightarrow}}
+\newcommand{\pto}{\stackrel{\mathrm{p}}{\longrightarrow}}
+\newcommand{\wto}{\rightsquigarrow}
+\newcommand{\asto}{\stackrel{\mathrm{a.s.}}{\longrightarrow}}
+\newcommand{\dto}{\stackrel{\mathrm{\scr{D}}}{\longrightarrow}}
+\renewcommand{\scr}[1]{{\mathcal #1}}
+\newcommand{\argmin}{\operatornamewithlimits{argmin}}
+\newcommand{\argmax}{\operatornamewithlimits{argmax}}
+\newcommand{\EE}{\mathbb{E}}
+\newcommand{\FF}{\mathbb{F}}
+\newcommand{\GG}{\mathbb{G}}
+\newcommand{\PP}{\mathbb{P}}
+\newcommand{\ind}{\mathbf{1}}
+\newcommand{\RR}{\mathbb{R}}
+\newcommand{\ZZ}{\mathbb{Z}}
+\newcommand{\QQ}{\mathbb{Q}}
+\newcommand{\CC}{\text{I\!\!\!C}}  
+\newcommand{\NN}{\text{I\!N}}
+\renewcommand{\vec}[1]{\underline{ #1}}
+\newcommand{\ra}{\rightarrow}
+
+\newcommand{\diag}[1]{\mathrm{diag}\left(#1\right)}
+
+\renewcommand{\Pr}{\mathrm{Pr}}
+\newcommand{\M}{\scr{M}}
+\newcommand{\D}{\scr{D}}
+\newcommand{\mb}[1]{\mathbf{ #1}}
+\newcommand{\ft}[1]{\frametitle{#1}}
+\newcommand{\Bm}{\begin{bmatrix}}
+\newcommand{\Em}{\end{bmatrix}}
+\newcommand{\bs}[1]{{\boldsymbol #1}}
+%\newcommand{\T}{{\prime}}
+\newcommand{\T}{{\top}}
+\DeclareMathOperator{\tr}{tr}
+% -----------------------------------------------------------------------
+% My definitions for theorems etc.
+\theoremstyle{definition}
+\newtheorem{thm}{Theorem}
+\newtheorem{prop}[thm]{Proposition}
+\newtheorem{lem}[thm]{Lemma}
+\newtheorem{cor}[thm]{Corollary}
+\newtheorem{rem}[thm]{Remark}
+\newtheorem{ex}[thm]{Example}
+\newtheorem{defn}[thm]{Definition}
+\newtheorem{ass}[thm]{Assumption}
+\newtheorem{exer}{Exercise}
+% -----------------------------------------------------------------------
+\newcommand{\pr}{\ensuremath{{\rm P}}}
+\newcommand{\prob}[1]{\ensuremath{{\rm P}\!\left( #1 \right)}}
+\newcommand{\prc}[2]{\ensuremath{{\rm P}( #1 \, |\, #2)}}
+\newcommand{\expec}[1]{\ensuremath{{\rm E}\mspace{-1mu}\left[#1\right]}}
+\newcommand{\var}[1]{\ensuremath{{\rm Var}\!\left( #1 \right)}}
+\newcommand{\cov}[2]{\ensuremath{{\rm Cov}\!\left( #1 , #2 \right)}}
+\newcommand{\corr}[2]{\ensuremath{{\rho}\mspace{-1mu}\left( #1 , #2 \right)}}
+\newcommand{\mean}[1]{\ensuremath{\bar{#1}}}
+
+\newcommand{\simind}{\stackrel{\rm ind}{\sim}}
+\newcommand{\simiid}{\stackrel{\rm iid}{\sim}}
+
+\newcommand{\dN}[2]{\mathcal{N}\left(#1, #2\right)}
+
+\newcommand{\hl}[1]{\textcolor{Sienna}{#1}}
+\newcommand{\da}[1]{\textcolor{Navy}{#1}}
+\newcommand{\fuchsia}[1]{\textcolor{Fuchsia}{#1}}
+\newcommand{\red}[1]{\textcolor{red}{#1}}
+%\newcommand{\note}[1]{{\color{Violet} #1}}
+
+\newcommand{\solve}{\mathrm{solve}}
+
+%% add notes via
+\newcommand{\note}[1]{{\color{Violet} #1}}
+
+%---------------------------------------------------------------------------------------
+\title{Regularisation in guiding}
+\date{\today}
+\author{Frank -- Camilla (VU Amsterdam)}
+
+\begin{document}
+\maketitle
+
+\section{Setup}
+We consider the  Markov kernel $P(x_0, dx_1)$  defined by
+\[
+  X_1 \mid X_0 \;\sim\; \mathcal{N}(\omega + \psi X_0,\; \eta^2).
+\]
+We assume $v \sim x + \log Z^2$, where $Z\sim \mathcal{N}(0,1)$. 
+Define
+\[
+  h(x_1) = \text{density of } X_1 + \log Z^2 \text{ evaluated at } v,
+  \quad \text{where } Z \sim \mathcal{N}(0,1).
+  \]
+We have   \[
+  P\!\left(X_1 + \log Z^2 \le v\right)
+  = P\!\left(Z^2 \le e^{v - X_1}\right)
+ \]
+so
+\[
+  h(x_1) = f_{\chi^2(1)}\!\left(e^{v-x_1}\right) e^{v-x_1}.
+\]
+For large $x_1$ it will behave like
+$\sqrt{e^{v-x_1}}$.  It should also behave this way for large $x_1$.
+Define, using Gaussian approximation to the distribution of $\log Z^2$
+\[
+  g(x_1) = \phi(v;\; \mu + x_1,\; \sigma^2), \qquad \mu = -1.27,\quad \sigma^2 = \pi^2/2,
+\]
+where $\phi(\,\cdot\,;\mu,\sigma^2)$ denotes the Gaussian density.
+
+We have twisted kernels
+\[
+  P^h(x_0, dx_1) = \frac{P(x_0, dx_1)\, h(x_1)}{\int P(x_0, dx_1)\, h(x_1)}, \qquad
+  P^g(x_0, dx_1) = \frac{P(x_0, dx_1)\, g(x_1)}{\int P(x_0, dx_1)\, g(x_1)}.
+\]
+Define $c_g = \int P(x_0, dx_1)\, g(x_1)$ and similarly $c_h$. In our specific case
+\[ c_g = \phi(v; \mu+\omega+\psi x_0; \sigma^2+\eta^2). \]
+
+
+Note
+\[ P^{g+\varepsilon}(x_0, d x_1) = \frac{g(x_1) + \eps}{c_g +\eps} P(x_0, dx_1) = \lambda_g(\eps) P^g(x_0, d x_1) + (1-\lambda_g(\eps)) P(x_0, d x_1), \]
+with $\lambda_g(\eps)= c_g/(c_g+\eps)$. 
+%\section*{Questions}
+%\note{To be done}
+%\begin{itemize}
+%  \item Can we bound $\mathrm{KL}(P^h \,\|\, P^g)$?
+%  \item Can we bound $\mathrm{KL}(P^h \,\|\, P^{h+\eps g})$?
+%  \item Write code to evaluate $\mathrm{KL}(P^h \,\|\, P^g)$ numerically.
+%\end{itemize}
+
+\section{Sequential Monte Carlo Approach}
+
+Suppose we do sequential Monte Carlo to sample from $X_1 \mid v$ and to find
+the marginal likelihood $p(v)$, which is actually $c_h$.  We use mutation kernel $M = P^{g+\eps}$.
+Then it follows from the results in Chapter 5 of Chopin-Papaspiliopoulos that the 
+ potential should be
+\begin{align*}
+G_\eps(x_1)
+  & := h(x_1)\,\frac{P(x_0, dx_1)}{P^{g+\eps}(x_0, dx_1)}
+  = h(x_1)\,\frac{\int P(x_0, dx_1)\, g(x_1)\, dx_1+ \eps}{g(x_1)  + \eps}
+  \\ &= h(x_1)\,\frac{c_g+ \eps}{g(x_1)+ \eps} .
+\end{align*}
+The estimator for the marginal likelihood is
+\[
+ \hat{L}:= \frac{1}{N}\sum_{n=1}^{N} G_\eps\!\left(X_1^{(n)}\right),
+  \qquad \bigl(X_1^{(n)}\bigr)_{n=1}^{N} \sim P^{g+\eps}(x_0, dx_1).
+\]
+For {\it any} $\eps>0$
+\[  \EE_{P^{g+\eps}} \hat{L}=\EE_{P^{g+\eps}} G_\eps(X_1) = \int h(x_1) \,\frac{c_g+ \eps}{g(x_1)+ \eps} \frac{g(x_1)+\eps}{c_g+\eps} P(x_0, dx_1) =c_h. \]
+
+
+\subsection{Analysis of variance of $\hat L$}
+Define
+\[
+  m(\eps) = \mathbb{E}_{P^{g+\eps}}\!\left[G_\eps(x_0, X_1)\right]^2.
+\]
+By expanding we get
+\begin{align*}
+  m(\eps)
+  &= \int h(x_1)^2 \left(\frac{c_g+\eps}{g(x_1)+\eps}\right)^{\!2}
+    \frac{P(x_0, dx_1)\,(g(x_1)+\eps)}{c_g+\eps}
+  \\ &= \bigl(c_g+\eps\bigr)\int \frac{h(x_1)^2}{g(x_1)+\eps}\,P(x_0,dx_1).
+\end{align*}
+Define \[  I(\eps)= \int \frac{h(x_1)^2}{g(x_1)+\eps}\,P(x_0,dx_1)\] and
+\[ \bar{m}(\eps) = \log m(\eps) = \log (c_g+\eps) + \log I(\eps). \]
+
+
+
+
+Note that we can rewrite to
+\[
+  I(\eps) = \int h(x_1)\,\frac{\int h(x_1)\,P(x_0,dx_1)}{g(x_1)+\eps}\;
+      P^h(x_0,dx_1)
+  = c_h\int \frac{h(x_1)}{g(x_1)+\eps}\,P^h(x_0,dx_1).
+\]
+though we won't use this expression in the numerics. 
+
+\subsection{Infinite variance case}
+Suppose $\eps=0$. 
+Since $c > 0$, finiteness of $\bar{m}(0)$ is equivalent to finiteness of
+\[
+  I(0) = \int \frac{h(x_1)^2}{g(x_1)}\,P(x_0,dx_1).
+\]
+
+
+
+Using $f_{\chi^2(1)}(u) = (2\pi u)^{-1/2} e^{-u/2}$ we get
+\[
+  h(x_1) = \frac{1}{\sqrt{2\pi}}\,e^{-(v-x_1)/2}\,e^{-e^{v-x_1}/2},
+\]
+so
+\[
+  h(x_1)^2 = \frac{1}{2\pi}\,e^{-(v-x_1)}\,e^{-e^{v-x_1}}.
+\]
+Writing $t = x_1 - v$, the integrand of $I(0)$ is proportional to
+\[
+  \frac{h(x_1)^2}{g(x_1)}\,p(x_1\mid x_0)
+  \;\propto\;
+  \exp\!\left(t - e^{-t} + \frac{(t+\mu)^2}{2\sigma^2}
+  - \frac{(t - (\omega+\psi x_0 - v))^2}{2\eta^2}\right).
+\]
+
+We analyse the tails:
+\begin{itemize}
+	\item {\it Right tail $t\to+\infty$.}
+The term $e^{-t}\to 0$, and expanding the quadratics the dominant behaviour is
+\[
+  \exp\!\left(t^2\!\left(\frac{1}{2\sigma^2} - \frac{1}{2\eta^2}\right) + O(t)\right).
+\]
+This is integrable if and only if the coefficient of $t^2$ is strictly negative, i.e.
+\[
+  \frac{1}{2\sigma^2} - \frac{1}{2\eta^2} < 0 \iff \eta^2 < \sigma^2.
+\]
+
+\item {\it Left tail $t\to-\infty$.}
+The term $e^{-t}\to+\infty$ dominates inside the exponent, sending the integrand
+to zero faster than any polynomial. Hence the left tail never causes divergence.
+\end{itemize}
+
+Therefore,
+\begin{prop}
+With the observation scheme $v = X_1 + \log Z^2$, $Z\sim\mathcal{N}(0,1)$, we have
+\[
+  I(0) = \int \frac{h(x_1)^2}{g(x_1)}\,P(x_0,dx_1) < \infty
+  \iff \eta < \sigma.
+\]
+\end{prop}
+It follows that for $\eta<\pi/\sqrt{2}\approx 2.221$ no regularisation is needed. For $\eta=\sigma$ the integral diverges (though like $e^t$), while for $\eta>\sigma$ divergence is much faster. 
+
+\newpage
+\begin{center}
+	\includegraphics[scale=0.5]{mbar_plot_1.0.png}
+\end{center}
+
+\begin{center}
+	\includegraphics[scale=0.5]{mbar_plot_2.5.png}
+\end{center}
+
+\newpage
+
+
+\section{Importance Sampling Quality: KL and $\chi^2$ Divergences}
+
+\subsection{General theory}
+
+The natural divergences for assessing IS  quality of $\hat L$ are the KL divergence and the
+$\chi^2$ divergence between the target $P^h$ and the proposal $P^{g+\varepsilon}$:
+\begin{align*}
+  \mathrm{KL}(P^h \| P^{g+\varepsilon})
+    &= \int \log\frac{dP^h}{dP^{g+\varepsilon}}\,dP^h, \\
+  \chi^2(P^h \| P^{g+\varepsilon})
+    &= \int \left(\frac{dP^h}{dP^{g+\varepsilon}}\right)^{\!2} dP^{g+\varepsilon} - 1.
+\end{align*}
+Since \[\frac{dP^h}{dP^{g+\varepsilon}}(x_1) = \frac{h(x_1)/c_h}{(g(x_1)+\eps)/(c_g+\eps)} = \frac{G_\eps(x_1)}{c_h},\] we have
+\[
+  \chi^2(P^h \| P^{g+\varepsilon}) = \frac{m(\varepsilon)}{c_h^2} - 1,
+\]
+so finite variance of the IS estimator is \emph{exactly equivalent} to
+$\chi^2(P^h \| P^{g+\varepsilon}) < \infty$. The $\chi^2$ divergence thus directly
+controls the variance, while the KL divergence controls the asymptotic quality of
+log-likelihood estimators (see Diaconis et al.).
+
+\subsection{KL divergence: explicit form}
+We have
+\begin{align*}
+  \mathrm{KL}(P^h \| P^{g+\varepsilon})
+  &= \log\frac{c_g+\varepsilon}{c_h}
+     + \int \log h(x_1)\,P^h(x_0,dx_1)
+     - \int \log(g(x_1)+\varepsilon)\,P^h(x_0,dx_1).
+\end{align*}
+As $\varepsilon\downarrow 0$ each term has a finite limit provided
+$\int |\log g(x_1)|\,P^h(x_0,dx_1) < \infty$.
+Since $\log g(x_1)$ is quadratic in $x_1$ (as $g$ is Gaussian), this requires
+$P^h$ to have finite second moments. Hence
+\[
+  \mathrm{KL}(P^h \| P^{g+\varepsilon}) \to \mathrm{KL}(P^h \| P^g) < \infty
+  \quad \text{as } \varepsilon\downarrow 0,
+\]
+whenever $P^h$ has finite second moments, which holds for any $\varepsilon \geq 0$
+in our specific example.
+
+\subsection{$\chi^2$ divergence and finite variance: the threshold}
+
+For any $\varepsilon > 0$, the denominator $g(x_1)+\varepsilon \geq \varepsilon > 0$
+uniformly, so
+\[
+  m(\varepsilon) \leq \varepsilon^{-1}\int h(x_1)^2\,P(x_0,dx_1) < \infty,
+\]
+provided $h\in L^2(P(x_0,\cdot))$, which holds for our specific $h$.
+Hence the IS estimator has finite variance for \emph{every} $\varepsilon > 0$.
+
+At $\varepsilon = 0$ the situation is more delicate. From the tail analysis of
+Section~2, the integrand $h(x_1)^2/g(x_1)$ behaves like
+\[
+  \exp\!\left(t^2\!\left(\frac{1}{2\sigma^2}-\frac{1}{2\eta^2}\right) + O(t)\right)
+  \quad \text{as } t = x_1 - v \to +\infty,
+\]
+leading to the following result.
+
+\begin{prop}
+  For the observation scheme $v = X_1 + \log Z^2$, $Z\sim\mathcal{N}(0,1)$:
+  \[
+    \chi^2(P^h \| P^g) < \infty \iff m(0) < \infty \iff \eta < \sigma.
+  \]
+\end{prop}
+
+Now
+\[ ESS \approx \frac{N}{1+\chi^2(P^h \| P^{g+\eps})}. \]
+So minimising $m(\eps)$ at each SMC step is equivalent to maximising ESS. 
+
+
+%
+\newpage
+
+
+\section{Numerical Experiment: Effect of $\varepsilon$ on SMC Performance}
+
+\subsection{Setup}
+
+We consider the hidden Markov model
+\begin{align*}
+  X_t \mid X_{t-1} &\sim \mathcal{N}(\omega + \psi X_{t-1},\, \eta^2), \\
+  V_t \mid X_t      &= X_t + \log Z_t^2, \quad Z_t \sim \mathcal{N}(0,1),
+\end{align*}
+with parameters $\omega=0$, $\psi=0.9$, $\mu=-1.27$, $\sigma^2=\pi^2/2$.
+We compare two regimes:
+\begin{itemize}
+  \item \textbf{Regime A} ($\eta=1.0 < \sigma\approx 2.22$): finite-variance
+    regime, where $m(0)<\infty$.
+  \item \textbf{Regime B} ($\eta=3.0 > \sigma$): infinite-variance regime,
+    where $m(0)=\infty$.
+\end{itemize}
+In both regimes we run SMC with the twisted proposal $P^{g+\varepsilon}$ for
+several values of $\varepsilon \in \{0, 0.001, 0.01, 0.05, 0.1\}$.
+
+\subsection{SMC Algorithm}
+
+At each time step $t$, the twisted proposal is the mixture
+\[
+  P^{g+\varepsilon}(x, \cdot) =
+    \frac{c(x)}{c(x)+\varepsilon}\,P^g(x,\cdot)
+    + \frac{\varepsilon}{c(x)+\varepsilon}\,P(x,\cdot),
+\]
+where both $c(x)$ and the parameters of $P^g$ are available in closed form
+(see Section~2). The IS weight for a particle $x_t$ proposed from
+$P^{g+\varepsilon}(x_{t-1},\cdot)$ is
+\[
+  G_\varepsilon(x_{t-1}, x_t) = \frac{h_t(x_t)}{g_t(x_t)+\varepsilon}\,(c(x_{t-1})+\varepsilon).
+\]
+
+\begin{algorithm}
+\caption{SMC with twisted proposal $P^{g+\varepsilon}$}
+\label{alg:smc}
+\begin{algorithmic}[1]
+\Require observations $v_{1:T}$, particle count $N$, perturbation $\varepsilon \geq 0$
+\State Initialise particles $x_0^{(i)} \sim \mathcal{N}(0,\,\eta^2/(1-\psi^2))$
+  for $i=1,\ldots,N$
+\For{$t = 1, \ldots, T$}
+  \State \textbf{Propose:} for each $i$, draw
+    \[
+      x_t^{(i)} \sim P^{g_t+\varepsilon}(x_{t-1}^{(i)},\,\cdot\,)
+    \]
+    by sampling from $P^{g_t}(x_{t-1}^{(i)},\cdot) = \mathcal{N}(\mu^*,\sigma^{*2})$
+    with probability $\alpha^{(i)} = c(x_{t-1}^{(i)})/(c(x_{t-1}^{(i)})+\varepsilon)$,
+    and from $P(x_{t-1}^{(i)},\cdot)$ otherwise
+  \State \textbf{Weight:} compute unnormalised weights
+    \[
+      w^{(i)} = \frac{h_t(x_t^{(i)})}{g_t(x_t^{(i)})+\varepsilon}
+    \]
+  \State \textbf{Likelihood increment:}
+    \[
+      \log\hat{p}(v_t \mid v_{1:t-1})
+        = \log\!\left(\bar{c}_t + \varepsilon\right) + \log\frac{1}{N}\sum_{i=1}^N w^{(i)},
+      \quad \bar{c}_t = \frac{1}{N}\sum_{i=1}^N c(x_{t-1}^{(i)})
+    \]
+  \State \textbf{ESS:} compute
+    $\mathrm{ESS}_t = \bigl(\sum_i \tilde{w}^{(i)2}\bigr)^{-1}$
+    where $\tilde{w}^{(i)} = w^{(i)}/\sum_j w^{(j)}$
+  \If{$\mathrm{ESS}_t < N/2$}
+    \State \textbf{Resample} particles using systematic resampling with
+      weights $\tilde{w}^{(i)}$
+  \EndIf
+\EndFor
+\State \Return $\sum_{t=1}^T \log\hat{p}(v_t\mid v_{1:t-1})$,
+  $\{\mathrm{ESS}_t\}_{t=1}^T$
+\end{algorithmic}
+\end{algorithm}
+
+\noindent
+To assess performance, we run Algorithm~\ref{alg:smc} independently $R=200$
+times on the same simulated dataset ($T=50$, $N=2000$) and record the minimum
+ESS over time,
+\[
+  \mathrm{ESS}_{\min} = \min_{t=1,\ldots,T} \mathrm{ESS}_t,
+\]
+for each run. A low $\mathrm{ESS}_{\min}$ indicates that at some point the
+particle cloud collapsed to a near-degenerate distribution, with a single
+particle carrying almost all the weight.
+
+\subsection{Results}
+
+Figure~\ref{fig:miness_cdf} shows the empirical CDF of $\mathrm{ESS}_{\min}$
+across $R=200$ runs for each value of $\varepsilon$, separately for the two
+regimes.
+
+{\it Regime A ($\eta < \sigma$).}
+All curves are tightly clustered regardless of $\varepsilon$, with
+$\mathrm{ESS}_{\min}$ concentrated between 400 and 600. This confirms the
+theoretical prediction: when $m(0)<\infty$, the IS weights have finite
+variance and $\varepsilon$ has no meaningful effect on performance. Note though, while finiteness is guaranteed, it is typically beneficial to take nonzero $\eps$. The value $m(0)$ can still be large, while finite. 
+
+{\it Regime B ($\eta > \sigma$).}
+The picture changes dramatically. At $\varepsilon=0$ the CDF has substantial
+mass near zero, meaning that in a significant fraction of runs the particle
+cloud collapses to near-degeneracy at some time step. A small perturbation
+$\varepsilon=0.001$ shifts the CDF markedly rightward, essentially eliminating
+the collapses. This is the direct numerical manifestation of $m(0)=\infty$:
+the IS weights have infinite variance, leading to occasional but catastrophic
+weight concentration on a single particle.
+
+Figure~\ref{fig:miness_vs_eps} shows the mean and 5th percentile of
+$\mathrm{ESS}_{\min}$ as a function of $\varepsilon$ for both regimes. In
+Regime B, the 5th percentile at $\varepsilon=0$ is near 0 out of 2000,
+confirming that in the worst 5\% of runs the particle cloud is essentially
+degenerate. Both diagnostics improve sharply as $\varepsilon$ increases from
+0, reach a maximum around $\varepsilon^* \approx 0.001$, and then slowly
+deteriorate for larger $\varepsilon$. This non-monotone behaviour reflects two
+competing effects: for $\varepsilon < \varepsilon^*$, increasing $\varepsilon$
+regularises the weights and reduces the chance of collapse; for $\varepsilon >
+\varepsilon^*$, the proposal $P^{g+\varepsilon}$ moves away from the optimal
+twist $P^g$ toward the untwisted kernel $P$, which is a poor proposal for $h$.
+
+\subsection{On the difficulty of choosing $\varepsilon$ in Regime B}
+
+The results highlight that the choice of $\varepsilon$ in Regime B is
+delicate. The optimal $\varepsilon^*$ exists and can in principle be found by
+minimising $m(\varepsilon)$ numerically, as described in Section~3. However,
+$m(\varepsilon)$ depends on $x_0$ and varies across time steps as the particle
+cloud evolves, so a single fixed $\varepsilon$ cannot be globally optimal.
+Furthermore, the performance is sensitive to this choice: the 5th percentile
+of $\mathrm{ESS}_{\min}$ drops sharply on both sides of $\varepsilon^*$,
+leaving a narrow window of well-performing values.
+
+This suggests that a fixed $\varepsilon$ is fundamentally limited in Regime B,
+and that an \emph{adaptive} scheme --- choosing $\varepsilon_t$ at each step
+based on the current particle cloud by minimising an empirical estimate of
+$m(\varepsilon)$ --- would be more robust. In Regime A, by contrast, $\varepsilon=0$
+is already optimal and no adaptation is needed.
+
+
+
+\begin{figure}
+	\begin{center}
+		\includegraphics[scale=0.6]{miness_cdf_good.png}\\[.5in]
+				\includegraphics[scale=0.6]{miness_cdf_bad.png}\\[.5in]
+			\caption{\label{fig:miness_cdf}}
+	\end{center}
+\end{figure}
+
+
+\begin{figure}
+	\begin{center}
+	\includegraphics[scale=0.6]{miness_vs_epsilon.png}
+		\caption{\label{fig:miness_vs_eps}}
+	\end{center}
+\end{figure}
+
+
+
+\end{document}
