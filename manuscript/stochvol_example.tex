@@ -17,6 +17,9 @@
 
 %\usepackage[linesnumbered,ruled,vlined]{algorithm2e}
 
+\usepackage{graphicx}
+\graphicspath{{../smc/figs/}}
+
 \usepackage{algorithm}
 \usepackage{algpseudocode}
 % -----------------------------------------------------------------------
@@ -294,8 +297,8 @@ Since \[\frac{dP^h}{dP^{g+\varepsilon}}(x_1) = \frac{h(x_1)/c_h}{(g(x_1)+\eps)/(
 \]
 so finite variance of the IS estimator is \emph{exactly equivalent} to
 $\chi^2(P^h \| P^{g+\varepsilon}) < \infty$. The $\chi^2$ divergence thus directly
-controls the variance, while the KL divergence controls the asymptotic quality of
-log-likelihood estimators (see Diaconis et al.).
+controls the variance. Note, using $\log x \le x-1$ (and thus $2\log x \le x^2-1$)
+\[  2 \mathrm{KL}(P^h \| P^{g+\varepsilon}) \le   \chi^2(P^h \| P^{g+\varepsilon}) . \]
 
 \subsection{KL divergence: explicit form}
 We have
@@ -492,10 +495,27 @@ is already optimal and no adaptation is needed.
 	\begin{center}
 		\includegraphics[scale=0.6]{adaptive_miness_cdf_good.png}\\[.5in]
 				\includegraphics[scale=0.6]{adaptive_miness_cdf_bad.png}\\[.5in]
-			\caption{\label{fig:miness_cdf}}
+			\caption{minESS comparison. \label{fig:miness_cdf}}
 	\end{center}
 \end{figure}
 
+
+\subsection{Work by Chatterjee \& Diaconis}
+Suggest to look at $q_n$-statistic. See Figure \ref{fig:maxqn_cdf}. 
+$q_n$ is maximum of the normalised weights. Note that $q_n\in [0,1]$ and we want it to be small.  
+
+\begin{figure}
+	\begin{center}
+		\includegraphics[scale=0.6]{adaptive_maxqn_cdf_good.png}\\[.5in]
+				\includegraphics[scale=0.6]{adaptive_maxqn_cdf_bad.png}\\[.5in]
+			\caption{Max $Q_n$ comparison.\label{fig:maxqn_cdf}}
+	\end{center}
+\end{figure}
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Adaptive Choice of $\varepsilon$}
 
 \subsection{Motivation}
@@ -596,8 +616,7 @@ $\varepsilon \in \{\varepsilon_1,\ldots,\varepsilon_K\}$.
       \begin{cases}
         \dfrac{1}{N}\displaystyle\sum_{n=1}^N w_t^n
           & \text{if resampling occurred at time }t,\\[8pt]
-        \dfrac{\displaystyle\sum_{n=1}^N w_t^n}
-              {\displaystyle\sum_{n=1}^N w_{t-1}^n}
+        \left(\sum_{n=1}^N w_t^n\right)/\left(\sum_{n=1}^N w_{t-1}^n\right)
           & \text{otherwise}
       \end{cases}
     \]
@@ -636,7 +655,7 @@ $\varepsilon \in \{\varepsilon_1,\ldots,\varepsilon_K\}$.
     \]
     is available in closed form, enabling Brent's method. However, in our
     Julia implementation with $N=500$ and $T=50$ steps, the grid search
-    proved faster in practice:
+    proved faster in practice: \note{to be adjusted}
     \begin{center}
     \begin{tabular}{lrr}
       \hline
@@ -685,8 +704,12 @@ $\varepsilon_t^*$ that prevents weight collapse, without requiring any prior
 knowledge of which regime the parameters fall in.
 
 
-\section{Adaptive Choice of $\varepsilon$ via ESS Targeting}
 
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Adaptive Choice of $\varepsilon$ via ESS Targeting}
+\note{This does not work; I guess the desired ESS simply cannot be attained.}
 \subsection{Motivation}
 
 The numerical experiments of Section~4 show that the optimal perturbation
@@ -771,5 +794,15 @@ correctly: it detects the hard step through the empirical minimiser of
 $\hat{m}(\varepsilon)$ and automatically increases $\varepsilon$ to protect
 against weight collapse, without any explicit knowledge of which observations
 are difficult.
+
+\begin{figure}
+	\begin{center}
+		\includegraphics[scale=0.5]{smc_run_adaptive_eta1.0.png}
+		\includegraphics[scale=0.5]{smc_run_adaptive_eta3.0.png}
+		\includegraphics[scale=0.5]{smc_run_fixed_eps0.0_eta1.0.png}
+		\includegraphics[scale=0.5]{smc_run_fixed_eps0.0_eta3.0.png}
+	\end{center}
+	\caption{\label{fig:smc_single_run}}
+\end{figure}
 
 \end{document}

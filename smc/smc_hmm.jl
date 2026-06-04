@@ -133,6 +133,7 @@ function run_smc(vs, N, ε, p; rng=Random.default_rng(), ess_min=N/2)
 
     log_liks = Vector{Float64}(undef, T)
     ess_vec  = Vector{Float64}(undef, T)
+    qn_vec   = Vector{Float64}(undef, T)
 
     for t in 1:T
         vt = vs[t]
@@ -354,18 +355,21 @@ function compare_adaptive(;
     # Colours for fixed ε: gradient from light to dark
     ε_colors = [:lightcoral, :orange, :goldenrod, :olivedrab, :teal]
 
-    for (label, η_val, slug) in [("eta=$(η_good) < sigma", η_good, "good"),
-                                  ("eta=$(η_bad) > sigma",  η_bad,  "bad")]
+    for (label, η_val, slug) in [("η=$(η_good) < σ", η_good, "good"),
+                                  ("η=$(η_bad) > σ",  η_bad,  "bad")]
 
         p = Para(η=η_val)
 
         rng_data = MersenneTwister(seed)
         _, vs    = simulate_hmm(0.0, T, p; rng=rng_data)
 
-        # Collect min-ESS for each fixed ε
+        # Collect min-ESS and max-Qn for each fixed ε
         miness_fixed = Dict{Float64, Vector{Float64}}(ε => Float64[] for ε in ε_range)
+        maxqn_fixed  = Dict{Float64, Vector{Float64}}(ε => Float64[] for ε in ε_range)
         miness_grid  = Float64[]
         miness_optim = Float64[]
+        maxqn_grid   = Float64[]
+        maxqn_optim  = Float64[]
         eps_grid     = Vector{Vector{Float64}}()
         eps_optim    = Vector{Vector{Float64}}()
 
@@ -374,16 +378,19 @@ function compare_adaptive(;
                 rng_r = MersenneTwister(seed + r)
                 _, _, min_ess_f, _, max_qn_f, _ = run_smc(vs, N, ε, p; rng=rng_r)
                 push!(miness_fixed[ε], min_ess_f)
+                push!(maxqn_fixed[ε],  max_qn_f)
             end
 
             rng_r2 = MersenneTwister(seed + r)
             _, _, min_ess_g, _, max_qn_g, ε_vec_g, _ = run_smc_adaptive(vs, N, p; rng=rng_r2)
             push!(miness_grid, min_ess_g)
+            push!(maxqn_grid,  max_qn_g)
             push!(eps_grid, ε_vec_g)
 
             rng_r3 = MersenneTwister(seed + r)
             _, _, min_ess_o, _, max_qn_o, ε_vec_o, _ = run_smc_adaptive_optim(vs, N, p; rng=rng_r3)
             push!(miness_optim, min_ess_o)
+            push!(maxqn_optim,  max_qn_o)
             push!(eps_optim, ε_vec_o)
         end
 
@@ -391,7 +398,7 @@ function compare_adaptive(;
         println("$label:")
         for ε in ε_range
             me = miness_fixed[ε]
-            println("  Fixed eps=$ε : mean=$(round(mean(me),digits=1)), "*
+            println("  Fixed ϵ=$ε : mean=$(round(mean(me),digits=1)), "*
                     "5th pct=$(round(quantile(me,0.05),digits=1))")
         end
         println("  Adaptive grid  : mean=$(round(mean(miness_grid),digits=1)), "*
@@ -405,7 +412,7 @@ function compare_adaptive(;
         for (k, ε) in enumerate(ε_range)
             vals = sort(miness_fixed[ε])
             cdf  = (1:R) ./ R
-            plot!(plt, vals, cdf, label="eps=$ε", lw=2,
+            plot!(plt, vals, cdf, label="ϵ=$ε", lw=2,
                   color=ε_colors[min(k, length(ε_colors))])
         end
         let vals = sort(miness_grid), cdf = (1:R) ./ R
@@ -425,7 +432,7 @@ function compare_adaptive(;
         for (k, ε) in enumerate(ε_range)
             vals = sort(maxqn_fixed[ε])
             cdf  = (1:R) ./ R
-            plot!(plt_qn, vals, cdf, label="eps=$ε", lw=2,
+            plot!(plt_qn, vals, cdf, label="ϵ=$ε", lw=2,
                   color=ε_colors[min(k, length(ε_colors))])
         end
         let vals = sort(maxqn_grid), cdf = (1:R) ./ R
@@ -439,8 +446,8 @@ function compare_adaptive(;
         savefig(plt_qn, "figs/adaptive_maxqn_cdf_$slug.png")
 
         # ε* over time
-        p2 = plot(title="Mean eps* over time ($label)",
-                  xlabel="t", ylabel="eps*",
+        p2 = plot(title="Mean ϵ* over time ($label)",
+                  xlabel="t", ylabel="ϵ*",
                   yscale=:log10, lw=2, size=(600, 350))
         plot!(p2, 1:T, mean(eps_grid),  label="grid",  lw=2, color=:blue)
         plot!(p2, 1:T, mean(eps_optim), label="Brent", lw=2, color=:purple,
@@ -484,7 +491,7 @@ end
 
 p = Para()
 main_smc(p)
-compare_adaptive()
+compare_adaptive(R=500)
 benchmark_eps_methods(Para())
 
 
