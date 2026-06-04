@@ -150,7 +150,7 @@ We have twisted kernels
   P^h(x_0, dx_1) = \frac{P(x_0, dx_1)\, h(x_1)}{\int P(x_0, dx_1)\, h(x_1)}, \qquad
   P^g(x_0, dx_1) = \frac{P(x_0, dx_1)\, g(x_1)}{\int P(x_0, dx_1)\, g(x_1)}.
 \]
-Define $c_g = \int P(x_0, dx_1)\, g(x_1)$ and similarly $c_h$. In our specific case
+Define $c_g = \int P(x_0, dx_1)\, g(x_1)$ and similarly $c_h$. As $x_0$ is fixed in this section, we omit it from our notation.  In our specific case
 \[ c_g = \phi(v; \mu+\omega+\psi x_0; \sigma^2+\eta^2). \]
 
 
@@ -270,7 +270,7 @@ It follows that for $\eta<\pi/\sqrt{2}\approx 2.221$ no regularisation is needed
 \end{center}
 
 \begin{center}
-	\includegraphics[scale=0.5]{mbar_plot_2.5.png}
+	\includegraphics[scale=0.5]{mbar_plot_3.0.png}
 \end{center}
 
 \newpage
@@ -386,45 +386,58 @@ $P^{g+\varepsilon}(x_{t-1},\cdot)$ is
 \]
 
 \begin{algorithm}
-\caption{SMC with twisted proposal $P^{g+\varepsilon}$}
-\label{alg:smc}
+\caption{Guided particle filter (GPF) with twisted proposal $P^{g+\varepsilon}$,
+  following \citet[Algorithm~10.5]{chopin2020introduction}}
+\label{alg:gpf}
 \begin{algorithmic}[1]
-\Require observations $v_{1:T}$, particle count $N$, perturbation $\varepsilon \geq 0$
-\State Initialise particles $x_0^{(i)} \sim \mathcal{N}(0,\,\eta^2/(1-\psi^2))$
-  for $i=1,\ldots,N$
+\Require observations $v_{1:T}$, particle count $N$, perturbation $\varepsilon\geq 0$,
+  ESS threshold $\mathrm{ESS}_{\min}$
+\State For $n=1,\ldots,N$: draw
+  $X_0^n \sim P(x_0)$,
+  set $w_0^n \leftarrow G_0(X_0^n)$,
+  $W_0^n \leftarrow w_0^n / \sum_{m=1}^N w_0^m$
+  \newline where $G_0(x_0) := P_0(dx_0)\,h_0(x_0)/M_0(x_0)$
 \For{$t = 1, \ldots, T$}
-  \State \textbf{Propose:} for each $i$, draw
-    \[
-      x_t^{(i)} \sim P^{g_t+\varepsilon}(x_{t-1}^{(i)},\,\cdot\,)
-    \]
-    by sampling from $P^{g_t}(x_{t-1}^{(i)},\cdot) = \mathcal{N}(\mu^*,\sigma^{*2})$
-    with probability $\alpha^{(i)} = c(x_{t-1}^{(i)})/(c(x_{t-1}^{(i)})+\varepsilon)$,
-    and from $P(x_{t-1}^{(i)},\cdot)$ otherwise
-  \State \textbf{Weight:} compute unnormalised weights
-    \[
-      w^{(i)} = \frac{h_t(x_t^{(i)})}{g_t(x_t^{(i)})+\varepsilon}
-    \]
-  \State \textbf{Likelihood increment:}
-    \[
-      \log\hat{p}(v_t \mid v_{1:t-1})
-        = \log\!\left(\bar{c}_t + \varepsilon\right) + \log\frac{1}{N}\sum_{i=1}^N w^{(i)},
-      \quad \bar{c}_t = \frac{1}{N}\sum_{i=1}^N c(x_{t-1}^{(i)})
-    \]
-  \State \textbf{ESS:} compute
-    $\mathrm{ESS}_t = \bigl(\sum_i \tilde{w}^{(i)2}\bigr)^{-1}$
-    where $\tilde{w}^{(i)} = w^{(i)}/\sum_j w^{(j)}$
-  \If{$\mathrm{ESS}_t < N/2$}
-    \State \textbf{Resample} particles using systematic resampling with
-      weights $\tilde{w}^{(i)}$
+  \If{$\mathrm{ESS}(W_{t-1}^{1:N}) < \mathrm{ESS}_{\min}$}
+    \State $A_{t-1}^{1:N} \leftarrow \mathrm{resample}(W_{t-1}^{1:N})$
+    \State $\hat{w}_{t-1} \leftarrow 1$
+  \Else
+    \State $A_{t-1}^n \leftarrow n$
+    \State $\hat{w}_{t-1} \leftarrow w_{t-1}^n$
   \EndIf
+  \State For $n=1,\ldots,N$: draw
+    $X_t^n \sim M_t(X_{t-1}^{A_{t-1}^n},\,dx_t) = P^{g_t+\varepsilon}(X_{t-1}^{A_{t-1}^n},\,dx_t)$
+    \newline by sampling from
+    $P^{g_t}(X_{t-1}^{A_{t-1}^n},\cdot) = \mathcal{N}(\mu^*,\sigma^{*2})$
+    with probability $\alpha^n = c(X_{t-1}^{A_{t-1}^n})/(c(X_{t-1}^{A_{t-1}^n})+\varepsilon)$,
+    and from $P(X_{t-1}^{A_{t-1}^n},\cdot)$ otherwise
+  \State $w_t^n \leftarrow \hat{w}_{t-1}^n \cdot G_t(X_{t-1}^{A_{t-1}^n},\, X_t^n)$
+    \newline where
+    \[
+      G_t(x_{t-1}, x_t) :=
+        \frac{h_t(x_t)}{g_t(x_t)+\varepsilon}
+        \cdot\bigl(c(x_{t-1})+\varepsilon\bigr)
+    \]
+  \State $W_t^n \leftarrow w_t^n \,/\, \sum_{m=1}^N w_t^m$
 \EndFor
-\State \Return $\sum_{t=1}^T \log\hat{p}(v_t\mid v_{1:t-1})$,
-  $\{\mathrm{ESS}_t\}_{t=1}^T$
+\State \Return
+  $\sum_{t=1}^T \log \ell_t^N$,\quad
+  $\{\mathrm{ESS}(W_t^{1:N})\}_{t=1}^T$
+  \newline where, following equation~(10.3) of \citet{chopin2020introduction},
+  \[
+    \ell_t^N :=
+    \begin{cases}
+      \dfrac{1}{N}\displaystyle\sum_{n=1}^N w_t^n
+        & \text{if resampling occurred at time } t, \\[8pt]
+      \left(\sum_{n=1}^N w_t^n\right)/\left(\sum_{n=1}^N w_{t-1}^n\right)
+        & \text{otherwise.}
+    \end{cases}
+  \]
 \end{algorithmic}
 \end{algorithm}
 
 \noindent
-To assess performance, we run Algorithm~\ref{alg:smc} independently $R=200$
+To assess performance, we run Algorithm~\ref{alg:gpf} independently $R=200$
 times on the same simulated dataset ($T=50$, $N=2000$) and record the minimum
 ESS over time,
 \[
@@ -455,17 +468,6 @@ the collapses. This is the direct numerical manifestation of $m(0)=\infty$:
 the IS weights have infinite variance, leading to occasional but catastrophic
 weight concentration on a single particle.
 
-Figure~\ref{fig:miness_vs_eps} shows the mean and 5th percentile of
-$\mathrm{ESS}_{\min}$ as a function of $\varepsilon$ for both regimes. In
-Regime B, the 5th percentile at $\varepsilon=0$ is near 0 out of 2000,
-confirming that in the worst 5\% of runs the particle cloud is essentially
-degenerate. Both diagnostics improve sharply as $\varepsilon$ increases from
-0, reach a maximum around $\varepsilon^* \approx 0.001$, and then slowly
-deteriorate for larger $\varepsilon$. This non-monotone behaviour reflects two
-competing effects: for $\varepsilon < \varepsilon^*$, increasing $\varepsilon$
-regularises the weights and reduces the chance of collapse; for $\varepsilon >
-\varepsilon^*$, the proposal $P^{g+\varepsilon}$ moves away from the optimal
-twist $P^g$ toward the untwisted kernel $P$, which is a poor proposal for $h$.
 
 \subsection{On the difficulty of choosing $\varepsilon$ in Regime B}
 
@@ -488,20 +490,286 @@ is already optimal and no adaptation is needed.
 
 \begin{figure}
 	\begin{center}
-		\includegraphics[scale=0.6]{miness_cdf_good.png}\\[.5in]
-				\includegraphics[scale=0.6]{miness_cdf_bad.png}\\[.5in]
+		\includegraphics[scale=0.6]{adaptive_miness_cdf_good.png}\\[.5in]
+				\includegraphics[scale=0.6]{adaptive_miness_cdf_bad.png}\\[.5in]
 			\caption{\label{fig:miness_cdf}}
 	\end{center}
 \end{figure}
 
+\section{Adaptive Choice of $\varepsilon$}
 
-\begin{figure}
-	\begin{center}
-	\includegraphics[scale=0.6]{miness_vs_epsilon.png}
-		\caption{\label{fig:miness_vs_eps}}
-	\end{center}
-\end{figure}
+\subsection{Motivation}
+
+The numerical experiments of Section~4 show that the optimal perturbation
+$\varepsilon^*$ depends on the current state of the particle cloud and varies
+across time steps. A fixed $\varepsilon$ cannot be globally optimal, and
+performance is sensitive to this choice in the infinite-variance regime
+($\eta>\sigma$). This motivates an adaptive scheme that selects
+$\varepsilon_t^*$ at each step by minimising an empirical estimate of
+$m(\varepsilon)$ over the current particle cloud.
+
+\subsection{Empirical Estimate of $m(\varepsilon)$}
+
+Recall that
+\[
+  m(\varepsilon) = \bigl(c(x_0)+\varepsilon\bigr)
+    \int \frac{h(x_1)^2}{g(x_1)+\varepsilon}\,P(x_0,dx_1).
+\]
+Given the particle cloud $\{x_{t-1}^{(i)}\}_{i=1}^N$ at time $t-1$ and
+observation $v_t$, we estimate $m(\varepsilon)$ by drawing auxiliary proposals
+$\{\tilde{x}_t^{(i)}\}_{i=1}^N$ from the \emph{untwisted} kernel
+$P(x_{t-1}^{(i)},\cdot)$ and computing
+\[
+  \hat{m}(\varepsilon) = \bigl(\bar{c}_t + \varepsilon\bigr)\cdot
+    \frac{1}{N}\sum_{i=1}^N \frac{h_t(\tilde{x}_t^{(i)})^2}
+    {g_t(\tilde{x}_t^{(i)})+\varepsilon},
+  \qquad
+  \bar{c}_t = \frac{1}{N}\sum_{i=1}^N c(x_{t-1}^{(i)}).
+\]
+Crucially, the auxiliary proposals $\tilde{x}_t^{(i)}$ are drawn
+independently of $\varepsilon$, so $\hat{m}(\varepsilon)$ can be evaluated
+over a grid of $\varepsilon$ values at the cost of a single forward pass
+through $P$. The optimal perturbation is then
+\[
+  \varepsilon_t^* = \argmin_{\varepsilon \geq 0}\, \hat{m}(\varepsilon),
+\]
+found by a search over a log-spaced grid
+$\varepsilon \in \{\varepsilon_1,\ldots,\varepsilon_K\}$.
+
+\subsection{Adaptive SMC Algorithm}
+\begin{algorithm}
+\caption{Adaptive GPF with $\varepsilon_t^*$ chosen by grid search}
+\label{alg:gpf_adaptive}
+\begin{algorithmic}[1]
+\Require observations $v_{1:T}$, particle count $N$,
+  ESS threshold $\mathrm{ESS}_{\min}$,
+  grid $\mathcal{E} = \{\varepsilon_1 < \cdots < \varepsilon_K\}$
+\State For $n=1,\ldots,N$: draw
+  $X_0^n \sim \mathcal{N}(0,\,\eta^2/(1-\psi^2))$,
+  set $W_0^n \leftarrow 1/N$,
+  $w_0^n \leftarrow 1$
+\For{$t = 1, \ldots, T$}
+  \State \textbf{Find $\varepsilon_t^*$:} draw auxiliary proposals
+    $\tilde{X}_t^n \sim P(X_{t-1}^n,\,\cdot\,)$
+    for $n=1,\ldots,N$, and set
+    \[
+      \varepsilon_t^* = \argmin_{\varepsilon \in \mathcal{E}}\;
+        \hat{m}(\varepsilon), \qquad
+      \hat{m}(\varepsilon) =
+        \Bigl(\bar{c}_t + \varepsilon\Bigr)
+        \frac{1}{N}\sum_{n=1}^N
+        \frac{h_t(\tilde{X}_t^n)^2}{g_t(\tilde{X}_t^n)+\varepsilon},
+      \quad
+      \bar{c}_t = \frac{1}{N}\sum_{n=1}^N c(X_{t-1}^n)
+    \]
+    Discard $\{\tilde{X}_t^n\}$ after this step.
+  \If{$\mathrm{ESS}(W_{t-1}^{1:N}) < \mathrm{ESS}_{\min}$}
+    \State $A_{t-1}^{1:N} \leftarrow \mathrm{resample}(W_{t-1}^{1:N})$,\quad
+      $\hat{w}_{t-1}^n \leftarrow 1$
+  \Else
+    \State $A_{t-1}^n \leftarrow n$,\quad
+      $\hat{w}_{t-1}^n \leftarrow w_{t-1}^n$
+  \EndIf
+  \State \textbf{Propose:} for $n=1,\ldots,N$ draw
+    \[
+      X_t^n \sim P^{g_t+\varepsilon_t^*}
+        \!\left(X_{t-1}^{A_{t-1}^n},\,\cdot\,\right)
+    \]
+    by sampling from
+    $P^{g_t}(X_{t-1}^{A_{t-1}^n},\cdot) = \mathcal{N}(\mu^*,\sigma^{*2})$
+    with probability
+    $\alpha^n = c(X_{t-1}^{A_{t-1}^n})/
+      (c(X_{t-1}^{A_{t-1}^n})+\varepsilon_t^*)$,
+    and from $P(X_{t-1}^{A_{t-1}^n},\cdot)$ otherwise
+  \State \textbf{Update weights:}
+    \[
+      w_t^n = \hat{w}_{t-1}^n \cdot G_t\!\left(X_{t-1}^{A_{t-1}^n},\,X_t^n\right),
+      \qquad
+      G_t(x_{t-1},x_t) :=
+        \frac{h_t(x_t)}{g_t(x_t)+\varepsilon_t^*}
+        \cdot\bigl(c(x_{t-1})+\varepsilon_t^*\bigr)
+    \]
+  \State \textbf{Likelihood increment} (eq.~10.3 of
+    \citet{chopin2020introduction}):
+    \[
+      \ell_t^N :=
+      \begin{cases}
+        \dfrac{1}{N}\displaystyle\sum_{n=1}^N w_t^n
+          & \text{if resampling occurred at time }t,\\[8pt]
+        \dfrac{\displaystyle\sum_{n=1}^N w_t^n}
+              {\displaystyle\sum_{n=1}^N w_{t-1}^n}
+          & \text{otherwise}
+      \end{cases}
+    \]
+  \State \textbf{Normalise:}\quad
+    $W_t^n \leftarrow w_t^n \,/\, \sum_{m=1}^N w_t^m$
+  \State \textbf{ESS:}\quad
+    $\mathrm{ESS}_t \leftarrow
+      \bigl(\sum_n (W_t^n)^2\bigr)^{-1}$
+\EndFor
+\State \Return
+  $\sum_{t=1}^T \log \ell_t^N$,\quad
+  $\{\mathrm{ESS}_t\}_{t=1}^T$,\quad
+  $\{\varepsilon_t^*\}_{t=1}^T$
+\end{algorithmic}
+\end{algorithm}
+
+\paragraph{Remarks.}
+\begin{itemize}
+  \item The auxiliary proposals $\{\tilde{X}_t^n\}$ in Step~2 are drawn from
+    the untwisted kernel $P$ and discarded after the grid search. Since they
+    do not enter the weight update, the likelihood estimator
+    $\sum_t \log\ell_t^N$ remains unbiased for $\log p(v_{1:T})$ for any
+    data-dependent choice of $\varepsilon_t^*$.
+
+  \item The grid $\mathcal{E}$ is log-spaced over $[10^{-6}, 1]$ with $K=50$
+    points. All $K$ evaluations of $\hat{m}(\varepsilon)$ reuse the same
+    proposals $\{\tilde{X}_t^n\}$, so the cost of the grid search is one
+    forward pass ($O(N)$) plus $K$ evaluations of an $O(N)$ sum, totalling
+    $O(KN)$ per step. As an alternative, one could minimise $\hat{m}(\varepsilon)$
+    using a gradient-based method, since the analytical derivative
+    \[
+      \frac{d\hat{m}}{d\varepsilon} =
+        \frac{1}{N}\sum_{n=1}^N \frac{h_t(\tilde{X}_t^n)^2}{g_t(\tilde{X}_t^n)+\varepsilon}
+        - (\bar{c}_t+\varepsilon)
+        \frac{1}{N}\sum_{n=1}^N \frac{h_t(\tilde{X}_t^n)^2}{(g_t(\tilde{X}_t^n)+\varepsilon)^2}
+    \]
+    is available in closed form, enabling Brent's method. However, in our
+    Julia implementation with $N=500$ and $T=50$ steps, the grid search
+    proved faster in practice:
+    \begin{center}
+    \begin{tabular}{lrr}
+      \hline
+      Method       & Total time (ms) & Time per step (ms) \\
+      \hline
+      Grid ($K=50$) & 23.26          & 0.465              \\
+      Brent        & 40.81           & 0.816              \\
+      \hline
+    \end{tabular}
+    \end{center}
+    The grid search is $1.75\times$ faster because the $K=50$ evaluations
+    form a tight vectorised loop, whereas Brent's method incurs
+    per-iteration function-call overhead that outweighs the saving from
+    fewer iterations ($\approx 27$ vs $50$). Since $\hat{m}(\varepsilon)$ is
+    smooth and unimodal, reducing to $K=20$ or $K=30$ grid points would
+    roughly halve the cost with negligible impact on the quality of
+    $\varepsilon_t^*$.
+
+  \item In Regime A ($\eta < \sigma$), the minimiser $\varepsilon_t^*$ is
+    typically near the lower end of the grid, effectively recovering
+    $\varepsilon_t^* \approx 0$ and the non-adaptive algorithm. In Regime B
+    ($\eta > \sigma$), the minimiser is positive and varies over time,
+    automatically adjusting to the current particle cloud.
+\end{itemize}
+\subsection{Remarks}
+
+\paragraph{Computational cost.}
+The grid search adds one forward pass of $N$ proposals from $P$ and $K$
+evaluations of $\hat{m}(\varepsilon)$ per time step. Since $h_t$, $g_t$, and
+$c$ are all available in closed form, the overhead is $O(NK)$ per step,
+which is negligible for moderate $K$ (we use $K=50$ log-spaced values).
+
+\paragraph{Unbiasedness.}
+The auxiliary proposals $\tilde{x}_t^{(i)}$ used to estimate $\varepsilon_t^*$
+are discarded after the grid search; the actual SMC proposals
+$x_t^{(i)}$ are drawn fresh from $P^{g_t+\varepsilon_t^*}$. This ensures
+that the IS estimator remains unbiased for $c_h(x_0)$ for any data-dependent
+choice of $\varepsilon_t^*$.
+
+\paragraph{Regime dependence.}
+In Regime A ($\eta<\sigma$), the minimiser of $m(\varepsilon)$ is close to
+zero and the adaptive scheme essentially recovers $\varepsilon_t^*\approx 0$,
+giving performance comparable to the non-adaptive algorithm. In Regime B
+($\eta>\sigma$), the adaptive scheme automatically selects a positive
+$\varepsilon_t^*$ that prevents weight collapse, without requiring any prior
+knowledge of which regime the parameters fall in.
 
 
+\section{Adaptive Choice of $\varepsilon$ via ESS Targeting}
+
+\subsection{Motivation}
+
+The numerical experiments of Section~4 show that the optimal perturbation
+$\varepsilon^*$ varies across time steps and depends on the current particle
+cloud. A fixed $\varepsilon$ cannot be globally optimal. We propose an
+adaptive scheme inspired by tempering methods in SMC
+\cite{neal2001annealed,del2006sequential}, where a tempering parameter is
+chosen at each step so that the ESS after reweighting equals a target
+fraction $\rho N$. The same principle applies here: we choose $\varepsilon_t^*$
+such that the ESS of the IS weights equals $\rho N$.
+
+\subsection{ESS as a Function of $\varepsilon$}
+
+Given proposals $\{x_t^{(i)}\}_{i=1}^N$ drawn from $P(x_{t-1}^{(i)},\cdot)$,
+the ESS of the weights $w^{(i)}(\varepsilon) = h_t(x_t^{(i)})/(g_t(x_t^{(i)})+\varepsilon)$
+is
+\[
+  \mathrm{ESS}(\varepsilon) =
+    \frac{\bigl(\sum_i w^{(i)}(\varepsilon)\bigr)^2}
+         {\sum_i w^{(i)}(\varepsilon)^2}.
+\]
+Two key properties make this suitable for bisection:
+\begin{enumerate}
+  \item $\mathrm{ESS}(\varepsilon)$ is \emph{increasing} in $\varepsilon$:
+    as $\varepsilon\to\infty$, all weights converge to $h_t(x_t^{(i)})/\varepsilon$
+    and become equal, so $\mathrm{ESS}\to N$.
+  \item $\mathrm{ESS}(0)$ may be small or even zero if some $g_t(x_t^{(i)})=0$,
+    reflecting the weight degeneracy in the infinite-variance regime.
+\end{enumerate}
+The target $\varepsilon_t^*$ is therefore the unique solution of
+\[
+  \mathrm{ESS}(\varepsilon_t^*) = \rho N,
+\]
+found by bisection on $\varepsilon \in [0, \varepsilon_{\max}]$. If
+$\mathrm{ESS}(0) \geq \rho N$ already, we set $\varepsilon_t^* = 0$; if even
+$\varepsilon_{\max}$ is insufficient, we set $\varepsilon_t^* = \varepsilon_{\max}$.
+
+\subsection{Connection to $m(\varepsilon)$}
+
+The ESS targeting criterion is closely related to minimising $m(\varepsilon)$.
+Note that
+\[
+  \frac{\mathrm{ESS}(\varepsilon)}{N}
+  \approx \frac{1}{1 + \chi^2(P^h \| P^{g+\varepsilon})}
+  = \frac{c_h(x_0)^2}{m(\varepsilon)},
+\]
+so targeting $\mathrm{ESS}(\varepsilon) = \rho N$ is equivalent to targeting
+$\chi^2(P^h\|P^{g+\varepsilon}) = (1-\rho)/\rho$, i.e.\ a fixed level of the
+$\chi^2$ divergence. Rather than minimising $m(\varepsilon)$ (which requires
+a grid search and gives a different target at each step), ESS targeting gives
+a directly interpretable, step-by-step criterion for particle diversity, and
+bisection finds the solution efficiently without a grid.
+
+
+
+\section{Conclusion}
+
+Figure~\ref{fig:smc_single_run} shows the results of a single SMC run for
+both regimes and both fixed ($\varepsilon=0$) and adaptive $\varepsilon^*$.
+Even for $\eta=3$ the results with $\varepsilon=0$ can be just fine: a single
+run looks almost indistinguishable from the adaptive run in terms of ESS,
+cumulative log-likelihood, and incremental log-likelihood. However, if one
+were to repeat the analysis many times, occasionally this would result in a
+catastrophic drop in ESS. This is precisely the implication of $m(0)=\infty$:
+it does not mean every run fails, but that the variance of the IS weights
+across runs is infinite, so disasters occur with positive probability and
+cannot be ruled out from a single run alone. This is confirmed by the CDF
+plots of Figure~\ref{fig:miness_cdf}, which required $R=200$ independent
+runs to reveal the heavy left tail of the min-ESS distribution at
+$\varepsilon=0$.
+
+Two further observations support this interpretation. First, the incremental
+log-likelihood panel shows a pronounced dip around $t=30$ in both the fixed
+and adaptive runs for $\eta=3$. This dip is driven by a particular difficult
+observation and occurs regardless of $\varepsilon$, suggesting it reflects a
+genuinely hard step in the data rather than an algorithmic failure. In a
+catastrophic run, this dip would be far deeper and the ESS would collapse to
+near 1 at that point. Second, the adaptive $\varepsilon^*$ panel for $\eta=3$
+shows $\varepsilon^*$ spiking upward precisely around $t=30$, at the same
+difficult observation. This confirms that the adaptive scheme is responding
+correctly: it detects the hard step through the empirical minimiser of
+$\hat{m}(\varepsilon)$ and automatically increases $\varepsilon$ to protect
+against weight collapse, without any explicit knowledge of which observations
+are difficult.
 
 \end{document}
