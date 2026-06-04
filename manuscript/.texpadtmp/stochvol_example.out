@@ -12,13 +12,9 @@
 \BOOKMARK [2][-]{subsection.4.3}{4.3. Results}{section.4}% 12
 \BOOKMARK [2][-]{subsection.4.4}{4.4. On the difficulty of choosing \040in Regime B}{section.4}% 13
 \BOOKMARK [2][-]{subsection.4.5}{4.5. Work by Chatterjee \046 Diaconis}{section.4}% 14
-\BOOKMARK [1][-]{section.5}{5. Adaptive Choice of }{}% 15
-\BOOKMARK [2][-]{subsection.5.1}{5.1. Motivation}{section.5}% 16
-\BOOKMARK [2][-]{subsection.5.2}{5.2. Empirical Estimate of m\(\)}{section.5}% 17
-\BOOKMARK [2][-]{algorithm.2}{5.3. Adaptive SMC Algorithm}{section.5}% 18
-\BOOKMARK [2][-]{subsection.5.4}{5.4. Remarks}{section.5}% 19
-\BOOKMARK [1][-]{section.6}{6. Adaptive Choice of \040via ESS Targeting}{}% 20
-\BOOKMARK [2][-]{subsection.6.1}{6.1. Motivation}{section.6}% 21
-\BOOKMARK [2][-]{subsection.6.2}{6.2. ESS as a Function of }{section.6}% 22
-\BOOKMARK [2][-]{subsection.6.3}{6.3. Connection to m\(\)}{section.6}% 23
-\BOOKMARK [1][-]{section.7}{7. Conclusion}{}% 24
+\BOOKMARK [1][-]{section.5}{5. Adaptive Choice of t*}{}% 15
+\BOOKMARK [1][-]{section.6}{6. Adaptive Choice of \040via ESS Targeting}{}% 16
+\BOOKMARK [2][-]{subsection.6.1}{6.1. Motivation}{section.6}% 17
+\BOOKMARK [2][-]{subsection.6.2}{6.2. ESS as a Function of }{section.6}% 18
+\BOOKMARK [2][-]{subsection.6.3}{6.3. Connection to m\(\)}{section.6}% 19
+\BOOKMARK [1][-]{section.7}{7. Conclusion}{}% 20

@@ -514,51 +514,51 @@ $q_n$ is maximum of the normalised weights. Note that $q_n\in [0,1]$ and we want
 
 
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Adaptive Choice of $\varepsilon_t^*$}
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Adaptive Choice of $\varepsilon$}
-
-\subsection{Motivation}
-
-The numerical experiments of Section~4 show that the optimal perturbation
-$\varepsilon^*$ depends on the current state of the particle cloud and varies
-across time steps. A fixed $\varepsilon$ cannot be globally optimal, and
-performance is sensitive to this choice in the infinite-variance regime
-($\eta>\sigma$). This motivates an adaptive scheme that selects
-$\varepsilon_t^*$ at each step by minimising an empirical estimate of
-$m(\varepsilon)$ over the current particle cloud.
-
-\subsection{Empirical Estimate of $m(\varepsilon)$}
-
-Recall that
+The following result motivates the adaptive estimator. For a fixed particle
+$x_{t-1}$ and observation $v_t$, the second moment of the IS weight
+$G_\varepsilon(x_{t-1}, X_t)$ when $X_t \sim P^{g_t+\varepsilon}(x_{t-1},\cdot)$
+is
 \[
-  m(\varepsilon) = \bigl(c(x_0)+\varepsilon\bigr)
-    \int \frac{h(x_1)^2}{g(x_1)+\varepsilon}\,P(x_0,dx_1).
+  m(\varepsilon, x_{t-1}) =
+    \bigl(c(x_{t-1})+\varepsilon\bigr)
+    \int \frac{h_t(x_1)^2}{g_t(x_1)+\varepsilon}\,P(x_{t-1},dx_1).
 \]
-Given the particle cloud $\{x_{t-1}^{(i)}\}_{i=1}^N$ at time $t-1$ and
-observation $v_t$, we estimate $m(\varepsilon)$ by drawing auxiliary proposals
-$\{\tilde{x}_t^{(i)}\}_{i=1}^N$ from the \emph{untwisted} kernel
-$P(x_{t-1}^{(i)},\cdot)$ and computing
+Given the particle cloud $\{X_{t-1}^n\}$ with normalised weights
+$\{W_{t-1}^n\}$, the population-level second moment is the weighted average
 \[
-  \hat{m}(\varepsilon) = \bigl(\bar{c}_t + \varepsilon\bigr)\cdot
-    \frac{1}{N}\sum_{i=1}^N \frac{h_t(\tilde{x}_t^{(i)})^2}
-    {g_t(\tilde{x}_t^{(i)})+\varepsilon},
-  \qquad
-  \bar{c}_t = \frac{1}{N}\sum_{i=1}^N c(x_{t-1}^{(i)}).
+  m(\varepsilon) = \sum_{n=1}^N W_{t-1}^n \cdot m(\varepsilon, X_{t-1}^n)
+  = \sum_{n=1}^N W_{t-1}^n\,\bigl(c(X_{t-1}^n)+\varepsilon\bigr)
+    \int \frac{h_t(x_1)^2}{g_t(x_1)+\varepsilon}\,P(X_{t-1}^n,dx_1).
 \]
-Crucially, the auxiliary proposals $\tilde{x}_t^{(i)}$ are drawn
-independently of $\varepsilon$, so $\hat{m}(\varepsilon)$ can be evaluated
-over a grid of $\varepsilon$ values at the cost of a single forward pass
-through $P$. The optimal perturbation is then
-\[
-  \varepsilon_t^* = \argmin_{\varepsilon \geq 0}\, \hat{m}(\varepsilon),
-\]
-found by a search over a log-spaced grid
-$\varepsilon \in \{\varepsilon_1,\ldots,\varepsilon_K\}$.
+We choose $\varepsilon_t^* = \argmin_{\varepsilon \geq 0}\, m(\varepsilon)$.
 
-\subsection{Adaptive SMC Algorithm}
+
+\paragraph{Empirical estimator.}
+We estimate $m(\varepsilon)$ by drawing auxiliary proposals
+$\tilde{X}_t^n \sim P(X_{t-1}^n,\cdot)$ once and computing
+\[
+  \hat{m}(\varepsilon) =
+    \sum_{n=1}^N W_{t-1}^n\,
+    \frac{h_t(\tilde{X}_t^n)^2}{g_t(\tilde{X}_t^n)+\varepsilon}
+    \cdot\bigl(c(X_{t-1}^n)+\varepsilon\bigr).
+\]
+The analytical derivative is
+\[
+  \frac{d\hat{m}}{d\varepsilon} =
+    \sum_{n=1}^N W_{t-1}^n\,
+    h_t(\tilde{X}_t^n)^2\,
+    \frac{g_t(\tilde{X}_t^n) - c(X_{t-1}^n)}
+         {(g_t(\tilde{X}_t^n)+\varepsilon)^2},
+\]
+which enables gradient-based optimisation. An alternative consists of minimising
+$\hat{m}(\varepsilon)$ over a log-spaced grid $\mathcal{E} =
+\{\varepsilon_1 < \cdots < \varepsilon_K\}$.
+
 \begin{algorithm}
-\caption{Adaptive GPF with $\varepsilon_t^*$ chosen by grid search}
+\caption{Adaptive GPF with $\varepsilon_t^*$ chosen by weighted grid search}
 \label{alg:gpf_adaptive}
 \begin{algorithmic}[1]
 \Require observations $v_{1:T}$, particle count $N$,
@@ -566,21 +566,17 @@ $\varepsilon \in \{\varepsilon_1,\ldots,\varepsilon_K\}$.
   grid $\mathcal{E} = \{\varepsilon_1 < \cdots < \varepsilon_K\}$
 \State For $n=1,\ldots,N$: draw
   $X_0^n \sim \mathcal{N}(0,\,\eta^2/(1-\psi^2))$,
-  set $W_0^n \leftarrow 1/N$,
-  $w_0^n \leftarrow 1$
+  set $W_0^n \leftarrow 1/N$, $w_0^n \leftarrow 1$
 \For{$t = 1, \ldots, T$}
   \State \textbf{Find $\varepsilon_t^*$:} draw auxiliary proposals
-    $\tilde{X}_t^n \sim P(X_{t-1}^n,\,\cdot\,)$
-    for $n=1,\ldots,N$, and set
+    $\tilde{X}_t^n \sim P(X_{t-1}^n,\,\cdot\,)$ for $n=1,\ldots,N$, and set
     \[
       \varepsilon_t^* = \argmin_{\varepsilon \in \mathcal{E}}\;
         \hat{m}(\varepsilon), \qquad
       \hat{m}(\varepsilon) =
-        \Bigl(\bar{c}_t + \varepsilon\Bigr)
-        \frac{1}{N}\sum_{n=1}^N
-        \frac{h_t(\tilde{X}_t^n)^2}{g_t(\tilde{X}_t^n)+\varepsilon},
-      \quad
-      \bar{c}_t = \frac{1}{N}\sum_{n=1}^N c(X_{t-1}^n)
+        \sum_{n=1}^N W_{t-1}^n\,
+        \frac{h_t(\tilde{X}_t^n)^2}{g_t(\tilde{X}_t^n)+\varepsilon}
+        \cdot\bigl(c(X_{t-1}^n)+\varepsilon\bigr)
     \]
     Discard $\{\tilde{X}_t^n\}$ after this step.
   \If{$\mathrm{ESS}(W_{t-1}^{1:N}) < \mathrm{ESS}_{\min}$}
@@ -591,10 +587,7 @@ $\varepsilon \in \{\varepsilon_1,\ldots,\varepsilon_K\}$.
       $\hat{w}_{t-1}^n \leftarrow w_{t-1}^n$
   \EndIf
   \State \textbf{Propose:} for $n=1,\ldots,N$ draw
-    \[
-      X_t^n \sim P^{g_t+\varepsilon_t^*}
-        \!\left(X_{t-1}^{A_{t-1}^n},\,\cdot\,\right)
-    \]
+    $X_t^n \sim P^{g_t+\varepsilon_t^*}\!\left(X_{t-1}^{A_{t-1}^n},\,\cdot\,\right)$
     by sampling from
     $P^{g_t}(X_{t-1}^{A_{t-1}^n},\cdot) = \mathcal{N}(\mu^*,\sigma^{*2})$
     with probability
@@ -616,15 +609,14 @@ $\varepsilon \in \{\varepsilon_1,\ldots,\varepsilon_K\}$.
       \begin{cases}
         \dfrac{1}{N}\displaystyle\sum_{n=1}^N w_t^n
           & \text{if resampling occurred at time }t,\\[8pt]
-        \left(\sum_{n=1}^N w_t^n\right)/\left(\sum_{n=1}^N w_{t-1}^n\right)
+           \left(\sum_{n=1}^N w_t^n\right)/\left(\sum_{n=1}^N w_{t-1}^n\right)
           & \text{otherwise}
       \end{cases}
     \]
   \State \textbf{Normalise:}\quad
     $W_t^n \leftarrow w_t^n \,/\, \sum_{m=1}^N w_t^m$
   \State \textbf{ESS:}\quad
-    $\mathrm{ESS}_t \leftarrow
-      \bigl(\sum_n (W_t^n)^2\bigr)^{-1}$
+    $\mathrm{ESS}_t \leftarrow \bigl(\sum_n (W_t^n)^2\bigr)^{-1}$
 \EndFor
 \State \Return
   $\sum_{t=1}^T \log \ell_t^N$,\quad
@@ -635,76 +627,32 @@ $\varepsilon \in \{\varepsilon_1,\ldots,\varepsilon_K\}$.
 
 \paragraph{Remarks.}
 \begin{itemize}
-  \item The auxiliary proposals $\{\tilde{X}_t^n\}$ in Step~2 are drawn from
-    the untwisted kernel $P$ and discarded after the grid search. Since they
-    do not enter the weight update, the likelihood estimator
+  \item The auxiliary proposals $\{\tilde{X}_t^n\}$ are drawn from the
+    untwisted kernel $P$ and discarded after the grid search. Since they do
+    not enter the weight update, the likelihood estimator
     $\sum_t \log\ell_t^N$ remains unbiased for $\log p(v_{1:T})$ for any
     data-dependent choice of $\varepsilon_t^*$.
 
+  \item Using the carry-over weights $W_{t-1}^n$ in $\hat{m}(\varepsilon)$
+    is essential when resampling has not occurred recently. After resampling
+    all weights equal $1/N$ and the weighted and unweighted averages
+    coincide; in steps without resampling the weight distribution can be
+    skewed and the unweighted average gives a poorly-targeted
+    $\varepsilon_t^*$. Numerical experiments confirm that the weighted
+    version gives a substantial improvement in both min-ESS and
+    max-$Q_n$ diagnostics.
+
   \item The grid $\mathcal{E}$ is log-spaced over $[10^{-6}, 1]$ with $K=50$
     points. All $K$ evaluations of $\hat{m}(\varepsilon)$ reuse the same
-    proposals $\{\tilde{X}_t^n\}$, so the cost of the grid search is one
-    forward pass ($O(N)$) plus $K$ evaluations of an $O(N)$ sum, totalling
-    $O(KN)$ per step. As an alternative, one could minimise $\hat{m}(\varepsilon)$
-    using a gradient-based method, since the analytical derivative
-    \[
-      \frac{d\hat{m}}{d\varepsilon} =
-        \frac{1}{N}\sum_{n=1}^N \frac{h_t(\tilde{X}_t^n)^2}{g_t(\tilde{X}_t^n)+\varepsilon}
-        - (\bar{c}_t+\varepsilon)
-        \frac{1}{N}\sum_{n=1}^N \frac{h_t(\tilde{X}_t^n)^2}{(g_t(\tilde{X}_t^n)+\varepsilon)^2}
-    \]
-    is available in closed form, enabling Brent's method. However, in our
-    Julia implementation with $N=500$ and $T=50$ steps, the grid search
-    proved faster in practice: \note{to be adjusted}
-    \begin{center}
-    \begin{tabular}{lrr}
-      \hline
-      Method       & Total time (ms) & Time per step (ms) \\
-      \hline
-      Grid ($K=50$) & 23.26          & 0.465              \\
-      Brent        & 40.81           & 0.816              \\
-      \hline
-    \end{tabular}
-    \end{center}
-    The grid search is $1.75\times$ faster because the $K=50$ evaluations
-    form a tight vectorised loop, whereas Brent's method incurs
-    per-iteration function-call overhead that outweighs the saving from
-    fewer iterations ($\approx 27$ vs $50$). Since $\hat{m}(\varepsilon)$ is
-    smooth and unimodal, reducing to $K=20$ or $K=30$ grid points would
-    roughly halve the cost with negligible impact on the quality of
-    $\varepsilon_t^*$.
+    proposals $\{\tilde{X}_t^n\}$, so the cost is $O(KN)$ per step.
+    Reducing to $K=20$ or $K=30$ would roughly halve the cost with
+    negligible impact on $\varepsilon_t^*$.
 
-  \item In Regime A ($\eta < \sigma$), the minimiser $\varepsilon_t^*$ is
-    typically near the lower end of the grid, effectively recovering
-    $\varepsilon_t^* \approx 0$ and the non-adaptive algorithm. In Regime B
-    ($\eta > \sigma$), the minimiser is positive and varies over time,
-    automatically adjusting to the current particle cloud.
+  \item In Regime A ($\eta < \sigma$), $\varepsilon_t^* \approx 0$
+    typically, recovering the non-adaptive algorithm. In Regime B
+    ($\eta > \sigma$), $\varepsilon_t^*$ is positive and varies over time,
+    automatically responding to difficult observations.
 \end{itemize}
-\subsection{Remarks}
-
-\paragraph{Computational cost.}
-The grid search adds one forward pass of $N$ proposals from $P$ and $K$
-evaluations of $\hat{m}(\varepsilon)$ per time step. Since $h_t$, $g_t$, and
-$c$ are all available in closed form, the overhead is $O(NK)$ per step,
-which is negligible for moderate $K$ (we use $K=50$ log-spaced values).
-
-\paragraph{Unbiasedness.}
-The auxiliary proposals $\tilde{x}_t^{(i)}$ used to estimate $\varepsilon_t^*$
-are discarded after the grid search; the actual SMC proposals
-$x_t^{(i)}$ are drawn fresh from $P^{g_t+\varepsilon_t^*}$. This ensures
-that the IS estimator remains unbiased for $c_h(x_0)$ for any data-dependent
-choice of $\varepsilon_t^*$.
-
-\paragraph{Regime dependence.}
-In Regime A ($\eta<\sigma$), the minimiser of $m(\varepsilon)$ is close to
-zero and the adaptive scheme essentially recovers $\varepsilon_t^*\approx 0$,
-giving performance comparable to the non-adaptive algorithm. In Regime B
-($\eta>\sigma$), the adaptive scheme automatically selects a positive
-$\varepsilon_t^*$ that prevents weight collapse, without requiring any prior
-knowledge of which regime the parameters fall in.
-
-
-
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

@@ -216,60 +216,99 @@ function main_smc(p; T=50, N=500, ε=0.01, seed=42)
 end
 
 # ── Adaptive ε* SMC via grid search on m̂(ε) ─────────────────────────────────
-
-"""
-    find_eps_star(x_prev, vt, p, rng; ε_grid)
-
-Find ε* minimising the empirical m̂(ε) over a log-spaced grid, using
-auxiliary proposals drawn once from the untwisted P.
-"""
-function find_eps_star(x_prev, vt, p, rng;
+function find_eps_star(x_prev, vt, p, rng, w;
                        ε_grid = exp.(range(log(1e-6), log(1.0), length=50)))
     @unpack ω, ψ, η = p
     N         = length(x_prev)
     proposals = [randn(rng) * η + ω + ψ * x_prev[i] for i in 1:N]
     h_vals    = [h_t(proposals[i], vt, p) for i in 1:N]
     g_vals    = [g_t(proposals[i], vt, p) for i in 1:N]
-    c_mean    = mean(c_closed(x_prev[i], vt, p) for i in 1:N)
-    m_vals    = [(c_mean + ε) * mean(h_vals[i]^2 / (g_vals[i] + ε) for i in 1:N)
+    c_vals    = [c_closed(x_prev[i], vt, p) for i in 1:N]
+    # weighted average of per-particle m̂(ε)
+    m_vals    = [sum(w[i] * (c_vals[i] + ε) * h_vals[i]^2 / (g_vals[i] + ε)
+                     for i in 1:N)
                  for ε in ε_grid]
     return ε_grid[argmin(m_vals)]
 end
 
-"""
-    find_eps_star_optim(x_prev, vt, p, rng; ε_lo, ε_hi)
 
-Find ε* minimising m̂(ε) using Brent's method with analytical gradient:
-    dm̂/dε = I(ε) - (c̄ + ε) · J(ε)
-where I(ε) = (1/N)Σ hᵢ²/(gᵢ+ε),  J(ε) = (1/N)Σ hᵢ²/(gᵢ+ε)²
-"""
-function find_eps_star_optim(x_prev, vt, p, rng;
-                             ε_lo = 1e-8,
-                             ε_hi = 1.0)
+function find_eps_star_optim(x_prev, vt, p, rng, w; ε_lo=1e-8, ε_hi=1.0)
     @unpack ω, ψ, η = p
     N         = length(x_prev)
     proposals = [randn(rng) * η + ω + ψ * x_prev[i] for i in 1:N]
     h_vals    = [h_t(proposals[i], vt, p) for i in 1:N]
     g_vals    = [g_t(proposals[i], vt, p) for i in 1:N]
-    c_mean    = mean(c_closed(x_prev[i], vt, p) for i in 1:N)
+    c_vals    = [c_closed(x_prev[i], vt, p) for i in 1:N]
 
     function m_hat(ε)
-        I = mean(h_vals[i]^2 / (g_vals[i] + ε) for i in 1:N)
-        return (c_mean + ε) * I
+        return sum(w[i] * (c_vals[i] + ε) * h_vals[i]^2 / (g_vals[i] + ε)
+                   for i in 1:N)
     end
 
     function dm_hat(ε)
-        I = mean(h_vals[i]^2 / (g_vals[i] + ε)   for i in 1:N)
-        J = mean(h_vals[i]^2 / (g_vals[i] + ε)^2 for i in 1:N)
-        return I - (c_mean + ε) * J
+        return sum(w[i] * h_vals[i]^2 * (g_vals[i] - c_vals[i]) / (g_vals[i] + ε)^2
+                   for i in 1:N)
     end
 
     dm_hat(ε_lo) >= 0.0 && return ε_lo
     dm_hat(ε_hi) <= 0.0 && return ε_hi
-
     result = Optim.optimize(m_hat, ε_lo, ε_hi, Optim.Brent())
     return Optim.minimizer(result)
 end
+
+# """
+#     find_eps_star(x_prev, vt, p, rng; ε_grid)
+
+# Find ε* minimising the empirical m̂(ε) over a log-spaced grid, using
+# auxiliary proposals drawn once from the untwisted P.
+# """
+# function find_eps_star(x_prev, vt, p, rng;
+#                        ε_grid = exp.(range(log(1e-6), log(1.0), length=50)))
+#     @unpack ω, ψ, η = p
+#     N         = length(x_prev)
+#     proposals = [randn(rng) * η + ω + ψ * x_prev[i] for i in 1:N]
+#     h_vals    = [h_t(proposals[i], vt, p) for i in 1:N]
+#     g_vals    = [g_t(proposals[i], vt, p) for i in 1:N]
+#     c_mean    = mean(c_closed(x_prev[i], vt, p) for i in 1:N)
+#     m_vals    = [(c_mean + ε) * mean(h_vals[i]^2 / (g_vals[i] + ε) for i in 1:N)
+#                  for ε in ε_grid]
+#     return ε_grid[argmin(m_vals)]
+# end
+
+# """
+#     find_eps_star_optim(x_prev, vt, p, rng; ε_lo, ε_hi)
+
+# Find ε* minimising m̂(ε) using Brent's method with analytical gradient:
+#     dm̂/dε = I(ε) - (c̄ + ε) · J(ε)
+# where I(ε) = (1/N)Σ hᵢ²/(gᵢ+ε),  J(ε) = (1/N)Σ hᵢ²/(gᵢ+ε)²
+# """
+# function find_eps_star_optim(x_prev, vt, p, rng;
+#                              ε_lo = 1e-8,
+#                              ε_hi = 1.0)
+#     @unpack ω, ψ, η = p
+#     N         = length(x_prev)
+#     proposals = [randn(rng) * η + ω + ψ * x_prev[i] for i in 1:N]
+#     h_vals    = [h_t(proposals[i], vt, p) for i in 1:N]
+#     g_vals    = [g_t(proposals[i], vt, p) for i in 1:N]
+#     c_mean    = mean(c_closed(x_prev[i], vt, p) for i in 1:N)
+
+#     function m_hat(ε)
+#         I = mean(h_vals[i]^2 / (g_vals[i] + ε) for i in 1:N)
+#         return (c_mean + ε) * I
+#     end
+
+#     function dm_hat(ε)
+#         I = mean(h_vals[i]^2 / (g_vals[i] + ε)   for i in 1:N)
+#         J = mean(h_vals[i]^2 / (g_vals[i] + ε)^2 for i in 1:N)
+#         return I - (c_mean + ε) * J
+#     end
+
+#     dm_hat(ε_lo) >= 0.0 && return ε_lo
+#     dm_hat(ε_hi) <= 0.0 && return ε_hi
+
+#     result = Optim.optimize(m_hat, ε_lo, ε_hi, Optim.Brent())
+#     return Optim.minimizer(result)
+# end
 
 # ── Shared SMC loop body ──────────────────────────────────────────────────────
 
@@ -290,7 +329,7 @@ function _run_smc_adaptive(vs, N, p, find_eps_fn; rng=Random.default_rng(), ess_
     for t in 1:T
         vt = vs[t]
 
-        ε        = find_eps_fn(X, vt, p, rng)
+        ε        = find_eps_fn(X, vt, p, rng, w)
         ε_vec[t] = ε
 
         ess = 1.0 / sum(w.^2)
