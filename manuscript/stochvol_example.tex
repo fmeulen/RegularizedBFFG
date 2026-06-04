@@ -267,7 +267,7 @@ With the observation scheme $v = X_1 + \log Z^2$, $Z\sim\mathcal{N}(0,1)$, we ha
 \end{prop}
 It follows that for $\eta<\pi/\sqrt{2}\approx 2.221$ no regularisation is needed. For $\eta=\sigma$ the integral diverges (though like $e^t$), while for $\eta>\sigma$ divergence is much faster. 
 
-\newpage
+
 \begin{center}
 	\includegraphics[scale=0.5]{mbar_plot_1.0.png}
 \end{center}
@@ -350,7 +350,7 @@ So minimising $m(\eps)$ at each SMC step is equivalent to maximising ESS.
 
 
 %
-\newpage
+
 
 
 \section{Numerical Experiment: Effect of $\varepsilon$ on SMC Performance}
@@ -371,7 +371,7 @@ We compare two regimes:
     where $m(0)=\infty$.
 \end{itemize}
 In both regimes we run SMC with the twisted proposal $P^{g+\varepsilon}$ for
-several values of $\varepsilon \in \{0, 0.001, 0.01, 0.05, 0.1\}$.
+several values of \[ \varepsilon \in \{0, 0.001, 0.01, 0.05, 0.1\}.\]
 
 \subsection{SMC Algorithm}
 
@@ -440,36 +440,38 @@ $P^{g+\varepsilon}(x_{t-1},\cdot)$ is
 \end{algorithm}
 
 \noindent
-To assess performance, we run Algorithm~\ref{alg:gpf} independently $R=200$
-times on the same simulated dataset ($T=50$, $N=2000$) and record the minimum
-ESS over time,
-\[
-  \mathrm{ESS}_{\min} = \min_{t=1,\ldots,T} \mathrm{ESS}_t,
-\]
-for each run. A low $\mathrm{ESS}_{\min}$ indicates that at some point the
+To assess performance, we run Algorithm~\ref{alg:gpf} independently $R=500$
+times on the same simulated dataset ($T=50$, $N=2000$) and record both the minimum
+ESS over time and the maximum normalised weight over time for each run. Define
+\begin{align*}
+  \mathrm{ESS}_{\min} &= \min_{t=1,\ldots,T} \mathrm{ESS}_t,	\\
+  Q_{\max} &= \max_{t=1,\ldots,T} \max_n W^n_t.
+\end{align*}
+ A low $\mathrm{ESS}_{\min}$ indicates that at some point the
 particle cloud collapsed to a near-degenerate distribution, with a single
-particle carrying almost all the weight.
+particle carrying almost all the weight. similarly a large $Q_{\max}$ value indicates this. 
 
 \subsection{Results}
 
 Figure~\ref{fig:miness_cdf} shows the empirical CDF of $\mathrm{ESS}_{\min}$
-across $R=200$ runs for each value of $\varepsilon$, separately for the two
-regimes.
-
-{\it Regime A ($\eta < \sigma$).}
-All curves are tightly clustered regardless of $\varepsilon$, with
-$\mathrm{ESS}_{\min}$ concentrated between 400 and 600. This confirms the
+across $R=500$ runs for each value of $\varepsilon$, separately for the two
+regimes. We took $N=500$ particles for a dataset with $T=50$. 
+\begin{itemize}
+	\item {\it Regime A ($\eta < \sigma$).}
+One can see an improvement upon taking $\epsilon>0$, though $\epsilon=0.01$ is clearly too large. One can see that the minimal ESS is about $60$ for $\epsilon=0$.   This confirms the
 theoretical prediction: when $m(0)<\infty$, the IS weights have finite
-variance and $\varepsilon$ has no meaningful effect on performance. Note though, while finiteness is guaranteed, it is typically beneficial to take nonzero $\eps$. The value $m(0)$ can still be large, while finite. 
+variance.  While finiteness is guaranteed, it is typically beneficial to take nonzero $\eps$. The value $m(0)$ can still be large, while finite. 
 
-{\it Regime B ($\eta > \sigma$).}
+\item {\it Regime B ($\eta > \sigma$).}
 The picture changes dramatically. At $\varepsilon=0$ the CDF has substantial
 mass near zero, meaning that in a significant fraction of runs the particle
-cloud collapses to near-degeneracy at some time step. A small perturbation
-$\varepsilon=0.001$ shifts the CDF markedly rightward, essentially eliminating
+cloud collapses to near-degeneracy at some time step. Taking 
+$\varepsilon=0.01$ shifts the CDF markedly rightward, essentially eliminating
 the collapses. This is the direct numerical manifestation of $m(0)=\infty$:
 the IS weights have infinite variance, leading to occasional but catastrophic
 weight concentration on a single particle.
+\end{itemize}
+
 
 
 \subsection{On the difficulty of choosing $\varepsilon$ in Regime B}
@@ -487,7 +489,7 @@ This suggests that a fixed $\varepsilon$ is fundamentally limited in Regime B,
 and that an \emph{adaptive} scheme --- choosing $\varepsilon_t$ at each step
 based on the current particle cloud by minimising an empirical estimate of
 $m(\varepsilon)$ --- would be more robust. In Regime A, by contrast, $\varepsilon=0$
-is already optimal and no adaptation is needed.
+is already satisfactory.
 
 
 
@@ -501,8 +503,8 @@ is already optimal and no adaptation is needed.
 
 
 \subsection{Work by Chatterjee \& Diaconis}
-Suggest to look at $q_n$-statistic. See Figure \ref{fig:maxqn_cdf}. 
-$q_n$ is maximum of the normalised weights. Note that $q_n\in [0,1]$ and we want it to be small.  
+Suggest to look at $Q_{\max}$-statistic. See Figure \ref{fig:maxqn_cdf}. 
+ is maximum of the normalised weights. Note that $Q_{\max}\in [0,1]$ and we want it to be small.  
 
 \begin{figure}
 	\begin{center}
@@ -532,19 +534,18 @@ $\{W_{t-1}^n\}$, the population-level second moment is the weighted average
   m(\varepsilon) = \sum_{n=1}^N W_{t-1}^n \cdot m(\varepsilon, X_{t-1}^n)
   = \sum_{n=1}^N W_{t-1}^n\,\bigl(c(X_{t-1}^n)+\varepsilon\bigr)
     \int \frac{h_t(x_1)^2}{g_t(x_1)+\varepsilon}\,P(X_{t-1}^n,dx_1).
-\]
+\] So we evaluate $m(\varepsilon)$  by taking the expectation of $x_{t-1}$ over the current particle approximation. 
 We choose $\varepsilon_t^* = \argmin_{\varepsilon \geq 0}\, m(\varepsilon)$.
 
 
-\paragraph{Empirical estimator.}
-We estimate $m(\varepsilon)$ by drawing auxiliary proposals
+The integral appearing in $m(\eps)$ can be approximately using numerical quadrature, but in our implementation we approximate it by  drawing auxiliary proposals
 $\tilde{X}_t^n \sim P(X_{t-1}^n,\cdot)$ once and computing
 \[
   \hat{m}(\varepsilon) =
     \sum_{n=1}^N W_{t-1}^n\,
     \frac{h_t(\tilde{X}_t^n)^2}{g_t(\tilde{X}_t^n)+\varepsilon}
     \cdot\bigl(c(X_{t-1}^n)+\varepsilon\bigr).
-\]
+\] Thus, this involves a Monte-Carlo estimator based on just 1 sample. 
 The analytical derivative is
 \[
   \frac{d\hat{m}}{d\varepsilon} =
@@ -640,7 +641,7 @@ $\hat{m}(\varepsilon)$ over a log-spaced grid $\mathcal{E} =
     skewed and the unweighted average gives a poorly-targeted
     $\varepsilon_t^*$. Numerical experiments confirm that the weighted
     version gives a substantial improvement in both min-ESS and
-    max-$Q_n$ diagnostics.
+    $Q_{\max}$ diagnostics.
 
   \item The grid $\mathcal{E}$ is log-spaced over $[10^{-6}, 1]$ with $K=50$
     points. All $K$ evaluations of $\hat{m}(\varepsilon)$ reuse the same
@@ -648,10 +649,7 @@ $\hat{m}(\varepsilon)$ over a log-spaced grid $\mathcal{E} =
     Reducing to $K=20$ or $K=30$ would roughly halve the cost with
     negligible impact on $\varepsilon_t^*$.
 
-  \item In Regime A ($\eta < \sigma$), $\varepsilon_t^* \approx 0$
-    typically, recovering the non-adaptive algorithm. In Regime B
-    ($\eta > \sigma$), $\varepsilon_t^*$ is positive and varies over time,
-    automatically responding to difficult observations.
+
 \end{itemize}
 
 
