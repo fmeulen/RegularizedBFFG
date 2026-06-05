@@ -54,6 +54,13 @@ function h(x₁, p)
     return fχ * u
 end
 
+
+# function h(x₁, p)
+#    @unpack v = p   # add b to Para struct
+#    b = 0.01
+#     return pdf(Laplace(v, b), x₁)
+# end
+
 # ── Gauss-Hermite integration over P(x₀, dx₁) ────────────────────────────────
 # x₁ = μ_kernel + η·√2·s,  P(x₀, dx₁) = φ(t; 0,1) dt
 # GH: ∫ f(t) e^{-t²} dt ≈ Σ wᵢ f(tᵢ)

@@ -111,7 +111,7 @@
 \newcommand{\solve}{\mathrm{solve}}
 
 %% add notes via
-\newcommand{\note}[1]{{\color{Violet} #1}}
+\newcommand{\note}[1]{{\color{Sienna} #1}}
 
 %---------------------------------------------------------------------------------------
 \title{Regularisation in guiding}
@@ -121,7 +121,30 @@
 \begin{document}
 \maketitle
 
-\section{Setup}
+
+\section{General setup}
+
+
+Consider discrete-time nonlinear Gaussian model
+\[ X_{t+1} \mid X_t=x \sim \dN{b_t(x)}{Q_t(x)}. \]
+Assume to observe 
+\[ V_{t} \mid X_{t}=x \sim K(x,\cdot), \]
+
+Consider the continuous-time SDE model
+\[	  \dd X_t = b(t,X_t) \dd t + q \dd W_t,\qquad  X_0=x_0 .\]
+Assume to observe 
+\[ V_{i} \mid X_{t_i}=x \sim K(x,\cdot). \]
+We  assume the Markov kernel $K$ to admit a density $k(x,\cdot)$ with respect to Lebesgue measure. 
+
+
+Outline:
+\begin{enumerate}
+	\item focus on filtering using SMC
+	\item Upon linear approximation of $b$ and $k$, we can compute guiding functions
+	\item Analyse behaviour of resulting guided process, show need of safeguarding using $\eps$. 
+\end{enumerate}
+
+\section{Discrete example setup}
 We consider the  Markov kernel $P(x_0, dx_1)$  defined by
 \[
   X_1 \mid X_0 \;\sim\; \mathcal{N}(\omega + \psi X_0,\; \eta^2).
@@ -155,18 +178,16 @@ We have twisted kernels
 \]
 Define $c_g = \int P(x_0, dx_1)\, g(x_1)$ and similarly $c_h$. As $x_0$ is fixed in this section, we omit it from our notation.  In our specific case
 \[ c_g = \phi(v; \mu+\omega+\psi x_0; \sigma^2+\eta^2). \]
+Moreover, 
+\[ P^g(x_0, \dd x_1) \sim \dN{\mu^\star}{(\sigma^\star)^2}, \]
+with
+\[ (\sigma^\star)^2=\frac{\eta^2\sigma^2}{\eta^2+\sigma^2} \qquad \mu^\star = \frac{\sigma^2(\omega+\psi x_0)+\eta^2(v-\mu)}{\eta^2+\sigma^2}. 
+\]
 
 
-Note
+The measure obtained from $g_\eps$ is a mixture:
 \[ P^{g+\varepsilon}(x_0, d x_1) = \frac{g(x_1) + \eps}{c_g +\eps} P(x_0, dx_1) = \lambda_g(\eps) P^g(x_0, d x_1) + (1-\lambda_g(\eps)) P(x_0, d x_1), \]
 with $\lambda_g(\eps)= c_g/(c_g+\eps)$. 
-%\section*{Questions}
-%\note{To be done}
-%\begin{itemize}
-%  \item Can we bound $\mathrm{KL}(P^h \,\|\, P^g)$?
-%  \item Can we bound $\mathrm{KL}(P^h \,\|\, P^{h+\eps g})$?
-%  \item Write code to evaluate $\mathrm{KL}(P^h \,\|\, P^g)$ numerically.
-%\end{itemize}
 
 \section{Sequential Monte Carlo Approach}
 
@@ -177,7 +198,7 @@ Then it follows from the results in Chapter 5 of Chopin-Papaspiliopoulos that th
 \begin{align*}
 G_\eps(x_1)
   & := h(x_1)\,\frac{P(x_0, dx_1)}{P^{g+\eps}(x_0, dx_1)}
-  = h(x_1)\,\frac{\int P(x_0, dx_1)\, g(x_1)\, dx_1+ \eps}{g(x_1)  + \eps}
+  \\ & = h(x_1)\,\frac{\int P(x_0, dx_1)\, g(x_1)\, dx_1+ \eps}{g(x_1)  + \eps}
   \\ &= h(x_1)\,\frac{c_g+ \eps}{g(x_1)+ \eps} .
 \end{align*}
 The estimator for the marginal likelihood is
@@ -195,12 +216,14 @@ Define
   m(\eps) = \mathbb{E}_{P^{g+\eps}}\!\left[G_\eps(x_0, X_1)\right]^2.
 \]
 By expanding we get
-\begin{align*}
+\begin{equation}\label{eq:m_eps1}
+\begin{split}
   m(\eps)
   &= \int h(x_1)^2 \left(\frac{c_g+\eps}{g(x_1)+\eps}\right)^{\!2}
     \frac{P(x_0, dx_1)\,(g(x_1)+\eps)}{c_g+\eps}
   \\ &= \bigl(c_g+\eps\bigr)\int \frac{h(x_1)^2}{g(x_1)+\eps}\,P(x_0,dx_1).
-\end{align*}
+	\end{split}	
+\end{equation}
 Define \[  I(\eps)= \int \frac{h(x_1)^2}{g(x_1)+\eps}\,P(x_0,dx_1)\] and
 \[ \bar{m}(\eps) = \log m(\eps) = \log (c_g+\eps) + \log I(\eps). \]
 
@@ -750,5 +773,169 @@ are difficult.
 	\end{center}
 	\caption{\label{fig:smc_single_run}}
 \end{figure}
+
+
+
+\section{Laplace Observation Scheme}
+
+\subsection{Setup}
+
+As an alternative to the log-chi-squared observation scheme, consider
+\[
+  V_t = X_t + U_t, \qquad U_t \sim \mathrm{Laplace}(0, b),
+\]
+so that the observation density evaluated at $v$ is
+\[
+  h(x_1) = \frac{1}{2b}\exp\!\left(-\frac{|v - x_1|}{b}\right).
+\]
+We retain the Gaussian approximation
+\[
+  g(x_1) = \phi(x_1;\, v-\mu,\, \sigma^2),
+\]
+so all closed-form expressions for $c(x_0)$, $P^g$, and the mixture sampler
+carry over unchanged from the Gaussian observation case.
+
+\subsection{Tail analysis of $m(0)$}
+
+Writing $t = x_1 - v$, the integrand of $I(0) = \int h(x_1)^2/g(x_1)\,
+P(x_0,dx_1)$ behaves as
+
+\[
+  \frac{h(x_1)^2}{g(x_1)}\,p(x_1\mid x_0)
+  \;\propto\;
+  \exp\!\left(
+    -\frac{2|t|}{b}
+    + \frac{(t+\mu)^2}{2\sigma^2}
+    - \frac{(t - (\omega+\psi x_0 - v))^2}{2\eta^2}
+  \right).
+\]
+\begin{itemize}
+	\item {\it Right tail $t\to+\infty$.}
+The linear term $-2t/b$ and the quadratic terms combine to give dominant
+behaviour
+\[
+  \exp\!\left(t^2\!\left(\frac{1}{2\sigma^2}-\frac{1}{2\eta^2}\right)
+    - \frac{2t}{b} + O(t)\right).
+\]
+For this to be integrable we need the coefficient of $t^2$ to be strictly
+negative, i.e.\ $\eta^2 < \sigma^2$, exactly as in the Gaussian observation
+case. When $\eta^2 \geq \sigma^2$, the quadratic growth dominates the linear
+decay from the Laplace tails and $I(0) = \infty$.
+
+When $\eta^2 < \sigma^2$ the quadratic term decays, but the linear term
+$-2t/b$ provides additional decay that is absent in the Gaussian observation
+case. The integrand therefore decays faster here, but $I(0)$ is still finite
+only when $\eta^2 < \sigma^2$.
+
+\item {\it Left tail $t\to-\infty$.}
+The Laplace density contributes $-2|t|/b = +2t/b \to -\infty$, providing
+exponential decay. However, when $\eta^2 \geq \sigma^2$ the quadratic term
+grows, and whether it dominates depends on the sign of
+$1/(2\sigma^2) - 1/(2\eta^2)$. When $\eta^2 \geq \sigma^2$ the quadratic
+growth again wins and $I(0) = \infty$.
+\end{itemize}
+\begin{prop}
+  For the Laplace observation scheme $V_t = X_t + U_t$,
+  $U_t \sim \mathrm{Laplace}(0,b)$:
+  \[
+    I(0) = \int \frac{h(x_1)^2}{g(x_1)}\,P(x_0,dx_1) < \infty
+    \iff \eta^2 < \sigma^2.
+  \]
+  Consequently, $\bar{m}(0)$ is finite if and only if $\eta < \sigma$,
+  independently of the scale parameter $b$.
+\end{prop}
+
+The threshold $\eta = \sigma$ is the same as for the Gaussian observation
+scheme. However, the Laplace tails make $I(0)$ larger for any fixed
+$\eta < \sigma$ compared to the Gaussian case, meaning the need for
+$\varepsilon > 0$ is more pressing even in the finite-variance regime.
+Furthermore, larger $\eta$ increases the coefficient of $t^2$, making
+$I(\varepsilon)$ larger for any fixed $\varepsilon > 0$ and the optimal
+$\varepsilon^*$ correspondingly larger.
+
+\subsection{The limit $b \downarrow 0$}
+
+As the scale $b \to 0$, the Laplace distribution concentrates on zero and
+the observation scheme approaches a noiseless observation $V_t = X_t$. In
+this limit:
+
+\begin{itemize}
+  \item $h(x_1) = \frac{1}{2b}\exp(-|v-x_1|/b) \to \delta_{x_1 = v}$, a
+    point mass at $x_1 = v$.
+
+  \item The twisted target $P^h(x_0, \cdot)$ concentrates all mass at
+    $x_1 = v$, i.e.\ the posterior on $X_t$ given $V_t = v$ becomes a
+    point mass.
+
+  \item The ratio $h(x_1)/g(x_1)$ becomes extremely large near $x_1 = v$
+    and extremely small away from it, since $h$ is an increasingly sharp
+    spike while $g$ remains spread out. This makes the IS weights
+    degenerate: a single particle near $v$ gets essentially all the weight.
+
+  \item Consequently, $m(\varepsilon) \to \infty$ for any fixed
+    $\varepsilon \geq 0$ as $b \to 0$, and the optimal $\varepsilon^*_b
+    \to \infty$ as well --- no finite regularisation can rescue the IS
+    estimator when the observation is nearly noiseless.
+\end{itemize}
+
+This limiting behaviour highlights a fundamental tension: the more
+informative the observation (smaller $b$), the harder the IS problem
+becomes. Intuitively, the Gaussian approximation $g$ is a poor proxy for a
+nearly point-mass likelihood, and $\varepsilon$ can only partially compensate
+by mixing in the prior $P$. In the limit $b = 0$, importance sampling from
+$P^{g+\varepsilon}$ breaks down entirely and a different approach --- such as
+an exact update using the point-mass likelihood --- would be needed.
+
+Numerically, one can verify this by plotting $\bar{m}(\varepsilon)$ for
+decreasing values of $b$: the minimum of $\bar{m}$ increases without bound
+and $\varepsilon^*$ drifts toward larger values as $b \to 0$.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Pushing the argument to SDEs}
+
+Suppose 
+\begin{equation}\label{eq:X}
+	  \dd X_t = b(t,X_t) \dd t + q \dd W_t,\qquad  X_0=x_0 .
+\end{equation}
+Here, $b\colon \RR_+ \times \RR^d \to \RR^d$ is a (typically nonlinear) map known as the drift function and $q \in  \RR^{d\times d'}$ is the diffusion function. Furthermore, $W$ is a standard Brownian motion process in $\RR^{d'}$.  
+Assume we observe $v$ at time $T$ and let 
+\[ h(x_T)= \mbox{density of v conditional on $X_T=x_T$}. 
+\]
+We can 
+\begin{itemize}
+	\item Make a Gaussian approximation to $h(x_T)$.
+	\item Compute $g(t,x)$ for all $t$. 
+	\item Use guided proposals with not $g$ but $g+\eps$. 
+\end{itemize}
+
+
+
+Rather than $g$, take $g_\epsilon:=g+\epsilon$. Then
+\begin{align*}
+	r_\eps(t,x):=\nabla_x g_\epsilon(t,x) &= \frac{g^\prime(t,x)}{g(t,x)+\epsilon} = \frac{g(t,x)}{g(t,x)+\epsilon} \nabla_x \log g(t,x) \\ &= s(-\log \epsilon +\log g(t,x)) \nabla_x \log g(t,x), 
+\end{align*} 
+where $s(x)=1/(1+e^{-x})$. Thus we get a damping factor. 
+The measure $P^{g+\epsilon}$ is  the measure (on path space) of the process
+\[ 	  \dd X_t = b(t,X_t) \dd t +Q r_\eps(t,X_t) +q \dd W_t,\qquad  X_0=x_0 .\]
+with $Q=q q^\T$. Now, with $x=(x_t,\in t\in [0,T])$. 
+\[ G_\eps(x) = h(x_T) \frac{d P}{d P^{g+\eps}}(x)   \]
+Thus 
+\begin{align*} m(\eps) &= \EE_{P^{g+\eps}} G_\eps(X)^2 = \int  G_\eps(x)^2 d P^{g+\eps}(x) \\ & = \int  G_\eps(x)^2 \frac{d P^{g+\eps}}{d P}(x) d P(x) \\ & = \int \left(\frac{d P^{g+\eps}}{d P}(x)\right)^{-1} h(x_T)^2 d P(x) \\ & =(g(x_0)+\eps) \int \frac{h(x_T)^2}{g(x_T)+\eps}  \Psi(x) d P(x) ,
+\end{align*}
+with
+\[ \log \Psi(x)= \int_0^T (b(t,x_t)-\tilde{b}(t,x_t)) r_\eps(t,x_t) d t. \]
+This is to be compared to \eqref{eq:m_eps1}: $c_g$ in that formula is exactly as $g(x_0)$ here. In the discrete-time we assumed linear dynamics and thus $\tilde b=b$ which amounts to $\Psi(x)=1$. \note{I think the nonlinear case is most interesting here, for else filtering at time $T$ boils down to the discrete-time problem.}
+\begin{lem}
+Suppose $g(T,x)=\phi(v; \mu, \sigma^2)$ (with $\mu, \sigma$ depending on $v$). If $b(x)=\omega + \psi x$ then for $t\in [0,T)$ we have
+\[ g(t,x)= ....\]
+\note{Closed form expression or via backward ODEs.}
+	
+	
+	\bigskip
+	
+	
+Can we establish when $m(0)=\infty$?
+\end{lem}
 
 \end{document}

@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.21 (TeX Live 2020) (preloaded format=pdflatex 2020.11.27)  4 JUN 2026 15:50
+This is pdfTeX, Version 3.14159265-2.6-1.40.21 (TeX Live 2020) (preloaded format=pdflatex 2020.11.27)  5 JUN 2026 14:33
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -474,272 +474,300 @@ LaTeX Info: Redefining \nameref on input line 121.
 \openout3 = `stochvol_example.out'.
 
 LaTeX Font Info:    Font shape `U/lasy/b/n' in size <8> not available
-(Font)              Font shape `U/lasy/m/n' tried instead on input line 125.
+(Font)              Font shape `U/lasy/m/n' tried instead on input line 129.
  [1{/usr/local/texlive/2020/texmf-var/fonts/map/pdftex/updmap/pdftex.map}]
 
 Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `math shift' on input line 193.
+(hyperref)                removing `math shift' on input line 214.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `math shift' on input line 193.
+(hyperref)                removing `math shift' on input line 214.
 
 [2]
-<../smc/figs/mbar_plot_1.0.png, id=109, 602.25pt x 401.5pt>
+<../smc/figs/mbar_plot_1.0.png, id=136, 602.25pt x 401.5pt>
 File: ../smc/figs/mbar_plot_1.0.png Graphic file (type png)
 <use ../smc/figs/mbar_plot_1.0.png>
-Package pdftex.def Info: ../smc/figs/mbar_plot_1.0.png  used on input line 272.
+Package pdftex.def Info: ../smc/figs/mbar_plot_1.0.png  used on input line 295.
 (pdftex.def)             Requested size: 301.12425pt x 200.7495pt.
-<../smc/figs/mbar_plot_3.0.png, id=110, 602.25pt x 401.5pt>
+ [3]
+<../smc/figs/mbar_plot_3.0.png, id=143, 602.25pt x 401.5pt>
 File: ../smc/figs/mbar_plot_3.0.png Graphic file (type png)
 <use ../smc/figs/mbar_plot_3.0.png>
-Package pdftex.def Info: ../smc/figs/mbar_plot_3.0.png  used on input line 276.
+Package pdftex.def Info: ../smc/figs/mbar_plot_3.0.png  used on input line 299.
 (pdftex.def)             Requested size: 301.12425pt x 200.7495pt.
- [3 <../smc/figs/mbar_plot_1.0.png>] [4 <../smc/figs/mbar_plot_3.0.png>]
+ [4 <../smc/figs/mbar_plot_1.0.png> <../smc/figs/mbar_plot_3.0.png>]
 
 Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `math shift' on input line 282.
-
-
-Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `\chi' on input line 282.
+(hyperref)                removing `math shift' on input line 305.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `superscript' on input line 282.
+(hyperref)                removing `\chi' on input line 305.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `math shift' on input line 282.
+(hyperref)                removing `superscript' on input line 305.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `math shift' on input line 324.
+(hyperref)                removing `math shift' on input line 305.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `\chi' on input line 324.
+(hyperref)                removing `math shift' on input line 347.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `superscript' on input line 324.
+(hyperref)                removing `\chi' on input line 347.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `math shift' on input line 324.
+(hyperref)                removing `superscript' on input line 347.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
+(hyperref)                removing `math shift' on input line 347.
 
 [5]
 
 Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `math shift' on input line 356.
+(hyperref)                removing `math shift' on input line 379.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `\varepsilon' on input line 356.
+(hyperref)                removing `\varepsilon' on input line 379.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `math shift' on input line 356.
+(hyperref)                removing `math shift' on input line 379.
 
-Package hyperref Info: bookmark level for unknown algorithm defaults to 0 on input line 393.
+Package hyperref Info: bookmark level for unknown algorithm defaults to 0 on input line 416.
 
-Package natbib Warning: Citation `chopin2020introduction' on page 6 undefined on input line 393.
+Package natbib Warning: Citation `chopin2020introduction' on page 6 undefined on input line 416.
 
 
-Underfull \hbox (badness 5475) in paragraph at lines 411--417
+Underfull \hbox (badness 5475) in paragraph at lines 434--440
 \OT1/cmr/m/n/10.95 by sam-pling from $\OML/cmm/m/it/10.95 P[]\OT1/cmr/m/n/10.95 (\OML/cmm/m/it/10.95 X[]; \OMS/cmsy/m/n/10.95 ^^A\OT1/cmr/m/n/10.95 ) = \OMS/cmsy/m/n/10.95 N\OT1/cmr/m/n/10.95 (\OML/cmm/m/it/10.95 ^^V[]; ^^[[]\OT1/cmr/m/n/10.95 )$ with prob-a-bil-ity $\OML/cmm/m/it/10.95 [] \OT1/cmr/m/n/10.95 =
  []
 
 
-Package natbib Warning: Citation `chopin2020introduction' on page 6 undefined on input line 429.
+Package natbib Warning: Citation `chopin2020introduction' on page 6 undefined on input line 452.
 
 [6]
 
 Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `math shift' on input line 479.
+(hyperref)                removing `math shift' on input line 502.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `\varepsilon' on input line 479.
+(hyperref)                removing `\varepsilon' on input line 502.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `math shift' on input line 479.
+(hyperref)                removing `math shift' on input line 502.
 
 [7]
-<../smc/figs/adaptive_miness_cdf_good.png, id=138, 652.4375pt x 401.5pt>
+<../smc/figs/adaptive_miness_cdf_good.png, id=166, 652.4375pt x 401.5pt>
 File: ../smc/figs/adaptive_miness_cdf_good.png Graphic file (type png)
 <use ../smc/figs/adaptive_miness_cdf_good.png>
-Package pdftex.def Info: ../smc/figs/adaptive_miness_cdf_good.png  used on input line 498.
+Package pdftex.def Info: ../smc/figs/adaptive_miness_cdf_good.png  used on input line 521.
 (pdftex.def)             Requested size: 391.46552pt x 240.90184pt.
-<../smc/figs/adaptive_miness_cdf_bad.png, id=139, 652.4375pt x 401.5pt>
+<../smc/figs/adaptive_miness_cdf_bad.png, id=167, 652.4375pt x 401.5pt>
 File: ../smc/figs/adaptive_miness_cdf_bad.png Graphic file (type png)
 <use ../smc/figs/adaptive_miness_cdf_bad.png>
-Package pdftex.def Info: ../smc/figs/adaptive_miness_cdf_bad.png  used on input line 499.
+Package pdftex.def Info: ../smc/figs/adaptive_miness_cdf_bad.png  used on input line 522.
 (pdftex.def)             Requested size: 391.46552pt x 240.90184pt.
-<../smc/figs/adaptive_maxqn_cdf_good.png, id=141, 652.4375pt x 401.5pt>
+<../smc/figs/adaptive_maxqn_cdf_good.png, id=169, 652.4375pt x 401.5pt>
 File: ../smc/figs/adaptive_maxqn_cdf_good.png Graphic file (type png)
 <use ../smc/figs/adaptive_maxqn_cdf_good.png>
-Package pdftex.def Info: ../smc/figs/adaptive_maxqn_cdf_good.png  used on input line 511.
+Package pdftex.def Info: ../smc/figs/adaptive_maxqn_cdf_good.png  used on input line 534.
 (pdftex.def)             Requested size: 391.46552pt x 240.90184pt.
-<../smc/figs/adaptive_maxqn_cdf_bad.png, id=142, 652.4375pt x 401.5pt>
+<../smc/figs/adaptive_maxqn_cdf_bad.png, id=170, 652.4375pt x 401.5pt>
 File: ../smc/figs/adaptive_maxqn_cdf_bad.png Graphic file (type png)
 <use ../smc/figs/adaptive_maxqn_cdf_bad.png>
-Package pdftex.def Info: ../smc/figs/adaptive_maxqn_cdf_bad.png  used on input line 512.
+Package pdftex.def Info: ../smc/figs/adaptive_maxqn_cdf_bad.png  used on input line 535.
 (pdftex.def)             Requested size: 391.46552pt x 240.90184pt.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `math shift' on input line 520.
+(hyperref)                removing `math shift' on input line 543.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `\varepsilon' on input line 520.
+(hyperref)                removing `\varepsilon' on input line 543.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `subscript' on input line 520.
+(hyperref)                removing `subscript' on input line 543.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `superscript' on input line 520.
+(hyperref)                removing `superscript' on input line 543.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `math shift' on input line 520.
+(hyperref)                removing `math shift' on input line 543.
 
 
-Package natbib Warning: Citation `chopin2020introduction' on page 8 undefined on input line 607.
+Package natbib Warning: Citation `chopin2020introduction' on page 8 undefined on input line 630.
 
 [8] [9pdfTeX warning (ext4): destination with the same identifier (name{figure.1}) has been already used, duplicate ignored
 
 \AtBegShi@Output ...ipout \box \AtBeginShipoutBox 
                                                   \fi \fi 
-l.646   \item T
+l.669   \item T
                he grid $\mathcal{E}$ is log-spaced over $[10^{-6}, 1]$ with ... <../smc/figs/adaptive_miness_cdf_good.png> <../smc/figs/adaptive_miness_cdf_bad.png>] [10pdfTeX warning (ext4): destination with the same identifier (name{figure.2}) has been already used, duplicate ignored
 
 \AtBegShi@Output ...ipout \box \AtBeginShipoutBox 
                                                   \fi \fi 
-l.646   \item T
+l.669   \item T
                he grid $\mathcal{E}$ is log-spaced over $[10^{-6}, 1]$ with ... <../smc/figs/adaptive_maxqn_cdf_good.png> <../smc/figs/adaptive_maxqn_cdf_bad.png>]
 
 Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `math shift' on input line 657.
+(hyperref)                removing `math shift' on input line 680.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `\varepsilon' on input line 657.
+(hyperref)                removing `\varepsilon' on input line 680.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `math shift' on input line 657.
+(hyperref)                removing `math shift' on input line 680.
 
 
-Package natbib Warning: Citation `neal2001annealed' on page 11 undefined on input line 665.
+Package natbib Warning: Citation `neal2001annealed' on page 11 undefined on input line 688.
 
 
-Package natbib Warning: Citation `del2006sequential' on page 11 undefined on input line 665.
+Package natbib Warning: Citation `del2006sequential' on page 11 undefined on input line 688.
 
 [11]
 
 Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `math shift' on input line 672.
+(hyperref)                removing `math shift' on input line 695.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `\varepsilon' on input line 672.
+(hyperref)                removing `\varepsilon' on input line 695.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `math shift' on input line 672.
+(hyperref)                removing `math shift' on input line 695.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `math shift' on input line 698.
+(hyperref)                removing `math shift' on input line 721.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `\varepsilon' on input line 698.
+(hyperref)                removing `\varepsilon' on input line 721.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `math shift' on input line 698.
+(hyperref)                removing `math shift' on input line 721.
 
 [12]
-<../smc/figs/smc_run_adaptive_eta1.0.png, id=172, 903.375pt x 602.25pt>
+<../smc/figs/smc_run_adaptive_eta1.0.png, id=200, 903.375pt x 602.25pt>
 File: ../smc/figs/smc_run_adaptive_eta1.0.png Graphic file (type png)
 <use ../smc/figs/smc_run_adaptive_eta1.0.png>
-Package pdftex.def Info: ../smc/figs/smc_run_adaptive_eta1.0.png  used on input line 746.
+Package pdftex.def Info: ../smc/figs/smc_run_adaptive_eta1.0.png  used on input line 769.
 (pdftex.def)             Requested size: 451.6864pt x 301.12425pt.
-<../smc/figs/smc_run_adaptive_eta3.0.png, id=173, 903.375pt x 602.25pt>
+<../smc/figs/smc_run_adaptive_eta3.0.png, id=201, 903.375pt x 602.25pt>
 File: ../smc/figs/smc_run_adaptive_eta3.0.png Graphic file (type png)
 <use ../smc/figs/smc_run_adaptive_eta3.0.png>
-Package pdftex.def Info: ../smc/figs/smc_run_adaptive_eta3.0.png  used on input line 747.
+Package pdftex.def Info: ../smc/figs/smc_run_adaptive_eta3.0.png  used on input line 770.
 (pdftex.def)             Requested size: 451.6864pt x 301.12425pt.
-<../smc/figs/smc_run_fixed_eps0.0_eta1.0.png, id=174, 903.375pt x 301.125pt>
+<../smc/figs/smc_run_fixed_eps0.0_eta1.0.png, id=202, 903.375pt x 301.125pt>
 File: ../smc/figs/smc_run_fixed_eps0.0_eta1.0.png Graphic file (type png)
 <use ../smc/figs/smc_run_fixed_eps0.0_eta1.0.png>
-Package pdftex.def Info: ../smc/figs/smc_run_fixed_eps0.0_eta1.0.png  used on input line 748.
+Package pdftex.def Info: ../smc/figs/smc_run_fixed_eps0.0_eta1.0.png  used on input line 771.
 (pdftex.def)             Requested size: 451.6864pt x 150.56212pt.
-<../smc/figs/smc_run_fixed_eps0.0_eta3.0.png, id=175, 903.375pt x 301.125pt>
+<../smc/figs/smc_run_fixed_eps0.0_eta3.0.png, id=203, 903.375pt x 301.125pt>
 File: ../smc/figs/smc_run_fixed_eps0.0_eta3.0.png Graphic file (type png)
 <use ../smc/figs/smc_run_fixed_eps0.0_eta3.0.png>
-Package pdftex.def Info: ../smc/figs/smc_run_fixed_eps0.0_eta3.0.png  used on input line 749.
+Package pdftex.def Info: ../smc/figs/smc_run_fixed_eps0.0_eta3.0.png  used on input line 772.
 (pdftex.def)             Requested size: 451.6864pt x 150.56212pt.
 
-Overfull \hbox (32.52019pt too wide) in paragraph at lines 746--750
+Overfull \hbox (32.52019pt too wide) in paragraph at lines 769--773
  [] 
  []
 
 
-Overfull \hbox (32.52019pt too wide) in paragraph at lines 746--750
+Overfull \hbox (32.52019pt too wide) in paragraph at lines 769--773
  [] 
  []
 
 
-Overfull \hbox (32.52019pt too wide) in paragraph at lines 746--750
+Overfull \hbox (32.52019pt too wide) in paragraph at lines 769--773
  [] 
  []
 
 
-Overfull \hbox (32.52019pt too wide) in paragraph at lines 746--750
+Overfull \hbox (32.52019pt too wide) in paragraph at lines 769--773
  [] 
  []
 
 
-LaTeX Warning: Float too large for page by 337.08148pt on input line 752.
+LaTeX Warning: Float too large for page by 337.08148pt on input line 775.
 
 
-Package natbib Warning: There were undefined citations.
+Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
+(hyperref)                removing `math shift' on input line 800.
 
-Package atveryend Info: Empty hook `BeforeClearDocument' on input line 754.
+
+Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
+(hyperref)                removing `math shift' on input line 800.
+
+
+Overfull \hbox (39.30795pt too wide) in paragraph at lines 800--802
+ \OT1/cmr/m/n/10.95 9.2.\OT1/cmr/bx/n/10.95 Tail anal-y-sis of $\OML/cmm/m/it/10.95 m\OT1/cmr/m/n/10.95 (0)$\OT1/cmr/bx/n/10.95 .[][] \OT1/cmr/m/n/10.95 Writ-ing $\OML/cmm/m/it/10.95 t \OT1/cmr/m/n/10.95 = \OML/cmm/m/it/10.95 x[] \OMS/cmsy/m/n/10.95 ^^@ \OML/cmm/m/it/10.95 v$\OT1/cmr/m/n/10.95 , the in-te-grand of $\OML/cmm/m/it/10.95 I\OT1/cmr/m/n/10.95 (0) = [] \OML/cmm/m/it/10.95 h\OT1/cmr/m/n/10.95 (\OML/cmm/m/it/10.95 x[]\OT1/cmr/m/n/10.95 )[]\OML/cmm/m/it/10.95 =g\OT1/cmr/m/n/10.95 (\OML/cmm/m/it/10.95 x[]\OT1/cmr/m/n/10.95 ) \OML/cmm/m/it/10.95 P\OT1/cmr/m/n/10.95 (\OML/cmm/m/it/10.95 x[]; dx[]\OT1/cmr/m/n/10.95 )$
+ []
+
 [13] [14pdfTeX warning (ext4): destination with the same identifier (name{figure.3}) has been already used, duplicate ignored
 
 \AtBegShi@Output ...ipout \box \AtBeginShipoutBox 
                                                   \fi \fi 
-l.754 \end{document}
-                     <../smc/figs/smc_run_adaptive_eta1.0.png> <../smc/figs/smc_run_adaptive_eta3.0.png> <../smc/figs/smc_run_fixed_eps0.0_eta1.0.png> <../smc/figs/smc_run_fixed_eps0.0_eta3.0.png>]
-Package atveryend Info: Empty hook `AfterLastShipout' on input line 754.
+l.855 
+       <../smc/figs/smc_run_adaptive_eta1.0.png> <../smc/figs/smc_run_adaptive_eta3.0.png> <../smc/figs/smc_run_fixed_eps0.0_eta1.0.png> <../smc/figs/smc_run_fixed_eps0.0_eta3.0.png>]
+
+Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
+(hyperref)                removing `math shift' on input line 858.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
+(hyperref)                removing `\downarrow' on input line 858.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
+(hyperref)                removing `math shift' on input line 858.
+
+[15]
+
+Package natbib Warning: There were undefined citations.
+
+Package atveryend Info: Empty hook `BeforeClearDocument' on input line 941.
+[16]
+Package atveryend Info: Empty hook `AfterLastShipout' on input line 941.
  (/Users/frankvandermeulen/.julia/dev/RegularizedBFFG/manuscript/.texpadtmp/stochvol_example.aux)
-Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 754.
-Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 754.
+Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 941.
+Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 941.
 Package rerunfilecheck Info: File `stochvol_example.out' has not changed.
-(rerunfilecheck)             Checksum: A54F6527D04BB008A8E295A661FF71C1;1476.
-Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 754.
+(rerunfilecheck)             Checksum: FD39252F546DF3096BA7A7A6E9A9CFA1;1885.
+Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 941.
  ) 
 Here is how much of TeX's memory you used:
- 9920 strings out of 480608
- 142438 string characters out of 5903629
- 449998 words of memory out of 5000000
- 25384 multiletter control sequences out of 15000+600000
+ 9943 strings out of 480608
+ 142674 string characters out of 5903629
+ 450109 words of memory out of 5000000
+ 25392 multiletter control sequences out of 15000+600000
  545411 words of font info for 75 fonts, out of 8000000 for 9000
  1302 hyphenation exceptions out of 8191
- 38i,12n,39p,292b,406s stack positions out of 5000i,500n,10000p,200000b,80000s
+ 38i,19n,39p,369b,406s stack positions out of 5000i,500n,10000p,200000b,80000s
 </usr/local/texlive/2020/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx10.pfb></usr/local/texlive/2020/texmf-dist/fonts/type1/public/amsfonts/cm/cmcsc10.pfb></usr/local/texlive/2020/texmf-dist/fonts/type1/public/amsfonts/cm/cmex10.pfb></usr/local/texlive/2020/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb></usr/local/texlive/2020/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi6.pfb></usr/local/texlive/2020/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi8.pfb></usr/local/texlive/2020/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb></usr/local/texlive/2020/texmf-dist/fonts/type1/public/amsfonts/cm/cmr6.pfb></usr/local/texlive/2020/texmf-dist/fonts/type1/public/amsfonts/cm/cmr8.pfb></usr/local/texlive/2020/texmf-dist/fonts/type1/public/amsfonts/cm/cmr9.pfb></usr/local/texlive/2020/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb></usr/local/texlive/2020/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy6.pfb></usr/local/texlive/2020/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy8.pfb></usr/local/texlive/2020/texmf-dist/fonts/type1/public/amsfonts/cm/cmti10.pfb></usr/local/texlive/2020/texmf-dist/fonts/type1/public/amsfonts/cm/cmti9.pfb></usr/local/texlive/2020/texmf-dist/fonts/type1/public/amsfonts/symbols/msbm10.pfb>
-Output written on /Users/frankvandermeulen/.julia/dev/RegularizedBFFG/manuscript/.texpadtmp/stochvol_example.pdf (14 pages, 785020 bytes).
+Output written on /Users/frankvandermeulen/.julia/dev/RegularizedBFFG/manuscript/.texpadtmp/stochvol_example.pdf (16 pages, 802099 bytes).
 PDF statistics:
- 250 PDF objects out of 1000 (max. 8388607)
- 205 compressed objects within 3 object streams
- 45 named destinations out of 1000 (max. 500000)
- 211 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 292 PDF objects out of 1000 (max. 8388607)
+ 245 compressed objects within 3 object streams
+ 60 named destinations out of 1000 (max. 500000)
+ 259 words of extra memory for PDF output out of 10000 (max. 10000000)
 

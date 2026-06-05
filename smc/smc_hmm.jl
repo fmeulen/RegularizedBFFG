@@ -505,16 +505,16 @@ function benchmark_eps_methods(p; N=500, T=50, seed=42)
     _, vs    = simulate_hmm(0.0, T, p; rng=rng)
     rng_data = MersenneTwister(seed + 1)
     X        = (η / sqrt(1 - ψ^2)) * randn(rng_data, N)
-
+    w        = fill(1.0/N, N)   # uniform weights for benchmarking
     # Warmup
-    find_eps_star(X, vs[1], p, MersenneTwister(1))
-    find_eps_star_optim(X, vs[1], p, MersenneTwister(1))
+    find_eps_star(X, vs[1], p, MersenneTwister(1), w)
+    find_eps_star_optim(X, vs[1], p, MersenneTwister(1), w)
 
     t_grid  = @elapsed for t in 1:T
-        find_eps_star(X, vs[t], p, MersenneTwister(t))
+        find_eps_star(X, vs[t], p, MersenneTwister(t), w)
     end
     t_brent = @elapsed for t in 1:T
-        find_eps_star_optim(X, vs[t], p, MersenneTwister(t))
+        find_eps_star_optim(X, vs[t], p, MersenneTwister(t), w)
     end
 
     println("Timing over $T steps (N=$N):")
@@ -530,7 +530,7 @@ end
 
 p = Para()
 main_smc(p)
-compare_adaptive(R=500)
+compare_adaptive(R=500)#, η_bad    = 8.0)
 benchmark_eps_methods(Para())
 
 
