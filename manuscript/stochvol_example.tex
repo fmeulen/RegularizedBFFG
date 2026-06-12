@@ -207,7 +207,7 @@ The estimator for the marginal likelihood is
   \qquad \bigl(X_1^{(n)}\bigr)_{n=1}^{N} \sim P^{g+\eps}(x_0, dx_1).
 \]
 For {\it any} $\eps>0$
-\[  \EE_{P^{g+\eps}} \hat{L}=\EE_{P^{g+\eps}} G_\eps(X_1) = \int h(x_1) \,\frac{c_g+ \eps}{g(x_1)+ \eps} \frac{g(x_1)+\eps}{c_g+\eps} P(x_0, dx_1) =c_h. \]
+\[  \EE_{P^{g+\eps}} \hat{L}=\EE_{P^{g+\eps}} G_\eps(X_1) = \int  h(x_1)\,\frac{P(x_0, dx_1)}{P^{g+\eps}(x_0, dx_1)} P^{g+\eps}(x_0, dx_1) =c_h. \]
 
 
 \subsection{Analysis of variance of $\hat L$}
@@ -255,7 +255,7 @@ so
 \[
   h(x_1)^2 = \frac{1}{2\pi}\,e^{-(v-x_1)}\,e^{-e^{v-x_1}}.
 \]
-Writing $t = x_1 - v$, the integrand of $I(0)$ is proportional to
+Writing $t = x_1 - v$, the integrand of $I(0)$ equals
 \[
   \frac{h(x_1)^2}{g(x_1)}\,p(x_1\mid x_0)
   \;\propto\;
@@ -316,12 +316,12 @@ $\chi^2$ divergence between the target $P^h$ and the proposal $P^{g+\varepsilon}
 \end{align*}
 Since \[\frac{dP^h}{dP^{g+\varepsilon}}(x_1) = \frac{h(x_1)/c_h}{(g(x_1)+\eps)/(c_g+\eps)} = \frac{G_\eps(x_1)}{c_h},\] we have
 \[
-  \chi^2(P^h \| P^{g+\varepsilon}) = \frac{m(\varepsilon)}{c_h^2} - 1,
+  \chi^2(P^h \| P^{g+\varepsilon}) =  \frac{m(\varepsilon)}{c_h^2} - 1,
 \]
 so finite variance of the IS estimator is \emph{exactly equivalent} to
 $\chi^2(P^h \| P^{g+\varepsilon}) < \infty$. The $\chi^2$ divergence thus directly
 controls the variance. Note, using $\log x \le x-1$ (and thus $2\log x \le x^2-1$)
-\[  2 \mathrm{KL}(P^h \| P^{g+\varepsilon}) \le   \chi^2(P^h \| P^{g+\varepsilon}) . \]
+\[  2 \mathrm{KL}(P^h \| P^{g+\varepsilon}) \le \int \left(\frac{dP^h}{dP^{g+\varepsilon}}\right)^{\!2} dP^{h} - 1  .\] \note{Original bound I wrote down was wrong.}
 
 \subsection{KL divergence: explicit form}
 We have
@@ -543,9 +543,8 @@ Suggest to look at $Q_{\max}$-statistic. See Figure \ref{fig:maxqn_cdf}.
 \section{Adaptive Choice of $\varepsilon_t^*$}
 
 The following result motivates the adaptive estimator. For a fixed particle
-$x_{t-1}$ and observation $v_t$, the second moment of the IS weight
-$G_\varepsilon(x_{t-1}, X_t)$ when $X_t \sim P^{g_t+\varepsilon}(x_{t-1},\cdot)$
-is
+$x_{t-1}$ and observation $v_t$, under $X_t \sim P^{g_t+\varepsilon}(x_{t-1},\cdot)$, the second moment of the IS weight
+equals
 \[
   m(\varepsilon, x_{t-1}) =
     \bigl(c(x_{t-1})+\varepsilon\bigr)
@@ -554,22 +553,21 @@ is
 Given the particle cloud $\{X_{t-1}^n\}$ with normalised weights
 $\{W_{t-1}^n\}$, the population-level second moment is the weighted average
 \[
-  m(\varepsilon) = \sum_{n=1}^N W_{t-1}^n \cdot m(\varepsilon, X_{t-1}^n)
+  \tilde m(\varepsilon) = \sum_{n=1}^N W_{t-1}^n \cdot m(\varepsilon, X_{t-1}^n)
   = \sum_{n=1}^N W_{t-1}^n\,\bigl(c(X_{t-1}^n)+\varepsilon\bigr)
     \int \frac{h_t(x_1)^2}{g_t(x_1)+\varepsilon}\,P(X_{t-1}^n,dx_1).
 \] So we evaluate $m(\varepsilon)$  by taking the expectation of $x_{t-1}$ over the current particle approximation. 
-We choose $\varepsilon_t^* = \argmin_{\varepsilon \geq 0}\, m(\varepsilon)$.
-
-
-The integral appearing in $m(\eps)$ can be approximately using numerical quadrature, but in our implementation we approximate it by  drawing auxiliary proposals
+The idea is to choose 
+\[ \varepsilon_t^* = \argmin_{\varepsilon \geq 0}\, \tilde m(\varepsilon).\]
+The integral appearing in $\tilde m(\eps)$ can be approximately using numerical quadrature, but in our implementation we approximate it by  drawing 
 $\tilde{X}_t^n \sim P(X_{t-1}^n,\cdot)$ once and computing
 \[
   \hat{m}(\varepsilon) =
     \sum_{n=1}^N W_{t-1}^n\,
     \frac{h_t(\tilde{X}_t^n)^2}{g_t(\tilde{X}_t^n)+\varepsilon}
     \cdot\bigl(c(X_{t-1}^n)+\varepsilon\bigr).
-\] Thus, this involves a Monte-Carlo estimator based on just 1 sample. 
-The analytical derivative is
+\] Thus, this is a  Monte-Carlo estimator for $\tilde m(\varepsilon)$ based on $N$ samples. 
+The analytical derivative with respect to $\eps$ is
 \[
   \frac{d\hat{m}}{d\varepsilon} =
     \sum_{n=1}^N W_{t-1}^n\,
@@ -921,7 +919,7 @@ The measure $P^{g+\epsilon}$ is  the measure (on path space) of the process
 with $Q=q q^\T$. Now, with $x=(x_t,\in t\in [0,T])$. 
 \[ G_\eps(x) = h(x_T) \frac{d P}{d P^{g+\eps}}(x)   \]
 Thus 
-\begin{align*} m(\eps) &= \EE_{P^{g+\eps}} G_\eps(X)^2 = \int  G_\eps(x)^2 d P^{g+\eps}(x) \\ & = \int  G_\eps(x)^2 \frac{d P^{g+\eps}}{d P}(x) d P(x) \\ & = \int \left(\frac{d P^{g+\eps}}{d P}(x)\right)^{-1} h(x_T)^2 d P(x) \\ & =(g(x_0)+\eps) \int \frac{h(x_T)^2}{g(x_T)+\eps}  \Psi(x) d P(x) ,
+\begin{align*} m(\eps) &= \EE_{P^{g+\eps}} G_\eps(X)^2 = \int  G_\eps(x)^2 d P^{g+\eps}(x) \\ & = \int  G_\eps(x)^2 \frac{d P^{g+\eps}}{d P}(x) d P(x) \\ & = \int \left(\frac{d P^{g+\eps}}{d P}(x)\right)^{-1} h(x_T)^2 d P(x) \\ & =(g(x_0)+\eps) \int \frac{h(x_T)^2}{g(x_T)+\eps}  \Psi(x)^{-1} d P(x) ,
 \end{align*}
 with
 \[ \log \Psi(x)= \int_0^T (b(t,x_t)-\tilde{b}(t,x_t)) r_\eps(t,x_t) d t. \]
