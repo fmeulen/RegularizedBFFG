@@ -103,8 +103,15 @@ end
 
 # ── Observation density ───────────────────────────────────────────────────────
 
-"""h(x_T) = φ(v; x_T, σ_obs²)"""
-h_ct(xT, p) = pdf(Normal(xT, p.σ_obs), p.v)
+#"""h(x_T) = φ(v; x_T, σ_obs²)"""
+function h_ct(xT, p)
+    @unpack v = p
+    u  = exp(v - xT)
+    fχ = pdf(Chisq(1), u)
+    return fχ * u
+end
+
+#h_ct(xT, p) = pdf(Normal(xT, p.σ_obs), p.v)
 
 # ── Euler-Maruyama simulation ─────────────────────────────────────────────────
 
@@ -187,7 +194,7 @@ Estimate m(ε) = E_{P^{g+ε}}[G_ε(X)²] by simulating N paths.
 function estimate_m(ε, N, p, rng)
     weights = Float64[]
     for _ in 1:N
-        xT, log_psi, _ = simulate_guided(ε, p; rng=rng)
+        xT, log_psi, _ = simulate_unguided(p, rng)# simulate_guided(ε, p; rng=rng)
         lw = log_weight(xT, log_psi, ε, p)
         push!(weights, exp(lw))
     end
@@ -457,7 +464,7 @@ diagnose_weights()
 
 
 
-function estimate_m_grid(ε_grid, N, p, rng)
+function estimate_m_grid(ε_grid, N, p, rng) #approximation based on unguided forward paths
     @unpack T, n_steps, x0 = p
     dt = T / n_steps
     ts = range(0.0, T, length=n_steps+1)
