@@ -29,6 +29,7 @@ using Statistics
 using Plots
 using Parameters
 using UnPack
+using Printf
 
 mkpath("figs")
 
@@ -64,13 +65,13 @@ b_ref(x, p) = -p.κ * x
 # Backward ODEs for reference process dX = -κX dt + q dW:
 #   ∂_t g + (-κx)∂_x g + (q²/2)∂_xx g = 0
 # Substituting Gaussian ansatz g = N(x; μ(t), Σ(t)):
-#   μ̇ = κμ        →  μ(t) = v · exp(-κ(T-t))
+#   μ̇ = κμ        →  μ(t) = v · exp(κ(T-t))
 #   Σ̇ = 2κΣ - q²  →  Σ(t) = (σ_obs² - q²/(2κ)) exp(2κ(T-t)) + q²/(2κ)
 # Note: Σ(t) > 0 for all t < T since the exp term dominates.
 
 # function gaussian_g_params(t, p)
 #     @unpack κ, q, v, σ_obs, T = p
-#     μt = v * exp(-κ * (T - t))
+#     μt = v * exp(κ * (T - t))
 #     Σt = (σ_obs^2 - q^2/(2κ)) * exp(2κ*(T-t)) + q^2/(2κ)
 #     Σt = max(Σt, 1e-10)   # numerical safety
 #     return μt, Σt
@@ -78,7 +79,7 @@ b_ref(x, p) = -p.κ * x
 
 function gaussian_g_params(t, p)
     @unpack κ, q, v, σ_obs, T = p
-    μt = v * exp(-κ * (T - t))
+    μt = v * exp(κ * (T - t))
     Σt = (σ_obs^2 + q^2/(2κ)) * exp(2κ*(T-t)) - q^2/(2κ)
     return μt, Σt
 end
@@ -111,7 +112,7 @@ function h_ct(xT, p)
     return fχ * u
 end
 
-#h_ct(xT, p) = pdf(Normal(xT, p.σ_obs), p.v)
+
 
 # ── Euler-Maruyama simulation ─────────────────────────────────────────────────
 
@@ -147,13 +148,12 @@ function simulate_guided(ε, p; rng=nothing, dWs=nothing)
         log_psi   += db * rval * dt
 
 #        if !isfinite(log_psi) || abs(log_psi) > 1e6
-if !isfinite(log_psi) || abs(log_psi) > 1e6 || !isfinite(x) || abs(x) > 100
-            log_psi = -1e6
-            xs[i+1] = x + drift_guid * dt + q * dW
-            for j in i+2:n_steps+1; xs[j] = xs[j-1]; end
-            break
-        end
-
+# if !isfinite(log_psi) || abs(log_psi) > 1e6 || !isfinite(x) || abs(x) > 100
+#             log_psi = -1e6
+#             xs[i+1] = x + drift_guid * dt + q * dW
+#             for j in i+2:n_steps+1; xs[j] = xs[j-1]; end
+#             break
+#         end
         xs[i+1] = x + drift_guid * dt + q * dW
     end
 
@@ -183,7 +183,8 @@ function log_weight(xT, log_psi, ε, p)
     if hT <= 0.0 || (gT + ε) <= 0.0 || (g0 + ε) <= 0.0
         return -Inf
     end
-    return log(hT) + log(g0 + ε) - log(gT + ε) - log_psi
+#    return log(hT) + log(g0 + ε) - log(gT + ε) - log_psi
+    return log(hT) + log(g0 + ε) - log(gT + ε) + log_psi
 end
 
 # ── m̂(ε) estimator ────────────────────────────────────────────────────────────
@@ -194,7 +195,7 @@ Estimate m(ε) = E_{P^{g+ε}}[G_ε(X)²] by simulating N paths.
 function estimate_m(ε, N, p, rng)
     weights = Float64[]
     for _ in 1:N
-        xT, log_psi, _ = simulate_unguided(p, rng)# simulate_guided(ε, p; rng=rng)
+        xT, log_psi, _ =  simulate_guided(ε, p; rng=rng) # simulate_unguided(p, rng)#
         lw = log_weight(xT, log_psi, ε, p)
         push!(weights, exp(lw))
     end
@@ -275,15 +276,18 @@ function find_eps_star_ct(p, rng;
     for ε in ε_grid
         Gvals = Float64[]
         for i in 1:N_aux
-            xT, lp, _ = simulate_guided(ε, p; dWs=dWs_all[i])
-            gT = g_ct(p.T, xT, p)
-            hT = h_ct(xT, p)
-            if !isfinite(lp) || gT + ε <= 0.0 || hT <= 0.0
-                push!(Gvals, 0.0)
-            else
-                G = (hT * (g0 + ε) / (gT + ε)) * exp(-lp)
-                push!(Gvals, G^2)
-            end
+            xT, log_psi, _ = simulate_guided(ε, p; dWs=dWs_all[i])
+            weight = exp(log_weight(xT, log_psi, ε, p))
+            push!(Gvals, weight^2)
+
+            # gT = g_ct(p.T, xT, p)
+            # hT = h_ct(xT, p)
+            # if !isfinite(lp) || gT + ε <= 0.0 || hT <= 0.0
+            #     push!(Gvals, 0.0)
+            # else
+            #     G = (hT * (g0 + ε) / (gT + ε)) * exp(-lp)
+            #     push!(Gvals, G^2)
+            # end
         end
         push!(m_vals, mean(Gvals))
     end
@@ -321,6 +325,53 @@ function run_IS(ε, N, p, rng)
 end
 
 # ── Main experiment ───────────────────────────────────────────────────────────
+
+
+function log_weight_adj(xT, log_psi, ε, p)
+    g0  = g_ct(0.0, p.x0, p)
+    gT  = g_ct(p.T, xT, p)
+    hT  = h_ct(xT, p)
+    # guard against log(0) when ε=0 and gT≈0
+    if hT <= 0.0 || (gT + ε) <= 0.0 || (g0 + ε) <= 0.0
+        return -Inf
+    end
+#    return log(hT) + log(g0 + ε) - log(gT + ε) - log_psi
+    return 2.0*log(hT) + log(gT + ε) - log(g0 + ε) - log_psi
+end
+
+# ── m̂(ε) estimator ────────────────────────────────────────────────────────────
+
+"""
+Estimate m(ε) = E_{P^{g+ε}}[G_ε(X)²] by simulating N paths.
+"""
+function estimate_m_adj(ε, N, p, rng)
+    weights = Float64[]
+    for _ in 1:N
+        xs, _ =  simulate_unguided(p, rng)#
+        xT = xs[end]
+        log_psi = log_psi_unguided(xs, ε, p)
+        lw = log_weight_adj(xT, log_psi, ε, p)
+        push!(weights, exp(lw))
+    end
+    return mean(weights .^ 2) 
+end
+
+
+
+p = ParaCT(κ=0.2)
+N = 1000
+rng = MersenneTwister(12)
+ϵs = exp.(range(log(1e-6), log(1e-1), length=100))
+
+ms = [estimate_m(ϵ , N, p, rng) for ϵ ∈ ϵs]
+plot(ϵs, log.(ms))
+
+ms_adj = [estimate_m_adj(ϵ , N, p, rng) for ϵ ∈ ϵs]
+plot(ϵs, log.(ms_adj))
+
+
+
+
 
 function main(; N=500, R=100, seed=42)
     p = ParaCT()
@@ -382,6 +433,7 @@ function main(; N=500, R=100, seed=42)
         cdf  = (1:R) ./ R
         plot!(plt_ess, vals, cdf, label=ε_labels[k], lw=2, color=colors[k])
     end
+    display(plt_ess)
     savefig(plt_ess, "figs/ct_ess_cdf.png")
 
     # max-Qn CDF
@@ -406,16 +458,16 @@ function main(; N=500, R=100, seed=42)
     end
     savefig(plt_ll, "figs/ct_ll_cdf.png")
 
-    println("\nSummary:")
-    for (k, ε) in enumerate(ε_range)
-        ess_ok = filter(isfinite, ess_runs[ε])
-        qn_ok  = filter(isfinite, qn_runs[ε])
-        n_nan  = R - length(ess_ok)
-        println("  $(ε_labels[k]): mean ESS=$(round(mean(ess_ok),digits=1)), "*
-                "5th pct ESS=$(round(quantile(ess_ok,0.05),digits=1)), "*
-                "mean Qn=$(round(mean(qn_ok),digits=4)), "*
-                "NaN/degenerate runs=$n_nan/$R")
-    end
+    # println("\nSummary:")
+    # for (k, ε) in enumerate(ε_range)
+    #     ess_ok = filter(isfinite, ess_runs[ε])
+    #     qn_ok  = filter(isfinite, qn_runs[ε])
+    #     n_nan  = R - length(ess_ok)
+    #     println("  $(ε_labels[k]): mean ESS=$(round(mean(ess_ok),digits=1)), "*
+    #             "5th pct ESS=$(round(quantile(ess_ok,0.05),digits=1)), "*
+    #             "mean Qn=$(round(mean(qn_ok),digits=4)), "*
+    #             "NaN/degenerate runs=$n_nan/$R")
+    # end
 
     println("\nSaved: figs/ct_mbar.png, figs/ct_ess_cdf.png, "*
             "figs/ct_qn_cdf.png, figs/ct_ll_cdf.png")

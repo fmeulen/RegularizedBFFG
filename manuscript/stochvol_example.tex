@@ -226,7 +226,7 @@ By expanding we get
 \end{equation}
 Define \[  I(\eps)= \int \frac{h(x_1)^2}{g(x_1)+\eps}\,P(x_0,dx_1)\] and
 \[ \bar{m}(\eps) = \log m(\eps) = \log (c_g+\eps) + \log I(\eps). \]
-
+Note that we can evaluate $c_g$ and $I(\epsilon)$ numerically using Gauss-Hermite quadrature. 
 
 
 
@@ -917,12 +917,14 @@ where $s(x)=1/(1+e^{-x})$. Thus we get a damping factor.
 The measure $P^{g+\epsilon}$ is  the measure (on path space) of the process
 \[ 	  \dd X_t = b(t,X_t) \dd t +Q r_\eps(t,X_t) +q \dd W_t,\qquad  X_0=x_0 .\]
 with $Q=q q^\T$. Now, with $x=(x_t,\in t\in [0,T])$. 
-\[ G_\eps(x) = h(x_T) \frac{d P}{d P^{g+\eps}}(x)   \]
-Thus 
-\begin{align*} m(\eps) &= \EE_{P^{g+\eps}} G_\eps(X)^2 = \int  G_\eps(x)^2 d P^{g+\eps}(x) \\ & = \int  G_\eps(x)^2 \frac{d P^{g+\eps}}{d P}(x) d P(x) \\ & = \int \left(\frac{d P^{g+\eps}}{d P}(x)\right)^{-1} h(x_T)^2 d P(x) \\ & =(g(x_0)+\eps) \int \frac{h(x_T)^2}{g(x_T)+\eps}  \Psi(x)^{-1} d P(x) ,
-\end{align*}
+\[ G_\eps(x) = h(x_T) \frac{d P}{d P^{g+\eps}}(x) .  \]
+Here
+\[ \frac{d P}{d P^{g+\eps}}(x) = \frac{g(x_0)}{g(x_T)} \Psi(x), \]
 with
 \[ \log \Psi(x)= \int_0^T (b(t,x_t)-\tilde{b}(t,x_t)) r_\eps(t,x_t) d t. \]
+Thus 
+\begin{align*} m(\eps) &= \EE_{P^{g+\eps}} G_\eps(X)^2 = \int  G_\eps(x)^2 d P^{g+\eps}(x) \\ & = \int  G_\eps(x)^2 \frac{d P^{g+\eps}}{d P}(x) d P(x) \\ & = \int \left(\frac{d P^{g+\eps}}{d P}(x)\right)^{-1} h(x_T)^2 d P(x) \\ & =(g(x_0)+\eps) \int \frac{h(x_T)^2}{g(x_T)+\eps}  \Psi(x)^{-1} d P(x) .
+\end{align*}
 This is to be compared to \eqref{eq:m_eps1}: $c_g$ in that formula is exactly as $g(x_0)$ here. In the discrete-time we assumed linear dynamics and thus $\tilde b=b$ which amounts to $\Psi(x)=1$. \note{I think the nonlinear case is most interesting here, for else filtering at time $T$ boils down to the discrete-time problem.}
 \begin{lem}
 Suppose $g(T,x)=\phi(v; \mu, \sigma^2)$ (with $\mu, \sigma$ depending on $v$). If $b(x)=\omega + \psi x$ then for $t\in [0,T)$ we have
