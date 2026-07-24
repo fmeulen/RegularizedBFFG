@@ -60,16 +60,7 @@ b_ref(x, p) = -p.κ * x
 
 # ── Observation density h (log-chi-squared) ───────────────────────────────────
 
-"""
-h(x_T) = f_{χ²(1)}(e^{v-x_T}) · e^{v-x_T}
-        = (2π)^{-1/2} exp(-(v-x_T)/2) exp(-e^{v-x_T}/2)
-"""
-function h_ct(xT, p)
-    u = p.v - xT          # u = v - x_T
-    return (2π)^(-0.5) * exp(-u/2) * exp(-exp(u)/2)
-end
-
-function h(x₁, p) # original
+function h_ct(x₁, p) # original
     @unpack v = p
     u  = exp(v - x₁)
     fχ = pdf(Chisq(1), u)
@@ -105,7 +96,7 @@ end
 
 function r_eps(t, x, ε, p)
     gval = g_ct(t, x, p)
-    return gval / (gval + ε) * score_g(t, x, p)
+    return (gval / (gval + ε)) * score_g(t, x, p)
 end
 
 # ── Unguided simulation ───────────────────────────────────────────────────────
@@ -154,14 +145,21 @@ function estimate_m_grid(ε_grid, N, p, rng)
     sums   = zeros(K)
     counts = zeros(Int, K)
 
-    for _ in 1:N
+   for _ in 1:N
         xs = simulate_unguided(p, rng)
         xT = xs[end]
+
+        # skip exploded paths
+        if !isfinite(xT) || any(!isfinite, xs)
+            continue
+        end
+
         hT = h_ct(xT, p)
         gT = g_ct(p.T, xT, p)
         h2 = hT^2
 
-        if h2 == 0.0 || !isfinite(h2)
+        # skip paths with zero or non-finite h
+        if !isfinite(h2) || h2 == 0.0
             continue
         end
 
@@ -171,14 +169,16 @@ function estimate_m_grid(ε_grid, N, p, rng)
                 continue
             end
             log_psi = log_psi_from_path(xs, ε, p)
-            if !isfinite(log_psi)
+            if isnan(log_psi)
                 continue
             end
+            # exp(-log_psi) = +Inf when log_psi = -Inf: correct, signals m(ε)=∞
             contrib = h2 / denom * exp(-log_psi)
-            if isfinite(contrib)
-                sums[k]   += contrib
-                counts[k] += 1
+            if isnan(contrib)
+                continue
             end
+            sums[k]   += contrib
+            counts[k] += 1
         end
     end
     return [(g0 + ε_grid[k]) * sums[k] / max(counts[k], 1) for k in 1:K]
@@ -252,5 +252,5 @@ T = 1.0
 η = 1.0
 ε_grid = range(0.0, 0.05, length=20)
 
-main(ψ, η, T, ε_grid)
+main(ψ, η, T, ε_grid; N=2500)
 
