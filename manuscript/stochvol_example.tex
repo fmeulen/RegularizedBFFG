@@ -927,15 +927,15 @@ Thus
 \end{align*}
 This is to be compared to \eqref{eq:m_eps1}: $c_g$ in that formula is exactly as $g(x_0)$ here. In the discrete-time we assumed linear dynamics and thus $\tilde b=b$ which amounts to $\Psi(x)=1$. \note{I think the nonlinear case is most interesting here, for else filtering at time $T$ boils down to the discrete-time problem.}
 \begin{lem}
-Suppose $g(T,x)=\phi(v; \mu, \sigma^2)$ (with $\mu, \sigma$ depending on $v$). If $b(x)=\omega + \psi x$ then for $t\in [0,T)$ we have
-\[ g(t,x)= ....\]
-\note{Closed form expression or via backward ODEs.}
-	
-	
-	\bigskip
-	
-	
-Can we establish when $m(0)=\infty$?
+Suppose $g(T,x)=\phi(v; \mu, \sigma^2)$ (with $\mu, \sigma$ depending on $v$). If $\omega=0$ and $(\psi, \eta)$ are given, then for
+\[ \kappa =-\frac1{T}\log \psi \quad \text{and}\quad  Q=\frac{2\kappa \eta^2}{1-\psi^2} \]
+ the distribution of $X_T \mid X_0=x_0$ is the same in the continuous- and discrete time setup.
 \end{lem}
+
+
+\begin{lem} For the diffusion $\dd X_t = -\kappa X_t \dd t + q \dd W_t$, conditional on $g(T,x)=\phi(v-x; \mu, \sigma^2)$, we have
+\[ g(t,x)= \phi\left(e^{-\kappa(T-t)} x; v-\mu, \sigma^2 +\frac{q^2}{2\kappa} \left(1-e^{-2\kappa(T-t)}\right) \right). \]
+\end{lem}
+Note that for fixed $t$, $x\mapsto g(t,x)$ is not a probability density (except at time $T$). 
 
 \end{document}
