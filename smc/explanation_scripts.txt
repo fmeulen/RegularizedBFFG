@@ -1,0 +1,6 @@
+
+m_discrete.jl makes plots of \epsilon \mapsto m(\epsilon) in the discrete case. Does what it should do.
+m_continuous.jl: makes plots of \epsilon \mapsto m(\epsilon) in the continuous case. Does what it should do.
+
+smc_discrete.jl: implements SMC for discrete time case, shows effect of guiding with different choices of \epsilon and also adaptive choice of \epsilon
+

@@ -926,6 +926,21 @@ Thus
 \begin{align*} m(\eps) &= \EE_{P^{g+\eps}} G_\eps(X)^2 = \int  G_\eps(x)^2 d P^{g+\eps}(x) \\ & = \int  G_\eps(x)^2 \frac{d P^{g+\eps}}{d P}(x) d P(x) \\ & = \int \left(\frac{d P^{g+\eps}}{d P}(x)\right)^{-1} h(x_T)^2 d P(x) \\ & =(g(x_0)+\eps) \int \frac{h(x_T)^2}{g(x_T)+\eps}  \Psi(x)^{-1} d P(x) .
 \end{align*}
 This is to be compared to \eqref{eq:m_eps1}: $c_g$ in that formula is exactly as $g(x_0)$ here. In the discrete-time we assumed linear dynamics and thus $\tilde b=b$ which amounts to $\Psi(x)=1$. \note{I think the nonlinear case is most interesting here, for else filtering at time $T$ boils down to the discrete-time problem.}
+
+We wish to show that $\epsilon \mapsto m(\epsilon)$ is U-shaped. For that, a starting point would be to show $m^\prime(0)<0$. In general, this seems hard to prove, but in case $\Psi\equiv 1$ we have
+\[ m^\prime(\epsilon) = \int \frac{h(x_T)^2}{g(x_T)+\epsilon} \dd P(x) - (g(x_0)+\epsilon) \int \frac{h(x_T)^2}{(g(x_T)+\epsilon)^2} \dd P(x). \]
+This implies
+\[ m^\prime(0)= \EE_P w_T -  \EE_P g(x_T) \EE_P \left(\frac{w_T}{g(x_T)}\right)=\mbox{Cov}_P\left( g(x_T), \frac{h(x_T)^2}{g(x_T)^2}\right), \]
+where $w_T = h(x_T)^2/g(x_T)$ and we used  that $g(x_0)=\EE_P g(x_T)$ at the first equality sign. 
+We have $m^\prime(0)<0$ iff 
+\[ \frac{\EE [h(x_T)^2/g(x_T)]}{\EE [h(x_T)^2/g(x_T)^2]} \le \EE [g(x_T)] \]
+Define the measure $\nu$ by 
+\[ \frac{\dd \nu}{\dd P}(x) \propto \frac{h(x_T)^2}{g(x_T)^2}. \]
+Then we can rewrite the above inequality as
+\[ \EE_\nu g(x_T) < \EE_P g(x_T). \]
+
+
+
 \begin{lem}
 Suppose $g(T,x)=\phi(v; \mu, \sigma^2)$ (with $\mu, \sigma$ depending on $v$). If $\omega=0$ and $(\psi, \eta)$ are given, then for
 \[ \kappa =-\frac1{T}\log \psi \quad \text{and}\quad  Q=\frac{2\kappa \eta^2}{1-\psi^2} \]
