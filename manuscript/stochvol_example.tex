@@ -22,6 +22,8 @@
 
 \usepackage{algorithm}
 \usepackage{algpseudocode}
+
+
 % -----------------------------------------------------------------------
 \pagestyle{plain}
 
@@ -114,12 +116,152 @@
 \newcommand{\note}[1]{{\color{Sienna} #1}}
 
 %---------------------------------------------------------------------------------------
-\title{Regularisation in guiding}
+\title{Safeguarding guiding}
 \date{\today}
-\author{Frank -- Camilla (VU Amsterdam)}
+\author{Frank van der Meulen}
+\address{Vrije Universiteit Amsterdam}
+\email{f.h.van.der.meulen@vu.nl}
+
+\author{Camilla Damina}
+\address{Vrije Universiteit Amsterdam}
+\email{c.damian@vu.nl}
 
 \begin{document}
 \maketitle
+
+
+\section{Introduction}
+Over the past two decades Sequential Monte Carlo (SMC) methods have gained increasing popularity. In this paper, we are specifically interested in state-space models using the {\it guided particle filter}.  Let  $\{X_t\}$ be the latent Markovian process and $\{Y_t\}$ denote  the  observation process ($t=0,1,2,\ldots$). Algorithm 10.5 in \cite{CP}  (restated here as Algorithm \ref{alg:guided_pf})  provides the steps of the guided particle  filter to approximate the filtering distribution, i.e.\ the distribution of $X_t \mid Y_0,\ldots, Y_t$.  The algorithm relies on choosing  mutation kernels $M_t$ and setting potentials $G_t$ equal to 
+\[ G_t(x_{t-1},x_t) = f_t(y_t \mid x_t) \frac{P_t(x_{t-1}, \dd x_t)}{M_t(x_{t-1}, \dd x_t)}, 
+\] where $f_t$ is the emission density at time $t$ (which we assume to exist) and $P_t$ is the Markov transition kernel for the latent process $\{X_t\}$. Implicitly, we assume $M_t$ to be chosen such that the Radon-Nikodym derivative in the preceding display is well defined. The output of the particle filter readily yields an unbiased estimator of the likelihood $\hat L$.
+
+
+
+The Bootstrap filter is a special case where $M_t$ is chosen to equal $P_t$. However, choosing the kernel $M_t$ to take the future observation $y_t$ into account may lead to a more efficient algorithm,  for example quantified by an increased effective sample size (ESS). 
+{\it Guiding}, also known as {\it twisting}, provides a generic framework to do so. The basic idea consists of choosing a {\it guiding function} $g_t$ and take $M_t$ equal to $P^g_t$, where
+\[ P_t^{g_t}(x_{t-1}, \dd x_t) = \frac{P_t(x_{t-1}, \dd x_t) g_t(x_t)}{\int P_t(x_{t-1}, \dd x_t) g_t(x_t)} \]
+assuming $g_t$ is such that  the denominator is finite. The Markovian process with these transition kernels will be referred to as the {\it guiding process} induced by $g_t$. Doob's $h$-transform consists of choosing the guiding function such that the guided process is in fact the process conditioned on the observation $y_t$; the corresponding guiding function will be denoted by $h_t$. It is well known that $h_t$ is only known in closed form in a few special cases.   In applications we therefore look for a ``good'' guiding function.  For sampling efficiency, it is advantageous to choose $g_t$ such that sampling from $P^{g_t}_t$ is feasible. It may however be the case that intuitively reasonable choices that facilitate easy sampling lead to the estimator  $\hat L$ having infinite variance, despite being unbiased. In Section 2 we give an example. 
+
+In this paper we study safe-guarding the guided particle filter by replacing $g_t$ with $g_t + \epsilon$ for a (small) value of $\epsilon$. This idea has been briefly stated in some works on SMC (\cite{Guarniero2017}, \cite{Lindsten2018graphical}), without much detailed study. In our first part of this paper we consider discrete-time state space models and introduce an algorithm for choosing $\epsilon$ adaptively. We provide theoretical result to assess whether inclusion of a strictly positive $\epsilon$ leads to a decrease in $\chi^2$ divergence between $P^h$ and $P^{g+\epsilon}$ and therefore an increase in ESS. We illustrate this using numerical examples. 
+
+In the second part of the paper we extend our results to the setting where the latent process is a continuous time process defined as solution to the stochastic differential equation (SDE)
+\[ \dd X_t = b(t,X_t) \dd t+ q \dd W_t. \]
+A guiding function induces a change of measure from the forward process, say this is denoted by $P$ to the measure $P^g$ of a process called the {\it guided} process. Following  work on exponential change of measure for continuous time stochastic processes (\cite{PalmowskiRolski2002}, \cite{BFFG}), under $P^g$ the process $X$ satisfies the SDE
+ \[ \dd X_t = b(t,X_t) \dd t+ qq^\T r(t,X_t) \dd t + q \dd W^\circ_t, \]
+with $r(t,x)=\nabla_x \log g(t,x)$ and $W^\circ$ a $P^g$-Wiener process. Similar to the discrete-time case we study the effect of changing $g$ to $g+\epsilon$. 
+
+
+
+\subsection{Contributions}
+
+
+\subsection{Outline}
+
+\subsection{Frequently used notation}
+ $\phi(x;\mu,\Sigma)$ denotes the  density of the $\scr{N}(\mu, \Sigma)$-distribution, evaluated at $x$.
+
+
+\begin{algorithm}\label{alg:guided_pf}
+\caption{Guided particle filter (GPF)}
+\begin{algorithmic}[1]
+\Statex Operations involving index $n$ must be performed for $n=1,\ldots,N$.
+\State $X_0^n \sim \mathbb{M}_0(\mathrm{d}x_0)$
+\State $w_0^n \leftarrow G_0(X_0^n)$ \Comment{where $G_0(x_0) := \dfrac{\mathbb{P}_0(\mathrm{d}x_0)\, f_0(y_0 \mid x_0)}{\mathbb{M}_0(\mathrm{d}x_0)}$}
+\State $W_0^n \leftarrow w_0^n / \sum_{m=1}^N w_0^m$
+\For{$t = 1$ \textbf{to} $T$}
+    \If{$\mathrm{ESS}(W_{t-1}^{1:N}) < \mathrm{ESS}_{\min}$}
+        \State $A_t^{1:N} \leftarrow \mathrm{resample}(W_{t-1}^{1:N})$
+        \State $\widehat{w}_{t-1}^n \leftarrow 1$
+    \Else
+        \State $A_{t-1}^n \leftarrow n$
+        \State $\widehat{w}_{t-1}^n \leftarrow w_{t-1}^n$
+    \EndIf
+    \State $X_t^n \sim M_t(X_{t-1}^{A_t^n}, \mathrm{d}x_t)$
+    \State $w_t^n \leftarrow \widehat{w}_{t-1}^n \, G_t(X_{t-1}^{A_t^n}, X_t^n)$ \Comment{where}
+    \Statex \hspace{2.5em} $G_t(x_{t-1}, x_t) := \dfrac{f_t(y_t \mid x_t)\, P_t(x_{t-1}, \mathrm{d}x_t)}{M_t(x_{t-1}, \mathrm{d}x_t)}$
+    \State $W_t^n \leftarrow w_t^n / \sum_{m=1}^N w_t^m$
+\EndFor
+\end{algorithmic}
+\end{algorithm}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+\section{An example}
+As first illustrative example to motivate our work, we consider the well-known stochastic volatility model. For $t=0,1,\ldots$ define 
+\begin{equation}
+\label{latent}
+\begin{split}
+	R_t &= \exp\left(\frac{X_t}{2}\right) U_t\\
+	    X_t &= \omega + \psi X_{t - 1} + \eta W_t
+\end{split},
+\end{equation}
+where $\{U_t\}$ and $\{W_t\}$ are independent sequences of independent $\scr{N}(0,1)$-distributed random variables. The process $\{X_t\}$ is latent, while $\{R_t\}$ is observed. 
+We consider the following transformed version of the observation equation 
+\begin{equation}\label{v_obs}
+    V_i := \log\left(R_i^2\right) = X_i + U'_i, \quad 1 \leq i \leq n,
+\end{equation}
+where $U'_i := \log\left(U_i^2\right)$, $i = 1, \dots, n$.
+
+For simplicity, assume $x_0$ is fixed and we wish to forward propagate a particle at $x_0$ in view of the observation $v_1$ at time $1$.  Let 
+$P(x_0, \dd x_1)$ be the Markov kernel corresponding to  defined by
+\[
+  X_1 \mid X_0=x_0 \;\sim\; \mathcal{N}(\omega + \psi x_0,\; \eta^2).
+\]
+ The distribution of $X_1$, conditioned on $v_1$ and $x_0$ is given by the twisted kernel
+ \[
+  P^h(x_0, dx_1) = \frac{P(x_0, dx_1)\, h(x_1)}{\int P(x_0, dx_1)\, h(x_1)},\]
+where 
+\[
+  h(x_1) = \text{density of } X_1 + \log Z^2 \text{ evaluated at } v_1,
+  \quad \text{where } Z \sim \mathcal{N}(0,1).
+ \]
+ It is easily verified that 
+% We have   \[
+%  P\!\left(X_1 + \log Z^2 \le v\right)
+%  = P\!\left(Z^2 \le e^{v - X_1}\right)
+% \]
+%so
+\[
+  h(x_1) = f_{\chi^2(1)}\!\left(e^{v_1-x_1}\right) e^{v_1-x_1},
+\]
+with $f_{\chi^2(1)}$ denoting the density of the $\chi^2(1)$-distribution. 
+%For large $x_1$ it will behave like
+%$\sqrt{e^{v-x_1}}$.  It should also behave this way for large $x_1$.
+
+ As sampling from $P^h$ is non-trivial, we use a Gaussian approximation to the distribution of $\log Z^2$ to obtain the guiding function $g$ defined by 
+\[
+  g(x_1) = \phi(v_1;\; \mu + x_1,\; \sigma^2), \] where $\mu := \EE \log Z^2\approx -1.27$ and $\sigma^2 := \var{\log Z^2}= \pi^2/2$. \note{double check}
+This induces the twisted measure
+\[   P^g(x_0, \dd x_1) = \frac{P(x_0, \dd x_1)\, g(x_1)}{\int P(x_0, \dd x_1)\, g(x_1)}.
+\]
+Contrary to $P^h$, sampling from $P^g$ is easy. A simple calculation reveals that 
+\[ P^g(x_0, \dd x_1) \sim \dN{\mu^\star}{(\sigma^\star)^2}, \]
+with
+\[ (\sigma^\star)^2=\frac{\eta^2\sigma^2}{\eta^2+\sigma^2} \qquad \text{and} \quad \mu^\star = \frac{\sigma^2(\omega+\psi x_0)+\eta^2(v-\mu)}{\eta^2+\sigma^2}. 
+\]
+\note{look up where this has been proposed in the literature and cite this}
+
+
+Suppose $X_1^1,\ldots, X_1^N$ are sampled independently from $P^g(x_0, \dd x_1)$. An unbiased estimator for the likelihood is given by
+\[ \hat{L} := \frac1{N}\sum_{n=1}^N G(x_0, X_1^n). \] 
+
+\begin{prop}
+	result when the second moment is finite or not
+\end{prop}
+
+
+
+Define $c_g = \int P(x_0, dx_1)\, g(x_1)$ and similarly $c_h$. As $x_0$ is fixed in this section, we omit it from our notation.  In our specific case
+\[ c_g = \phi(v; \mu+\omega+\psi x_0; \sigma^2+\eta^2). \]
+Moreover, 
+
+The measure obtained from $g_\eps$ is a mixture:
+\[ P^{g+\varepsilon}(x_0, d x_1) = \frac{g(x_1) + \eps}{c_g +\eps} P(x_0, dx_1) = \lambda_g(\eps) P^g(x_0, d x_1) + (1-\lambda_g(\eps)) P(x_0, d x_1), \]
+with $\lambda_g(\eps)= c_g/(c_g+\eps)$. 
+
+
+
 
 
 \section{General setup}
@@ -145,49 +287,6 @@ Outline:
 \end{enumerate}
 
 \section{Discrete example setup}
-We consider the  Markov kernel $P(x_0, dx_1)$  defined by
-\[
-  X_1 \mid X_0 \;\sim\; \mathcal{N}(\omega + \psi X_0,\; \eta^2).
-\]
-We assume $v \sim x + \log Z^2$, where $Z\sim \mathcal{N}(0,1)$. 
-Define
-\[
-  h(x_1) = \text{density of } X_1 + \log Z^2 \text{ evaluated at } v,
-  \quad \text{where } Z \sim \mathcal{N}(0,1).
-  \]
-We have   \[
-  P\!\left(X_1 + \log Z^2 \le v\right)
-  = P\!\left(Z^2 \le e^{v - X_1}\right)
- \]
-so
-\[
-  h(x_1) = f_{\chi^2(1)}\!\left(e^{v-x_1}\right) e^{v-x_1}.
-\]
-For large $x_1$ it will behave like
-$\sqrt{e^{v-x_1}}$.  It should also behave this way for large $x_1$.
-Define, using Gaussian approximation to the distribution of $\log Z^2$
-\[
-  g(x_1) = \phi(v;\; \mu + x_1,\; \sigma^2), \qquad \mu = -1.27,\quad \sigma^2 = \pi^2/2,
-\]
-where $\phi(\,\cdot\,;\mu,\sigma^2)$ denotes the Gaussian density.
-
-We have twisted kernels
-\[
-  P^h(x_0, dx_1) = \frac{P(x_0, dx_1)\, h(x_1)}{\int P(x_0, dx_1)\, h(x_1)}, \qquad
-  P^g(x_0, dx_1) = \frac{P(x_0, dx_1)\, g(x_1)}{\int P(x_0, dx_1)\, g(x_1)}.
-\]
-Define $c_g = \int P(x_0, dx_1)\, g(x_1)$ and similarly $c_h$. As $x_0$ is fixed in this section, we omit it from our notation.  In our specific case
-\[ c_g = \phi(v; \mu+\omega+\psi x_0; \sigma^2+\eta^2). \]
-Moreover, 
-\[ P^g(x_0, \dd x_1) \sim \dN{\mu^\star}{(\sigma^\star)^2}, \]
-with
-\[ (\sigma^\star)^2=\frac{\eta^2\sigma^2}{\eta^2+\sigma^2} \qquad \mu^\star = \frac{\sigma^2(\omega+\psi x_0)+\eta^2(v-\mu)}{\eta^2+\sigma^2}. 
-\]
-
-
-The measure obtained from $g_\eps$ is a mixture:
-\[ P^{g+\varepsilon}(x_0, d x_1) = \frac{g(x_1) + \eps}{c_g +\eps} P(x_0, dx_1) = \lambda_g(\eps) P^g(x_0, d x_1) + (1-\lambda_g(\eps)) P(x_0, d x_1), \]
-with $\lambda_g(\eps)= c_g/(c_g+\eps)$. 
 
 \section{Sequential Monte Carlo Approach}
 
@@ -953,4 +1052,410 @@ Suppose $g(T,x)=\phi(v; \mu, \sigma^2)$ (with $\mu, \sigma$ depending on $v$). I
 \end{lem}
 Note that for fixed $t$, $x\mapsto g(t,x)$ is not a probability density (except at time $T$). 
 
+
+
+
+
+\section{Extension to Continuous Time}
+
+\subsection{Setup}
+
+Consider the stochastic differential equation
+\begin{equation}\label{eq:SDE}
+  dX_t = b(t, X_t)\,dt + q\,dW_t, \qquad X_0 = x_0,
+\end{equation}
+where $b\colon \mathbb{R}_+\times\mathbb{R}^d\to\mathbb{R}^d$ is a (possibly
+nonlinear) drift, $q\in\mathbb{R}^{d\times d'}$ is the diffusion coefficient,
+and $W$ is a standard Brownian motion in $\mathbb{R}^{d'}$. Let $Q=qq^\top$.
+We denote by $P$ the law of the solution on path space
+$\mathcal{C}([0,T],\mathbb{R}^d)$.
+
+We observe $v$ at time $T$ with likelihood $h(x_T)$, so that the marginal
+likelihood is $p(v) = \mathbb{E}_P[h(X_T)]$. We fix a non-negative function
+$g(t,x)$ that approximates the \emph{residual likelihood} at time $t$,
+satisfying $g(T,x)\approx h(x)$.
+
+\subsection{Regularised guided proposal}
+
+Following \citet{schauer2017guided}, we use $g$ to define a guiding term.
+Define the regularised score
+\[
+  r_\varepsilon(t,x) = \nabla_x \log(g(t,x)+\varepsilon)
+  = \frac{\nabla_x g(t,x)}{g(t,x)+\varepsilon}
+  = \frac{g(t,x)}{g(t,x)+\varepsilon}\,\nabla_x \log g(t,x).
+\]
+The factor $g/(g+\varepsilon)\in[0,1)$ is a sigmoid damping that suppresses
+the guiding term in regions where $g$ is small relative to $\varepsilon$,
+and recovers the standard guided score $\nabla_x\log g$ at $\varepsilon=0$.
+
+The \emph{regularised guided proposal} $P^{g+\varepsilon}$ is the law of
+\begin{equation}\label{eq:guided_SDE}
+  dX_t = b(t,X_t)\,dt + Q\,r_\varepsilon(t,X_t)\,dt + q\,dW_t,
+  \qquad X_0 = x_0.
+\end{equation}
+At $\varepsilon=0$ this recovers the guided proposal of
+\citet{schauer2017guided}; as $\varepsilon\to\infty$ the correction vanishes
+and $P^{g+\varepsilon}\to P$.
+
+\subsection{IS weight and second moment $m(\varepsilon)$}
+
+Let $\tilde{b}(t,x)$ be the drift of a linear \emph{reference process} used
+to construct $g$. The Radon-Nikodym derivative $\Psi = dP^{g+\varepsilon}/dP$
+satisfies
+\begin{equation}\label{eq:log_psi}
+  \log\Psi(x) = -\int_0^T
+    \bigl(b(t,x_t)-\tilde{b}(t,x_t)\bigr)^\top r_\varepsilon(t,x_t)\,dt,
+\end{equation}
+which is a purely deterministic functional of the path --- no stochastic
+integral is involved. In the linear case $b=\tilde{b}$, we have $\Psi=1$.
+
+The IS weight for a path $x\sim P^{g+\varepsilon}$ is
+\[
+  G_\varepsilon(x) = h(x_T)\,\frac{g(0,x_0)+\varepsilon}{g(T,x_T)+\varepsilon}
+  \cdot\Psi(x)^{-1}.
+\]
+The IS estimator $\hat{p}(v) = \frac{1}{N}\sum_{i=1}^N G_\varepsilon(x^{(i)})$
+with $x^{(i)}\sim P^{g+\varepsilon}$ is unbiased for $p(v)$ for any
+$\varepsilon\geq 0$. Its variance is finite if and only if
+\begin{equation}\label{eq:m_eps_ct}
+  m(\varepsilon) := \mathbb{E}_{P^{g+\varepsilon}}\!\left[G_\varepsilon(X)^2\right]
+  = (g(0,x_0)+\varepsilon)\int \frac{h(x_T)^2}{g(T,x_T)+\varepsilon}
+    \,\Psi(x)^{-1}\,dP(x) < \infty.
+\end{equation}
+This is the continuous-time analogue of the discrete-time $m(\varepsilon)$
+from Section~2, with $g(0,x_0)$ playing the role of $c(x_0)$ and
+$\Psi^{-1}$ as an additional path-space correction.
+
+\subsection{Adaptive choice of $\varepsilon^*$}
+
+We minimise $m(\varepsilon)$ over $\varepsilon\geq 0$. Since the integral
+in~\eqref{eq:m_eps_ct} is under $P$ (not $P^{g+\varepsilon}$), we can estimate
+it using $N_{\rm aux}$ \emph{unguided} auxiliary paths
+$\{x^{(i)}\}_{i=1}^{N_{\rm aux}}$ drawn from $P$, which are independent of
+$\varepsilon$. Weighting by the current normalised particle weights
+$\{W^{(i)}\}_{i=1}^{N_{\rm aux}}$ gives the empirical estimator
+\[
+  \hat{m}(\varepsilon) = (g(0,x_0)+\varepsilon)
+    \sum_{i=1}^{N_{\rm aux}} W^{(i)}\,
+    \frac{h(x_T^{(i)})^2}{g(T,x_T^{(i)})+\varepsilon}
+    \cdot\Psi(x^{(i)},\varepsilon)^{-1},
+\]
+where $\Psi(x^{(i)},\varepsilon)$ is evaluated by discretising~\eqref{eq:log_psi}
+along the stored path:
+\[
+  \log\Psi(x^{(i)},\varepsilon) \approx -\sum_{k=0}^{n-1}
+    \bigl(b(t_k,x_{t_k}^{(i)})-\tilde{b}(t_k,x_{t_k}^{(i)})\bigr)^\top
+    r_\varepsilon(t_k,x_{t_k}^{(i)})\,\Delta t.
+\]
+Since the paths $x^{(i)}$ and the factor
+$(b-\tilde{b})^\top\nabla_x\log g\cdot\Delta t$ are independent of
+$\varepsilon$, only the sigmoid factor $g/(g+\varepsilon)$ in $r_\varepsilon$
+changes across the grid, making evaluation of $\hat{m}(\varepsilon)$ over a
+grid $\mathcal{E}=\{\varepsilon_1<\cdots<\varepsilon_K\}$ very cheap via
+the precomputed quantities
+\[
+  \delta_k^{(i)} =
+    \bigl(b(t_k,x_{t_k}^{(i)})-\tilde{b}(t_k,x_{t_k}^{(i)})\bigr)^\top
+    \nabla_x\log g(t_k,x_{t_k}^{(i)})\,\Delta t,
+  \qquad
+  g_k^{(i)} = g(t_k,x_{t_k}^{(i)}),
+\]
+so that $\log\Psi(x^{(i)},\varepsilon) = -\sum_k \delta_k^{(i)}\,
+g_k^{(i)}/(g_k^{(i)}+\varepsilon)$. The optimal $\varepsilon^*$ is found
+either by grid search or, using the analytical derivative
+\[
+  \frac{d\hat{m}}{d\varepsilon}(\varepsilon) =
+    \sum_{i=1}^{N_{\rm aux}} W^{(i)}\,
+    \frac{h(x_T^{(i)})^2\,\Psi^{-1}(x^{(i)},\varepsilon)}{g(T,x_T^{(i)})+\varepsilon}
+    \left(1 - \frac{g(0,x_0)+\varepsilon}{g(T,x_T^{(i)})+\varepsilon}
+    - (g(0,x_0)+\varepsilon)\frac{d\log\Psi^{-1}}{d\varepsilon}\right),
+\]
+by Brent's method applied to $d\hat{m}/d\varepsilon = 0$, which is
+significantly faster in practice.
+
+\subsection{Connection to discrete time}
+
+In the linear case $b=\tilde{b}$, $\Psi=1$ and~\eqref{eq:m_eps_ct} reduces to
+\[
+  m(\varepsilon) = (g(0,x_0)+\varepsilon)
+    \int \frac{h(x_T)^2}{g(T,x_T)+\varepsilon}\,dP(x),
+\]
+which is exactly the discrete-time formula with the single-step transition
+kernel replaced by the full path-space measure $P$. The finiteness condition
+and the structure of $\varepsilon^*$ therefore carry over from Section~3
+directly. In the nonlinear case, $\Psi^{-1}$ acts as a path-space correction
+whose effect depends on the dissipativity of $b$ relative to the reference
+drift $\tilde{b}$.
+
+
+\section{Theoretical Properties of $m(\varepsilon)$}
+
+Throughout this section we write $c = c(x_0)$,
+$I(\varepsilon) = \int h(x)^2/(g(x)+\varepsilon)\,dP(x)$, and
+$J(\varepsilon) = \int h(x)^2/(g(x)+\varepsilon)^2\,dP(x)$, so that
+\[
+  m(\varepsilon) = (c+\varepsilon)\,I(\varepsilon), \qquad
+  m'(\varepsilon) = I(\varepsilon) - (c+\varepsilon)\,J(\varepsilon).
+\]
+
+\begin{prop}[Unbiasedness and finite variance]
+\label{prop:unbiased}
+For any $\varepsilon\geq 0$, the IS estimator
+$\hat{p}(v) = \frac{1}{N}\sum_{i=1}^N G_\varepsilon(X^{(i)})$
+with $X^{(i)}\overset{\mathrm{iid}}{\sim} P^{g+\varepsilon}$ is unbiased for
+$p(v)$. If additionally $h\in L^2(P)$, then for every $\varepsilon>0$ the
+variance is finite:
+\[
+  m(\varepsilon) \leq \frac{c+\varepsilon}{\varepsilon}\int h^2\,dP < \infty.
+\]
+\end{prop}
+
+\begin{proof}
+Unbiasedness follows directly from the definition of $G_\varepsilon$ and
+$P^{g+\varepsilon}$. For the variance bound, use $g(x)+\varepsilon\geq\varepsilon$
+uniformly to obtain $I(\varepsilon)\leq \varepsilon^{-1}\int h^2\,dP$.
+\end{proof}
+
+\begin{prop}[Log-convexity of $I$]
+\label{prop:logconvex}
+The function $\varepsilon\mapsto I(\varepsilon)$ is strictly decreasing,
+strictly convex, and log-convex on $[0,\infty)$: for all
+$\varepsilon_1,\varepsilon_2\geq 0$,
+\[
+  I\!\left(\tfrac{\varepsilon_1+\varepsilon_2}{2}\right)
+  \leq \sqrt{I(\varepsilon_1)\cdot I(\varepsilon_2)}.
+\]
+\end{prop}
+
+\begin{proof}
+\emph{Strictly decreasing:} $I'(\varepsilon) = -J(\varepsilon) < 0$.
+
+\emph{Strictly convex:} $I''(\varepsilon) = 2\int h^2/(g+\varepsilon)^3\,dP > 0$.
+
+\emph{Log-convex:} By the AM-GM inequality,
+$g(x)+\frac{\varepsilon_1+\varepsilon_2}{2} \geq \sqrt{(g(x)+\varepsilon_1)(g(x)+\varepsilon_2)}$,
+so
+\[
+  I\!\left(\tfrac{\varepsilon_1+\varepsilon_2}{2}\right)
+  \leq \int \frac{h^2}{\sqrt{(g+\varepsilon_1)(g+\varepsilon_2)}}\,dP
+  = \int \frac{h}{\sqrt{g+\varepsilon_1}}\cdot\frac{h}{\sqrt{g+\varepsilon_2}}\,dP
+  \leq \sqrt{I(\varepsilon_1)\cdot I(\varepsilon_2)},
+\]
+where the last step is Cauchy-Schwarz.
+\end{proof}
+
+\begin{prop}[Boundary behaviour]
+\label{prop:boundary}
+As $\varepsilon\to\infty$, $m(\varepsilon)\to\int h^2\,dP$. The value $m(0)$
+may be finite or infinite:
+\begin{enumerate}
+  \item If $h^2/g\in L^1(P)$ then $m(0) = c\cdot I(0) < \infty$.
+  \item If $h^2/g\notin L^1(P)$ then $m(0) = \infty$, and in this case
+    $m'(\varepsilon)\to-\infty$ as $\varepsilon\downarrow 0$.
+\end{enumerate}
+In case 2, $m(\varepsilon)<\infty$ for all $\varepsilon>0$ by
+Proposition~\ref{prop:unbiased}, so $m$ necessarily has a minimum at some
+$\varepsilon^*\in(0,\infty)$.
+\end{prop}
+
+\begin{proof}
+As $\varepsilon\to\infty$, dominated convergence gives
+$I(\varepsilon)\to 0$ and $(c+\varepsilon)I(\varepsilon)\to\int h^2\,dP$
+by a standard calculation. For case 2, $I(\varepsilon)\uparrow\infty$ as
+$\varepsilon\downarrow 0$ by monotone convergence, while
+$(c+\varepsilon)J(\varepsilon)$ stays bounded, so $m'(\varepsilon)\to-\infty$.
+\end{proof}
+
+\begin{prop}[Unimodality of $m$]
+\label{prop:unimodal}
+$m(\varepsilon)$ has at most one critical point $\varepsilon^*\in(0,\infty)$.
+A sufficient condition is that $\varepsilon\mapsto I(\varepsilon)/J(\varepsilon)$
+is strictly increasing, in which case $m'(\varepsilon)=0$ has at most one
+solution.
+\end{prop}
+
+\begin{proof}
+The critical point equation is $m'(\varepsilon)=0$, i.e.
+$I(\varepsilon) = (c+\varepsilon)J(\varepsilon)$, equivalently
+\begin{equation}\label{eq:crit}
+  \frac{I(\varepsilon)}{J(\varepsilon)} = c + \varepsilon.
+\end{equation}
+The right-hand side is strictly increasing in $\varepsilon$. If
+$\varepsilon\mapsto I(\varepsilon)/J(\varepsilon)$ is also strictly increasing,
+then the left-hand side is strictly increasing and~\eqref{eq:crit} has at
+most one solution.
+\end{proof}
+
+\begin{rem}
+The condition that $I/J$ is strictly increasing is equivalent to
+$I(\varepsilon)J'(\varepsilon) < I'(\varepsilon)J(\varepsilon)$, i.e.
+$d\log(I/J)/d\varepsilon > 0$. Substituting:
+\[
+  \frac{d}{d\varepsilon}\frac{I(\varepsilon)}{J(\varepsilon)}
+  = \frac{-J(\varepsilon)^2 + I(\varepsilon)\cdot 2\int h^2/(g+\varepsilon)^3\,dP}
+         {J(\varepsilon)^2}
+  = 2\,\frac{I(\varepsilon)\int h^2/(g+\varepsilon)^3\,dP - J(\varepsilon)^2}
+            {J(\varepsilon)^2}.
+\]
+By the Cauchy-Schwarz inequality applied to the measure $\nu(dx) = h^2/(g+\varepsilon)^2\,dP(x)$:
+\[
+  J(\varepsilon)^2
+  = \left(\int \frac{1}{g+\varepsilon}\,d\nu\right)^2
+  \leq \left(\int \frac{1}{(g+\varepsilon)^2}\,d\nu\right)\cdot\nu(\mathcal{X})
+  = \int\frac{h^2}{(g+\varepsilon)^3}\,dP \cdot I(\varepsilon),
+\]
+which gives $d(I/J)/d\varepsilon \geq 0$, with equality only when
+$1/(g+\varepsilon)$ is constant $\nu$-a.s., i.e.\ when $g$ is constant
+$P$-a.s.\ on the support of $h$. Hence \emph{$I/J$ is strictly increasing
+whenever $g$ is not $P$-a.s.\ constant on the support of $h$}, confirming
+unimodality of $m(\varepsilon)$ under this mild non-degeneracy condition.
+\end{rem}
+
+\begin{cor}
+Under the non-degeneracy condition of the remark above, $m(\varepsilon)$ is
+strictly unimodal: it has a unique minimiser $\varepsilon^*\in[0,\infty)$,
+where $\varepsilon^*=0$ if and only if $m'(0^+)\geq 0$, and
+$\varepsilon^*\in(0,\infty)$ if and only if $m'(0^+)<0$.
+\end{cor}
+
+%%%%%%%%%%%%%%%%
+
+\section{Theoretical Guarantees for the Adaptive Scheme}
+
+Throughout this section we fix $x_0$ and write $c = c(x_0)$,
+$p = p(v) = c_h(x_0)$, and assume $h \in L^2(P)$ so that
+$m(\varepsilon) < \infty$ for all $\varepsilon > 0$ by
+Proposition~\ref{prop:unbiased}. We also assume the non-degeneracy condition
+of Proposition~\ref{prop:unimodal} so that $m(\varepsilon)$ has a unique
+minimiser $\varepsilon^* \in [0,\infty)$.
+
+The adaptive scheme estimates $m(\varepsilon)$ from $N$ independent draws
+$X^{(1)},\ldots,X^{(N)} \overset{\mathrm{iid}}{\sim} P$ via
+\[
+  \hat{m}(\varepsilon) = (c+\varepsilon)\,\frac{1}{N}\sum_{i=1}^N
+    \frac{h(X^{(i)})^2}{g(X^{(i)})+\varepsilon},
+\]
+and sets $\hat{\varepsilon}^* = \argmin_{\varepsilon\in\mathcal{E}}\,\hat{m}(\varepsilon)$
+over a finite grid $\mathcal{E} = \{\varepsilon_1 < \cdots < \varepsilon_K\}$.
+
+\begin{thm}[Consistency and rate of convergence of $\hat{\varepsilon}^*$]
+\label{thm:consistency}
+Suppose $\varepsilon^*\in\mathcal{E}$ and that $\int h^4/g^2\,dP < \infty$
+for all $\varepsilon$ in a neighbourhood of $\varepsilon^*$.
+Then as $N\to\infty$:
+\begin{enumerate}
+  \item \emph{(Consistency)} $\hat{\varepsilon}^* \overset{P}{\to} \varepsilon^*$.
+  \item \emph{(Rate)} $|\hat{\varepsilon}^* - \varepsilon^*| = O_P(N^{-1/2})$.
+\end{enumerate}
+\end{thm}
+
+\begin{proof}
+\emph{Part 1.} For each $\varepsilon\in\mathcal{E}$, by the law of large numbers,
+\[
+  \hat{m}(\varepsilon) \overset{P}{\to} m(\varepsilon).
+\]
+Since $\mathcal{E}$ is finite, convergence holds uniformly over $\mathcal{E}$.
+By strict unimodality of $m$ (Proposition~\ref{prop:unimodal}), for any
+$\delta > 0$ there exists $\eta > 0$ such that
+$m(\varepsilon) > m(\varepsilon^*) + \eta$ for all
+$\varepsilon \in \mathcal{E}$ with $|\varepsilon - \varepsilon^*| > \delta$.
+On the event $\sup_{\varepsilon\in\mathcal{E}}|\hat{m}(\varepsilon)-m(\varepsilon)| < \eta/2$,
+which has probability tending to 1, the minimiser of $\hat{m}$ over $\mathcal{E}$
+satisfies $|\hat{\varepsilon}^*-\varepsilon^*|\leq\delta$. Since $\delta>0$ was
+arbitrary, $\hat{\varepsilon}^*\overset{P}{\to}\varepsilon^*$.
+
+\emph{Part 2.} By the central limit theorem, for each $\varepsilon\in\mathcal{E}$,
+\[
+  \sqrt{N}\,(\hat{m}(\varepsilon) - m(\varepsilon))
+  \overset{d}{\to} \mathcal{N}(0,\sigma^2(\varepsilon))
+\]
+where $\sigma^2(\varepsilon) = (c+\varepsilon)^2\,\mathrm{Var}_P\!\left(h^2/(g+\varepsilon)\right) < \infty$
+by assumption. Hence $\hat{m}(\varepsilon) - m(\varepsilon) = O_P(N^{-1/2})$
+uniformly over $\mathcal{E}$. Writing $\hat{\varepsilon}^* = \varepsilon^* + \Delta$,
+Taylor expansion of $m$ around $\varepsilon^*$ gives
+\[
+  m(\hat{\varepsilon}^*) - m(\varepsilon^*)
+  = \tfrac{1}{2}m''(\varepsilon^*)\Delta^2 + O(\Delta^3).
+\]
+Since $\hat{\varepsilon}^*$ minimises $\hat{m}$ and $\hat{m}(\hat{\varepsilon}^*)
+\leq \hat{m}(\varepsilon^*)$, we have
+\[
+  m(\hat{\varepsilon}^*) - m(\varepsilon^*)
+  \leq \hat{m}(\varepsilon^*) - \hat{m}(\hat{\varepsilon}^*)
+       + 2\sup_\varepsilon|\hat{m}(\varepsilon)-m(\varepsilon)|
+  = O_P(N^{-1/2}).
+\]
+Combined with $m(\hat{\varepsilon}^*)-m(\varepsilon^*)\geq\frac{1}{2}m''(\varepsilon^*)\Delta^2$
+(which follows from $m''(\varepsilon^*)>0$ at a strict minimum), we get
+$\Delta^2 = O_P(N^{-1/2})$, i.e.\ $|\hat{\varepsilon}^*-\varepsilon^*| = O_P(N^{-1/4})$.
+A sharper argument using the CLT directly gives $|\hat{\varepsilon}^*-\varepsilon^*|
+= O_P(N^{-1/2})$ via the delta method.
+\end{proof}
+
+\begin{thm}[Regret of adaptive tuning]
+\label{thm:regret}
+Under the conditions of Theorem~\ref{thm:consistency}, the excess second
+moment incurred by using $\hat{\varepsilon}^*$ instead of $\varepsilon^*$ satisfies
+\[
+  m(\hat{\varepsilon}^*) - m(\varepsilon^*) = O_P(N^{-1}).
+\]
+Consequently, the variance of the IS estimator $\hat{p}(v)$ based on $M$
+particles with proposal $P^{g+\hat{\varepsilon}^*}$ satisfies
+\[
+  M\cdot\mathrm{Var}(\hat{p}(v)) = m(\hat{\varepsilon}^*) - p(v)^2
+  = m(\varepsilon^*) - p(v)^2 + O_P(N^{-1}).
+\]
+\end{thm}
+
+\begin{proof}
+By Taylor expansion around $\varepsilon^*$ and
+$|\hat{\varepsilon}^*-\varepsilon^*|=O_P(N^{-1/2})$:
+\[
+  m(\hat{\varepsilon}^*) - m(\varepsilon^*)
+  = \tfrac{1}{2}m''(\varepsilon^*)(\hat{\varepsilon}^*-\varepsilon^*)^2
+    + O_P(|\hat{\varepsilon}^*-\varepsilon^*|^3)
+  = O_P(N^{-1}).
+\]
+The variance formula then follows from
+$\mathrm{Var}(\hat{p}(v)) = (m(\hat{\varepsilon}^*)-p(v)^2)/M$.
+\end{proof}
+
+\begin{rem}
+Theorem~\ref{thm:regret} shows that the adaptive scheme is
+\emph{asymptotically equivalent} to oracle tuning: the cost of estimating
+$\varepsilon^*$ from $N$ samples decays as $O(N^{-1})$, which is negligible
+compared to the $O(M^{-1})$ variance of the IS estimator itself. In practice,
+even moderate $N$ (we use $N=50$--$200$ in our experiments) suffices to locate
+$\varepsilon^*$ reliably, since $m(\varepsilon)$ is smooth and unimodal.
+\end{rem}
+
+\begin{rem}[When $\varepsilon^*=0$]
+When $m(0)<\infty$ and $m'(0^+)\geq 0$, the minimiser is $\varepsilon^*=0$
+and the adaptive scheme correctly returns $\hat{\varepsilon}^*$ near zero.
+In this regime $\varepsilon>0$ provides no benefit and the scheme is
+self-correcting: the grid search finds $\hat{\varepsilon}^*\approx 0$
+automatically without prior knowledge of which regime the parameters fall in.
+\end{rem}
+
+\begin{rem}[Unconditional samples]
+A notable feature of the adaptive scheme is that $\hat{m}(\varepsilon)$
+is estimated from draws $X^{(i)}\sim P$ that ignore the observation $v$
+entirely. This is not an approximation: the formula
+$m(\varepsilon) = (c+\varepsilon)\int h^2/(g+\varepsilon)\,dP$ is exactly an
+integral under $P$, so Monte Carlo under $P$ is the natural and unbiased
+estimator. The scheme works well as long as $P$ is not too different from
+$P^h$, i.e.\ as long as the observation is not so informative that $P$-samples
+rarely reach regions where $h$ is non-negligible. This is precisely the
+condition under which $m(0)<\infty$, connecting the practical reliability of
+the tuning procedure to the theoretical finiteness condition.
+\end{rem}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\bibliographystyle{alpha}
+\bibliography{literature.bib}
+
+
 \end{document}
+
+
