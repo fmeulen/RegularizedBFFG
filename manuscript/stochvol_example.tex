@@ -160,6 +160,7 @@ with $r(t,x)=\nabla_x \log g(t,x)$ and $W^\circ$ a $P^g$-Wiener process. Similar
 \subsection{Frequently used notation}
  $\phi(x;\mu,\Sigma)$ denotes the  density of the $\scr{N}(\mu, \Sigma)$-distribution, evaluated at $x$.
 
+For a Markov kernel $P$ and compatible function $g$ we write $(P g)(x)= \int P(x,\dd y) g(y)$. 
 
 \begin{algorithm}\label{alg:guided_pf}
 \caption{Guided particle filter (GPF)}
@@ -187,7 +188,7 @@ with $r(t,x)=\nabla_x \log g(t,x)$ and $W^\circ$ a $P^g$-Wiener process. Similar
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-\section{An example}
+\section{Stochastic volatility example}\label{sec:stochvol}
 As first illustrative example to motivate our work, we consider the well-known stochastic volatility model. For $t=0,1,\ldots$ define 
 \begin{equation}
 \label{latent}
@@ -222,9 +223,9 @@ where
 %  = P\!\left(Z^2 \le e^{v - X_1}\right)
 % \]
 %so
-\[
+\begin{equation}\label{eq:hx1}
   h(x_1) = f_{\chi^2(1)}\!\left(e^{v_1-x_1}\right) e^{v_1-x_1},
-\]
+	\end{equation}
 with $f_{\chi^2(1)}$ denoting the density of the $\chi^2(1)$-distribution. 
 %For large $x_1$ it will behave like
 %$\sqrt{e^{v-x_1}}$.  It should also behave this way for large $x_1$.
@@ -244,123 +245,37 @@ with
 
 
 Suppose $X_1^1,\ldots, X_1^N$ are sampled independently from $P^g(x_0, \dd x_1)$. An unbiased estimator for the likelihood is given by
-\[ \hat{L} := \frac1{N}\sum_{n=1}^N G(x_0, X_1^n). \] 
-
-\begin{prop}
-	result when the second moment is finite or not
-\end{prop}
-
-
-
-Define $c_g = \int P(x_0, dx_1)\, g(x_1)$ and similarly $c_h$. As $x_0$ is fixed in this section, we omit it from our notation.  In our specific case
-\[ c_g = \phi(v; \mu+\omega+\psi x_0; \sigma^2+\eta^2). \]
-Moreover, 
-
-The measure obtained from $g_\eps$ is a mixture:
-\[ P^{g+\varepsilon}(x_0, d x_1) = \frac{g(x_1) + \eps}{c_g +\eps} P(x_0, dx_1) = \lambda_g(\eps) P^g(x_0, d x_1) + (1-\lambda_g(\eps)) P(x_0, d x_1), \]
-with $\lambda_g(\eps)= c_g/(c_g+\eps)$. 
-
-
-
-
-
-\section{General setup}
-
-
-Consider discrete-time nonlinear Gaussian model
-\[ X_{t+1} \mid X_t=x \sim \dN{b_t(x)}{Q_t(x)}. \]
-Assume to observe 
-\[ V_{t} \mid X_{t}=x \sim K(x,\cdot), \]
-
-Consider the continuous-time SDE model
-\[	  \dd X_t = b(t,X_t) \dd t + q \dd W_t,\qquad  X_0=x_0 .\]
-Assume to observe 
-\[ V_{i} \mid X_{t_i}=x \sim K(x,\cdot). \]
-We  assume the Markov kernel $K$ to admit a density $k(x,\cdot)$ with respect to Lebesgue measure. 
-
-
-Outline:
-\begin{enumerate}
-	\item focus on filtering using SMC
-	\item Upon linear approximation of $b$ and $k$, we can compute guiding functions
-	\item Analyse behaviour of resulting guided process, show need of safeguarding using $\eps$. 
-\end{enumerate}
-
-\section{Discrete example setup}
-
-\section{Sequential Monte Carlo Approach}
-
-Suppose we do sequential Monte Carlo to sample from $X_1 \mid v$ and to find
-the marginal likelihood $p(v)$, which is actually $c_h$.  We use mutation kernel $M = P^{g+\eps}$.
-Then it follows from the results in Chapter 5 of Chopin-Papaspiliopoulos that the 
- potential should be
-\begin{align*}
-G_\eps(x_1)
-  & := h(x_1)\,\frac{P(x_0, dx_1)}{P^{g+\eps}(x_0, dx_1)}
-  \\ & = h(x_1)\,\frac{\int P(x_0, dx_1)\, g(x_1)\, dx_1+ \eps}{g(x_1)  + \eps}
-  \\ &= h(x_1)\,\frac{c_g+ \eps}{g(x_1)+ \eps} .
-\end{align*}
-The estimator for the marginal likelihood is
-\[
- \hat{L}:= \frac{1}{N}\sum_{n=1}^{N} G_\eps\!\left(X_1^{(n)}\right),
-  \qquad \bigl(X_1^{(n)}\bigr)_{n=1}^{N} \sim P^{g+\eps}(x_0, dx_1).
-\]
-For {\it any} $\eps>0$
-\[  \EE_{P^{g+\eps}} \hat{L}=\EE_{P^{g+\eps}} G_\eps(X_1) = \int  h(x_1)\,\frac{P(x_0, dx_1)}{P^{g+\eps}(x_0, dx_1)} P^{g+\eps}(x_0, dx_1) =c_h. \]
-
-
-\subsection{Analysis of variance of $\hat L$}
+\[ \hat{L} := \frac1{N}\sum_{n=1}^N G(x_0, X_1^n), \] 
+where 
+\[ G(x_0, x_1) = h(x_1)\frac{P(x_0, \dd x_1)}{P^g(x_0, \dd x_1)} = h(x_1) \frac{(Pg)(x_0)}{g(x_1)}\]
 Define
-\[
-  m(\eps) = \mathbb{E}_{P^{g+\eps}}\!\left[G_\eps(x_0, X_1)\right]^2.
-\]
-By expanding we get
-\begin{equation}\label{eq:m_eps1}
-\begin{split}
-  m(\eps)
-  &= \int h(x_1)^2 \left(\frac{c_g+\eps}{g(x_1)+\eps}\right)^{\!2}
-    \frac{P(x_0, dx_1)\,(g(x_1)+\eps)}{c_g+\eps}
-  \\ &= \bigl(c_g+\eps\bigr)\int \frac{h(x_1)^2}{g(x_1)+\eps}\,P(x_0,dx_1).
-	\end{split}	
+\begin{equation}
+	\label{eq:m0}  m(0) = \mathbb{E}_{P^{g}}\!\left[G(x_0, X_1)\right]^2 ,
 \end{equation}
-Define \[  I(\eps)= \int \frac{h(x_1)^2}{g(x_1)+\eps}\,P(x_0,dx_1)\] and
-\[ \bar{m}(\eps) = \log m(\eps) = \log (c_g+\eps) + \log I(\eps). \]
-Note that we can evaluate $c_g$ and $I(\epsilon)$ numerically using Gauss-Hermite quadrature. 
 
-
-
-Note that we can rewrite to
+the notation being chosen such that it matches with more general notation introduced later. 
+\begin{prop}
 \[
-  I(\eps) = \int h(x_1)\,\frac{\int h(x_1)\,P(x_0,dx_1)}{g(x_1)+\eps}\;
-      P^h(x_0,dx_1)
-  = c_h\int \frac{h(x_1)}{g(x_1)+\eps}\,P^h(x_0,dx_1).
+  m(0) < \infty
+  \iff \eta < \sigma.
 \]
-though we won't use this expression in the numerics. 
-
-\subsection{Infinite variance case}
-Suppose $\eps=0$. 
-Since $c > 0$, finiteness of $\bar{m}(0)$ is equivalent to finiteness of
-\[
-  I(0) = \int \frac{h(x_1)^2}{g(x_1)}\,P(x_0,dx_1).
+\end{prop}
+\begin{proof} \note{double check proof}
+We have
+\begin{align*}
+	m(0) & = [(Pg)(x_0)]^2 \int \left(\frac{h(x_1)}{g(x_1)}\right)^2 P^g(x_0, \dd x_1) \\&= (Pg)(x_0) \int \frac{h(x_1)^2}{g(x_1)}\ P(x_0, \dd x_1)
+\end{align*}
+From \eqref{eq:hx1} we get 	\[
+  h(x_1)^2 = \frac{1}{2\pi}\,e^{-(v_1-x_1)}\,e^{-e^{v_1-x_1}}.
 \]
-
-
-
-Using $f_{\chi^2(1)}(u) = (2\pi u)^{-1/2} e^{-u/2}$ we get
+Writing $t = x_1 - v_1$, 
 \[
-  h(x_1) = \frac{1}{\sqrt{2\pi}}\,e^{-(v-x_1)/2}\,e^{-e^{v-x_1}/2},
-\]
-so
-\[
-  h(x_1)^2 = \frac{1}{2\pi}\,e^{-(v-x_1)}\,e^{-e^{v-x_1}}.
-\]
-Writing $t = x_1 - v$, the integrand of $I(0)$ equals
-\[
-  \frac{h(x_1)^2}{g(x_1)}\,p(x_1\mid x_0)
+  \frac{h(x_1)^2}{g(x_1)}\,\phi(x_1; \omega+\psi x_0, \eta^2)
   \;\propto\;
   \exp\!\left(t - e^{-t} + \frac{(t+\mu)^2}{2\sigma^2}
-  - \frac{(t - (\omega+\psi x_0 - v))^2}{2\eta^2}\right).
+  - \frac{(t - (\omega+\psi x_0 - v))^2}{2\eta^2}\right)
 \]
+where the proportionality is with respect to $x_1$. 
 
 We analyse the tails:
 \begin{itemize}
@@ -379,96 +294,297 @@ The term $e^{-t}\to+\infty$ dominates inside the exponent, sending the integrand
 to zero faster than any polynomial. Hence the left tail never causes divergence.
 \end{itemize}
 
-Therefore,
-\begin{prop}
-With the observation scheme $v = X_1 + \log Z^2$, $Z\sim\mathcal{N}(0,1)$, we have
-\[
-  I(0) = \int \frac{h(x_1)^2}{g(x_1)}\,P(x_0,dx_1) < \infty
-  \iff \eta < \sigma.
-\]
+\end{proof}
+
+
+
+It follows that for $\eta\ge \pi/\sqrt{2}\approx 2.221$ the estimator $\hat L$ has infinite variance. One possible solution is to choose $\sigma$ strictly larger than $\eta$. In this particular example we can do all calculations but this is generally not the case. 
+
+
+
+
+
+
+
+\section{Safe guarding (discrete time case)}
+
+The basic idea is to start with a a function $g$ that enables sampling from $P^g$. Next, we consider guiding using $g+\epsilon$ for $\epsilon>0$.
+\begin{prop}$P^{g+\epsilon}$ is a mixture of $P^g$ and $P$: 
+\[ P^{g+\varepsilon}(x_0, d x_1)   = \lambda_g(\eps) P^g(x_0, d x_1) + (1-\lambda_g(\eps)) P(x_0, d x_1), \]
+with $\lambda_g(\eps, x_0)= c/(c+\eps)$ and $c=(Pg)(x_0)$. 
 \end{prop}
-It follows that for $\eta<\pi/\sqrt{2}\approx 2.221$ no regularisation is needed. For $\eta=\sigma$ the integral diverges (though like $e^t$), while for $\eta>\sigma$ divergence is much faster. 
+Writing $c$ rather than $(Pg)(x_0)$ reduces notation in what follows. 
+\begin{proof} This follows from 
+\[  P^{g+\varepsilon}(x_0, d x_1) =\frac{P(x_0, \dd x_1) (g(x_1)+\epsilon)}{\int P(x_0, \dd x_1) (g(x_1)+\epsilon)}= \frac{P(x_0, \dd x_1) g(x_1)}{c+\epsilon} + \frac{P(x_0, \dd x_1)}{c+\epsilon}. \]
+%\frac{g(x_1) + \eps}{c_g +\eps} P(x_0, dx_1)	
+\end{proof}
 
 
-\begin{center}
-	\includegraphics[scale=0.5]{mbar_plot_1.0.png}
-\end{center}
+Similar to the derivations in the preceding section, we define the potential 
+\begin{equation}\label{eq:G_eps}
+\begin{split}
+	G_\eps(x_0, x_1)
+  & := h(x_1)\,\frac{P(x_0, \dd x_1)}{P^{g+\eps}(x_0, \dd x_1)}
+  \\ & = h(x_1)\,\frac{\int P(x_0, \dd x_1)\, g(x_1)\, \dd x_1+ \eps}{g(x_1)  + \eps}
+= h(x_1)\,\frac{c+ \eps}{g(x_1)+ \eps} .
+\end{split}	\end{equation}
+The estimator for the marginal likelihood is
+\[
+ \hat{L}:= \frac{1}{N}\sum_{n=1}^{N} G_\eps\!\left(x_0, X_1^{(n)}\right),
+  \qquad \bigl(X_1^{(n)}\bigr)_{n=1}^{N} \sim P^{g+\eps}(x_0, \dd x_1).
+\]
+For {\it any} $\eps\ge 0$,  $\hat L$ is an unbiased estimator for the likelihood:
+\[  \EE_{P^{g+\eps}} \hat{L}=\EE_{P^{g+\eps}} G_\eps(X_1) = \int  h(x_1)\,\frac{P(x_0, dx_1)}{P^{g+\eps}(x_0, dx_1)} P^{g+\eps}(x_0, dx_1) = (Ph)(x_0). \]
 
-\begin{center}
-	\includegraphics[scale=0.5]{mbar_plot_3.0.png}
-\end{center}
 
-\newpage
+Define
+\[
+  m(\eps) = \mathbb{E}_{P^{g+\eps}}\!\left[G_\eps(x_0, X_1)\right]^2.
+\]
+By expanding we get
+\begin{equation}\label{eq:m_eps1}
+%\begin{split}
+  m(\eps)
+  = \int h(x_1)^2 \left(\frac{c+\eps}{g(x_1)+\eps}\right)^{\!2}
+    \frac{P(x_0, \dd x_1)\,(g(x_1)+\eps)}{c+\eps}
+  = \bigl(c+\epsilon \bigr)I(\epsilon, x_0),
+\end{equation}
+where  \[  I(\eps, x_0)= \int \frac{h(x_1)^2}{g(x_1)+\eps}\,P(x_0,\dd x_1).\] Note that Equation \eqref{eq:m0} is a special case. Set $\bar{m}(\eps) = \log m(\eps)$.
 
 
-\section{Importance Sampling Quality: KL and $\chi^2$ Divergences}
 
-\subsection{General theory}
+%Note that we can rewrite to
+%\[
+%  I(\eps) = \int h(x_1)\,\frac{\int h(x_1)\,P(x_0,dx_1)}{g(x_1)+\eps}\;
+%      P^h(x_0,dx_1)
+%  = c_h\int \frac{h(x_1)}{g(x_1)+\eps}\,P^h(x_0,dx_1).
+%\]
+%though we won't use this expression in the numerics. 
 
-The natural divergences for assessing IS  quality of $\hat L$ are the KL divergence and the
+\begin{ex} We return to the stochastic volatility example of Section \ref{sec:stochvol}. Straightforward computation gives
+\[ c = \phi(v; \mu+\omega+\psi x_0; \sigma^2+\eta^2). \]
+Moreover, $I(x_0, \epsilon)$ can be  numerically approximated using Gauss-Hermite quadrature. In Figure \ref{fig:stochvol_eta1} and Figure \ref{fig:stochvol_eta3} we plot $\bar{m}$ for $\eta=1$ and $\eta=3$ respectively. In the former case we know $\bar{m}(0)<\infty$ while in the latter case $\lim_{\epsilon\downarrow 0} \bar{m}(\epsilon)=\infty$. In both cases $\bar m$ has a unique minimiser. 
+
+	
+\end{ex}
+
+\begin{figure}
+	\begin{center}
+		\includegraphics[scale=0.5]{mbar_plot_1.0.png}
+	\end{center}
+	\caption{Visualisation int he stochastic volatility example of $\epsilon\mapsto \bar{m}$ when $\eta=1$.\label{fig:stochvol_eta1}}
+\end{figure}
+
+\begin{figure}
+	\begin{center}
+		\includegraphics[scale=0.5]{mbar_plot_3.0.png}
+	\end{center}
+		\caption{Visualisation int he stochastic volatility example of $\epsilon\mapsto \bar{m}$ when $\eta=3$.\label{fig:stochvol_eta3}}
+\end{figure}
+
+
+
+
+%\section{General setup}
+%
+%
+%Consider discrete-time nonlinear Gaussian model
+%\[ X_{t+1} \mid X_t=x \sim \dN{b_t(x)}{Q_t(x)}. \]
+%Assume to observe 
+%\[ V_{t} \mid X_{t}=x \sim K(x,\cdot), \]
+%
+%Consider the continuous-time SDE model
+%\[	  \dd X_t = b(t,X_t) \dd t + q \dd W_t,\qquad  X_0=x_0 .\]
+%Assume to observe 
+%\[ V_{i} \mid X_{t_i}=x \sim K(x,\cdot). \]
+%We  assume the Markov kernel $K$ to admit a density $k(x,\cdot)$ with respect to Lebesgue measure. 
+%
+%
+%Outline:
+%\begin{enumerate}
+%	\item focus on filtering using SMC
+%	\item Upon linear approximation of $b$ and $k$, we can compute guiding functions
+%	\item Analyse behaviour of resulting guided process, show need of safeguarding using $\eps$. 
+%\end{enumerate}
+
+
+
+
+\subsection{Importance sampling quality: KL and $\chi^2$ divergences}
+
+
+
+The natural divergences for assessing importance sampling  quality of $\hat L$ are the KL divergence and the
 $\chi^2$ divergence between the target $P^h$ and the proposal $P^{g+\varepsilon}$:
 \begin{align*}
   \mathrm{KL}(P^h \| P^{g+\varepsilon})
-    &= \int \log\frac{dP^h}{dP^{g+\varepsilon}}\,dP^h, \\
+    &= \int \log\frac{\dd P^h}{\dd P^{g+\varepsilon}}\,\dd P^h, \\
   \chi^2(P^h \| P^{g+\varepsilon})
-    &= \int \left(\frac{dP^h}{dP^{g+\varepsilon}}\right)^{\!2} dP^{g+\varepsilon} - 1.
+    &= \int \left(\frac{\dd P^h}{\dd P^{g+\varepsilon}}\right)^{\!2} \dd P^{g+\varepsilon} - 1.
 \end{align*}
-Since \[\frac{dP^h}{dP^{g+\varepsilon}}(x_1) = \frac{h(x_1)/c_h}{(g(x_1)+\eps)/(c_g+\eps)} = \frac{G_\eps(x_1)}{c_h},\] we have
+The $\chi^2$-divergence is directly related to the second moment of the potential.
+\begin{lem}
 \[
-  \chi^2(P^h \| P^{g+\varepsilon}) =  \frac{m(\varepsilon)}{c_h^2} - 1,
+  \chi^2(P^h \| P^{g+\varepsilon}) =  \frac{m(\varepsilon)}{[(Ph)(x_0)]^2} - 1,
 \]
-so finite variance of the IS estimator is \emph{exactly equivalent} to
-$\chi^2(P^h \| P^{g+\varepsilon}) < \infty$. The $\chi^2$ divergence thus directly
-controls the variance. Note, using $\log x \le x-1$ (and thus $2\log x \le x^2-1$)
-\[  2 \mathrm{KL}(P^h \| P^{g+\varepsilon}) \le \int \left(\frac{dP^h}{dP^{g+\varepsilon}}\right)^{\!2} dP^{h} - 1  .\] \note{Original bound I wrote down was wrong.}
+\end{lem}
+\begin{proof}
+We have \[\frac{P^h(x_0, \dd x_1}{P^{g+\varepsilon}(x_0, \dd x_1)} = \frac{h(x_1)/ (Ph)(x_0)}{(g(x_1)+\eps)/((Pg)(x_0)+\eps)} = \frac{G_\eps(x_0, x_1)}{(Ph)(x_0)},\] where the final equality follows from Equation \eqref{eq:G_eps}.
+\end{proof}
 
-\subsection{KL divergence: explicit form}
-We have
-\begin{align*}
-  \mathrm{KL}(P^h \| P^{g+\varepsilon})
-  &= \log\frac{c_g+\varepsilon}{c_h}
-     + \int \log h(x_1)\,P^h(x_0,dx_1)
-     - \int \log(g(x_1)+\varepsilon)\,P^h(x_0,dx_1).
-\end{align*}
-As $\varepsilon\downarrow 0$ each term has a finite limit provided
-$\int |\log g(x_1)|\,P^h(x_0,dx_1) < \infty$.
-Since $\log g(x_1)$ is quadratic in $x_1$ (as $g$ is Gaussian), this requires
-$P^h$ to have finite second moments. Hence
-\[
-  \mathrm{KL}(P^h \| P^{g+\varepsilon}) \to \mathrm{KL}(P^h \| P^g) < \infty
-  \quad \text{as } \varepsilon\downarrow 0,
-\]
-whenever $P^h$ has finite second moments, which holds for any $\varepsilon \geq 0$
-in our specific example.
-
-\subsection{$\chi^2$ divergence and finite variance: the threshold}
-
-For any $\varepsilon > 0$, the denominator $g(x_1)+\varepsilon \geq \varepsilon > 0$
-uniformly, so
-\[
-  m(\varepsilon) \leq \varepsilon^{-1}\int h(x_1)^2\,P(x_0,dx_1) < \infty,
-\]
-provided $h\in L^2(P(x_0,\cdot))$, which holds for our specific $h$.
-Hence the IS estimator has finite variance for \emph{every} $\varepsilon > 0$.
-
-At $\varepsilon = 0$ the situation is more delicate. From the tail analysis of
-Section~2, the integrand $h(x_1)^2/g(x_1)$ behaves like
-\[
-  \exp\!\left(t^2\!\left(\frac{1}{2\sigma^2}-\frac{1}{2\eta^2}\right) + O(t)\right)
-  \quad \text{as } t = x_1 - v \to +\infty,
-\]
-leading to the following result.
-
-\begin{prop}
-  For the observation scheme $v = X_1 + \log Z^2$, $Z\sim\mathcal{N}(0,1)$:
-  \[
-    \chi^2(P^h \| P^g) < \infty \iff m(0) < \infty \iff \eta < \sigma.
-  \]
-\end{prop}
-
-Now
+We have \note{add reference}
 \[ ESS \approx \frac{N}{1+\chi^2(P^h \| P^{g+\eps})}. \]
 So minimising $m(\eps)$ at each SMC step is equivalent to maximising ESS. 
+
+
+
+\note{Using $\log x \le x-1$ (and thus $2\log x \le x^2-1$)
+\[  2 \mathrm{KL}(P^h \| P^{g+\varepsilon}) \le \int \left(\frac{dP^h}{dP^{g+\varepsilon}}\right)^{\!2} dP^{h} - 1  .\] }
+
+
+\subsection{Theoretical Properties of $m(\varepsilon)$}
+
+Throughout this section $x_0$ is fixed and therefore omitted in some notation. Let 
+$J(\epsilon) = \int h(x)^2/(g(x)+\epsilon)^2\, P(\dd x)$, so that
+\[
+  m(\epsilon) = (c+\epsilon)\,I(\varepsilon), \qquad
+  m'(\epsilon) = I(\epsilon) - (c+\epsilon)\,J(\epsilon).
+\]
+
+\begin{lem}
+If $\int h(x_1)^2 P(x_0, \dd x_1) <\infty$ then $m(\epsilon)<\infty$ for any $\epsilon>0$.	
+\end{lem}
+\begin{proof}
+	\[
+  m(\varepsilon) \leq \frac{c+\epsilon}{\epsilon}\int h(x_1)^2\,P(x_0,\dd x_1) < \infty.
+\]
+\end{proof}
+
+
+
+\begin{prop}[Log-convexity of $I$]
+\label{prop:logconvex}
+The function $\varepsilon\mapsto I(\varepsilon)$ is strictly decreasing,
+strictly convex, and log-convex on $[0,\infty)$: for all
+$\varepsilon_1,\varepsilon_2\geq 0$,
+\[
+  I\!\left(\frac{\epsilon_1+\epsilon_2}{2}\right)
+  \leq \sqrt{I(\epsilon_1)\cdot I(\epsilon_2)}.
+\]
+\end{prop}
+
+\begin{proof}
+\emph{Strictly decreasing:} $I'(\epsilon) = -J(\epsilon) < 0$.
+
+\emph{Strictly convex:} $I''(\epsilon) = 2\int h^2/(g+\epsilon)^3\,\dd P > 0$.
+
+\emph{Log-convex:} By the arithmetic-geometric inequality,
+$g(x)+\frac{\epsilon_1+\epsilon_2}{2} \geq \sqrt{(g(x)+\epsilon_1)(g(x)+\epsilon_2)}$,
+so
+\begin{align*}
+  I\!\left(\frac{\varepsilon_1+\varepsilon_2}{2}\right)
+  & \leq \int \frac{h^2}{\sqrt{(g+\varepsilon_1)(g+\epsilon_2)}}\,\dd P
+  \\& = \int \frac{h}{\sqrt{g+\epsilon_1}}\cdot\frac{h}{\sqrt{g+\epsilon_2}}\,\dd P
+  \leq \sqrt{I(\epsilon_1)\cdot I(\varepsilon_2)},
+\end{align*}
+where the last step follows from the Cauchy-Schwarz inequality.
+\end{proof}
+
+\begin{prop}[Boundary behaviour]
+\label{prop:boundary}
+As $\varepsilon\to\infty$, $m(\varepsilon)\to\int h^2\,dP$. The value $m(0)$
+may be finite or infinite:
+\begin{enumerate}
+  \item If $h^2/g\in L^1(P)$ then $m(0) = c\cdot I(0) < \infty$.
+  \item If $h^2/g\notin L^1(P)$ then $m(0) = \infty$, and in this case
+    $m'(\varepsilon)\to-\infty$ as $\varepsilon\downarrow 0$.
+\end{enumerate}
+In case 2, $m(\varepsilon)<\infty$ for all $\varepsilon>0$ by
+Proposition~\ref{prop:unbiased}, so $m$ necessarily has a minimum at some
+$\varepsilon^*\in(0,\infty)$.
+\end{prop}
+
+\begin{proof}
+As $\varepsilon\to\infty$, dominated convergence gives
+$I(\varepsilon)\to 0$ and $(c+\varepsilon)I(\varepsilon)\to\int h^2\,dP$
+by a standard calculation. For case 2, $I(\varepsilon)\uparrow\infty$ as
+$\varepsilon\downarrow 0$ by monotone convergence, while
+$(c+\varepsilon)J(\varepsilon)$ stays bounded, so $m'(\varepsilon)\to-\infty$.
+\end{proof}
+
+\begin{prop}[Unimodality of $m$]
+\label{prop:unimodal}
+$m(\varepsilon)$ has at most one critical point $\varepsilon^*\in(0,\infty)$.
+A sufficient condition is that $\varepsilon\mapsto I(\varepsilon)/J(\varepsilon)$
+is strictly increasing, in which case $m'(\varepsilon)=0$ has at most one
+solution.
+\end{prop}
+
+\begin{proof}
+The critical point equation is $m'(\varepsilon)=0$, i.e.
+$I(\varepsilon) = (c+\varepsilon)J(\varepsilon)$, equivalently
+\begin{equation}\label{eq:crit}
+  \frac{I(\varepsilon)}{J(\varepsilon)} = c + \varepsilon.
+\end{equation}
+The right-hand side is strictly increasing in $\varepsilon$. If
+$\varepsilon\mapsto I(\varepsilon)/J(\varepsilon)$ is also strictly increasing,
+then the left-hand side is strictly increasing and~\eqref{eq:crit} has at
+most one solution.
+\end{proof}
+
+\begin{rem}
+The condition that $I/J$ is strictly increasing is equivalent to
+$I(\varepsilon)J'(\varepsilon) < I'(\varepsilon)J(\varepsilon)$, i.e.
+$d\log(I/J)/d\varepsilon > 0$. Substituting:
+\[
+  \frac{d}{d\varepsilon}\frac{I(\varepsilon)}{J(\varepsilon)}
+  = \frac{-J(\varepsilon)^2 + I(\varepsilon)\cdot 2\int h^2/(g+\varepsilon)^3\,dP}
+         {J(\varepsilon)^2}
+  = 2\,\frac{I(\varepsilon)\int h^2/(g+\varepsilon)^3\,dP - J(\varepsilon)^2}
+            {J(\varepsilon)^2}.
+\]
+By the Cauchy-Schwarz inequality applied to the measure $\nu(dx) = h^2/(g+\varepsilon)^2\,dP(x)$:
+\[
+  J(\varepsilon)^2
+  = \left(\int \frac{1}{g+\varepsilon}\,d\nu\right)^2
+  \leq \left(\int \frac{1}{(g+\varepsilon)^2}\,d\nu\right)\cdot\nu(\mathcal{X})
+  = \int\frac{h^2}{(g+\varepsilon)^3}\,dP \cdot I(\varepsilon),
+\]
+which gives $d(I/J)/d\varepsilon \geq 0$, with equality only when
+$1/(g+\varepsilon)$ is constant $\nu$-a.s., i.e.\ when $g$ is constant
+$P$-a.s.\ on the support of $h$. Hence \emph{$I/J$ is strictly increasing
+whenever $g$ is not $P$-a.s.\ constant on the support of $h$}, confirming
+unimodality of $m(\varepsilon)$ under this mild non-degeneracy condition.
+\end{rem}
+
+\begin{cor}
+Under the non-degeneracy condition of the remark above, $m(\varepsilon)$ is
+strictly unimodal: it has a unique minimiser $\varepsilon^*\in[0,\infty)$,
+where $\varepsilon^*=0$ if and only if $m'(0^+)\geq 0$, and
+$\varepsilon^*\in(0,\infty)$ if and only if $m'(0^+)<0$.
+\end{cor}
+
+
+
+
+%\subsection{KL divergence: explicit form}
+%We have
+%\begin{align*}
+%  \mathrm{KL}(P^h \| P^{g+\varepsilon})
+%  &= \log\frac{c_g+\varepsilon}{c_h}
+%     + \int \log h(x_1)\,P^h(x_0,dx_1)
+%     - \int \log(g(x_1)+\varepsilon)\,P^h(x_0,dx_1).
+%\end{align*}
+%As $\varepsilon\downarrow 0$ each term has a finite limit provided
+%$\int |\log g(x_1)|\,P^h(x_0,dx_1) < \infty$.
+%Since $\log g(x_1)$ is quadratic in $x_1$ (as $g$ is Gaussian), this requires
+%$P^h$ to have finite second moments. Hence
+%\[
+%  \mathrm{KL}(P^h \| P^{g+\varepsilon}) \to \mathrm{KL}(P^h \| P^g) < \infty
+%  \quad \text{as } \varepsilon\downarrow 0,
+%\]
+%whenever $P^h$ has finite second moments, which holds for any $\varepsilon \geq 0$
+%in our specific example.
 
 
 %
@@ -477,14 +593,7 @@ So minimising $m(\eps)$ at each SMC step is equivalent to maximising ESS.
 
 \section{Numerical Experiment: Effect of $\varepsilon$ on SMC Performance}
 
-\subsection{Setup}
-
-We consider the hidden Markov model
-\begin{align*}
-  X_t \mid X_{t-1} &\sim \mathcal{N}(\omega + \psi X_{t-1},\, \eta^2), \\
-  V_t \mid X_t      &= X_t + \log Z_t^2, \quad Z_t \sim \mathcal{N}(0,1),
-\end{align*}
-with parameters $\omega=0$, $\psi=0.9$, $\mu=-1.27$, $\sigma^2=\pi^2/2$.
+We return to the model from Section \ref{sec:stochvol} with parameters $\omega=0$, $\psi=0.9$, $\mu=-1.27$, $\sigma^2=\pi^2/2$.
 We compare two regimes:
 \begin{itemize}
   \item \textbf{Regime A} ($\eta=1.0 < \sigma\approx 2.22$): finite-variance
@@ -493,77 +602,66 @@ We compare two regimes:
     where $m(0)=\infty$.
 \end{itemize}
 In both regimes we run SMC with the twisted proposal $P^{g+\varepsilon}$ for
-several values of \[ \varepsilon \in \{0, 0.001, 0.01, 0.05, 0.1\}.\]
+ \[ \epsilon \in \{0, 0.001, 0.01, 0.05, 0.1\}.\]
 
-\subsection{SMC Algorithm}
 
-At each time step $t$, the twisted proposal is the mixture
-\[
-  P^{g+\varepsilon}(x, \cdot) =
-    \frac{c(x)}{c(x)+\varepsilon}\,P^g(x,\cdot)
-    + \frac{\varepsilon}{c(x)+\varepsilon}\,P(x,\cdot),
-\]
-where both $c(x)$ and the parameters of $P^g$ are available in closed form
-(see Section~2). The IS weight for a particle $x_t$ proposed from
-$P^{g+\varepsilon}(x_{t-1},\cdot)$ is
-\[
-  G_\varepsilon(x_{t-1}, x_t) = \frac{h_t(x_t)}{g_t(x_t)+\varepsilon}\,(c(x_{t-1})+\varepsilon).
-\]
 
-\begin{algorithm}
-\caption{Guided particle filter (GPF) with twisted proposal $P^{g+\varepsilon}$,
-  following \citet[Algorithm~10.5]{chopin2020introduction}}
-\label{alg:gpf}
-\begin{algorithmic}[1]
-\Require observations $v_{1:T}$, particle count $N$, perturbation $\varepsilon\geq 0$,
-  ESS threshold $\mathrm{ESS}_{\min}$
-\State For $n=1,\ldots,N$: draw
-  $X_0^n \sim P(x_0)$,
-  set $w_0^n \leftarrow G_0(X_0^n)$,
-  $W_0^n \leftarrow w_0^n / \sum_{m=1}^N w_0^m$
-  \newline where $G_0(x_0) := P_0(dx_0)\,h_0(x_0)/M_0(x_0)$
-\For{$t = 1, \ldots, T$}
-  \If{$\mathrm{ESS}(W_{t-1}^{1:N}) < \mathrm{ESS}_{\min}$}
-    \State $A_{t-1}^{1:N} \leftarrow \mathrm{resample}(W_{t-1}^{1:N})$
-    \State $\hat{w}_{t-1} \leftarrow 1$
-  \Else
-    \State $A_{t-1}^n \leftarrow n$
-    \State $\hat{w}_{t-1} \leftarrow w_{t-1}^n$
-  \EndIf
-  \State For $n=1,\ldots,N$: draw
-    $X_t^n \sim M_t(X_{t-1}^{A_{t-1}^n},\,dx_t) = P^{g_t+\varepsilon}(X_{t-1}^{A_{t-1}^n},\,dx_t)$
-    \newline by sampling from
-    $P^{g_t}(X_{t-1}^{A_{t-1}^n},\cdot) = \mathcal{N}(\mu^*,\sigma^{*2})$
-    with probability $\alpha^n = c(X_{t-1}^{A_{t-1}^n})/(c(X_{t-1}^{A_{t-1}^n})+\varepsilon)$,
-    and from $P(X_{t-1}^{A_{t-1}^n},\cdot)$ otherwise
-  \State $w_t^n \leftarrow \hat{w}_{t-1}^n \cdot G_t(X_{t-1}^{A_{t-1}^n},\, X_t^n)$
-    \newline where
-    \[
-      G_t(x_{t-1}, x_t) :=
-        \frac{h_t(x_t)}{g_t(x_t)+\varepsilon}
-        \cdot\bigl(c(x_{t-1})+\varepsilon\bigr)
-    \]
-  \State $W_t^n \leftarrow w_t^n \,/\, \sum_{m=1}^N w_t^m$
-\EndFor
-\State \Return
-  $\sum_{t=1}^T \log \ell_t^N$,\quad
-  $\{\mathrm{ESS}(W_t^{1:N})\}_{t=1}^T$
-  \newline where, following equation~(10.3) of \citet{chopin2020introduction},
-  \[
-    \ell_t^N :=
-    \begin{cases}
-      \dfrac{1}{N}\displaystyle\sum_{n=1}^N w_t^n
-        & \text{if resampling occurred at time } t, \\[8pt]
-      \left(\sum_{n=1}^N w_t^n\right)/\left(\sum_{n=1}^N w_{t-1}^n\right)
-        & \text{otherwise.}
-    \end{cases}
-  \]
-\end{algorithmic}
-\end{algorithm}
+At each time step $t$, the twisted proposal is the mixture proposal  $P_t^{g_t+\varepsilon}(x_{t-1}, \dd x_t)$ and the potential is given by $G_\epsilon(x_{t-1}, x_t)$. 
 
-\noindent
-To assess performance, we run Algorithm~\ref{alg:gpf} independently $R=500$
-times on the same simulated dataset ($T=50$, $N=2000$) and record both the minimum
+%\begin{algorithm}
+%\caption{Guided particle filter (GPF) with twisted proposal $P^{g+\varepsilon}$,
+%  following \cite[Algorithm~10.5]{CP}}
+%\label{alg:gpf}
+%\begin{algorithmic}[1]
+%\Require observations $v_{1:T}$, particle count $N$, perturbation $\varepsilon\geq 0$,
+%  ESS threshold $\mathrm{ESS}_{\min}$
+%\State For $n=1,\ldots,N$: draw
+%  $X_0^n \sim P(x_0)$,
+%  set $w_0^n \leftarrow G_0(X_0^n)$,
+%  $W_0^n \leftarrow w_0^n / \sum_{m=1}^N w_0^m$
+%  \newline where $G_0(x_0) := P_0(dx_0)\,h_0(x_0)/M_0(x_0)$
+%\For{$t = 1, \ldots, T$}
+%  \If{$\mathrm{ESS}(W_{t-1}^{1:N}) < \mathrm{ESS}_{\min}$}
+%    \State $A_{t-1}^{1:N} \leftarrow \mathrm{resample}(W_{t-1}^{1:N})$
+%    \State $\hat{w}_{t-1} \leftarrow 1$
+%  \Else
+%    \State $A_{t-1}^n \leftarrow n$
+%    \State $\hat{w}_{t-1} \leftarrow w_{t-1}^n$
+%  \EndIf
+%  \State For $n=1,\ldots,N$: draw
+%    $X_t^n \sim M_t(X_{t-1}^{A_{t-1}^n},\,dx_t) = P^{g_t+\varepsilon}(X_{t-1}^{A_{t-1}^n},\,dx_t)$
+%    \newline by sampling from
+%    $P^{g_t}(X_{t-1}^{A_{t-1}^n},\cdot) = \mathcal{N}(\mu^*,\sigma^{*2})$
+%    with probability $\alpha^n = c(X_{t-1}^{A_{t-1}^n})/(c(X_{t-1}^{A_{t-1}^n})+\varepsilon)$,
+%    and from $P(X_{t-1}^{A_{t-1}^n},\cdot)$ otherwise
+%  \State $w_t^n \leftarrow \hat{w}_{t-1}^n \cdot G_t(X_{t-1}^{A_{t-1}^n},\, X_t^n)$
+%    \newline where
+%    \[
+%      G_t(x_{t-1}, x_t) :=
+%        \frac{h_t(x_t)}{g_t(x_t)+\varepsilon}
+%        \cdot\bigl(c(x_{t-1})+\varepsilon\bigr)
+%    \]
+%  \State $W_t^n \leftarrow w_t^n \,/\, \sum_{m=1}^N w_t^m$
+%\EndFor
+%\State \Return
+%  $\sum_{t=1}^T \log \ell_t^N$,\quad
+%  $\{\mathrm{ESS}(W_t^{1:N})\}_{t=1}^T$
+%  \newline where, following equation~(10.3) of \citet{chopin2020introduction},
+%  \[
+%    \ell_t^N :=
+%    \begin{cases}
+%      \dfrac{1}{N}\displaystyle\sum_{n=1}^N w_t^n
+%        & \text{if resampling occurred at time } t, \\[8pt]
+%      \left(\sum_{n=1}^N w_t^n\right)/\left(\sum_{n=1}^N w_{t-1}^n\right)
+%        & \text{otherwise.}
+%    \end{cases}
+%  \]
+%\end{algorithmic}
+%\end{algorithm}
+%
+%\noindent
+To assess performance, we ran Algorithm~\ref{alg:guided_pf} independently for  $R=500$
+times on the same simulated dataset with $t=0,\ldots, T$, with $T=50$. We ran the sampler with $N=2000$ particles \note{check in code, perhaps 500?} and record both the minimum
 ESS over time and the maximum normalised weight over time for each run. Define
 \begin{align*}
   \mathrm{ESS}_{\min} &= \min_{t=1,\ldots,T} \mathrm{ESS}_t,	\\
@@ -571,13 +669,12 @@ ESS over time and the maximum normalised weight over time for each run. Define
 \end{align*}
  A low $\mathrm{ESS}_{\min}$ indicates that at some point the
 particle cloud collapsed to a near-degenerate distribution, with a single
-particle carrying almost all the weight. similarly a large $Q_{\max}$ value indicates this. 
+particle carrying almost all the weight. Similarly a large $Q_{\max}$ value indicates to this phenomenom. Consideration of $Q_{\max}$ is inspired by \cite{chatterjee2018sample}.  
 
-\subsection{Results}
 
-Figure~\ref{fig:miness_cdf} shows the empirical CDF of $\mathrm{ESS}_{\min}$
-across $R=500$ runs for each value of $\varepsilon$, separately for the two
-regimes. We took $N=500$ particles for a dataset with $T=50$. 
+Figure~\ref{fig:miness_cdf} shows the empirical cumulative distribution function (cdf) of $\mathrm{ESS}_{\min}$
+across $R=500$ runs for each value of $\epsilon$, separately for the two
+regimes. 
 \begin{itemize}
 	\item {\it Regime A ($\eta < \sigma$).}
 One can see an improvement upon taking $\epsilon>0$, though $\epsilon=0.01$ is clearly too large. One can see that the minimal ESS is about $60$ for $\epsilon=0$.   This confirms the
@@ -585,52 +682,44 @@ theoretical prediction: when $m(0)<\infty$, the IS weights have finite
 variance.  While finiteness is guaranteed, it is typically beneficial to take nonzero $\eps$. The value $m(0)$ can still be large, while finite. 
 
 \item {\it Regime B ($\eta > \sigma$).}
-The picture changes dramatically. At $\varepsilon=0$ the CDF has substantial
+The picture changes dramatically. At $\epsilon=0$ the cdf has substantial
 mass near zero, meaning that in a significant fraction of runs the particle
 cloud collapses to near-degeneracy at some time step. Taking 
-$\varepsilon=0.01$ shifts the CDF markedly rightward, essentially eliminating
+$\epsilon=0.01$ shifts the CDF markedly rightward, essentially eliminating
 the collapses. This is the direct numerical manifestation of $m(0)=\infty$:
 the IS weights have infinite variance, leading to occasional but catastrophic
 weight concentration on a single particle.
 \end{itemize}
-
-
-
-\subsection{On the difficulty of choosing $\varepsilon$ in Regime B}
-
 The results highlight that the choice of $\varepsilon$ in Regime B is
 delicate. The optimal $\varepsilon^*$ exists and can in principle be found by
-minimising $m(\varepsilon)$ numerically, as described in Section~3. However,
-$m(\varepsilon)$ depends on $x_0$ and varies across time steps as the particle
-cloud evolves, so a single fixed $\varepsilon$ cannot be globally optimal.
+minimising $m(\varepsilon)$ numerically, as described in Section~3. However, in propagating to time $t$, 
+$m(\epsilon, x_{t-1})$ depends on $x_{t-1}$ and thus varies across time steps as the particle
+cloud evolves, so a single fixed $\epsilon$ cannot be globally optimal.
 Furthermore, the performance is sensitive to this choice: the 5th percentile
 of $\mathrm{ESS}_{\min}$ drops sharply on both sides of $\varepsilon^*$,
 leaving a narrow window of well-performing values.
 
-This suggests that a fixed $\varepsilon$ is fundamentally limited in Regime B,
-and that an \emph{adaptive} scheme --- choosing $\varepsilon_t$ at each step
+This suggests that a fixed $\epsilon$ is  limited, especially in regime B, 
+and choosing $\epsilon_t$ adaptively at each step
 based on the current particle cloud by minimising an empirical estimate of
-$m(\varepsilon)$ --- would be more robust. In Regime A, by contrast, $\varepsilon=0$
-is already satisfactory.
+$m(\epsilon)$ may yield better ESS. In Regime A, by contrast, $\epsilon=0$
+is already satisfactory, though also in this case a more refined choice of $\epsilon$ is beneficial.
 
 
 
 \begin{figure}
 	\begin{center}
-		\includegraphics[scale=0.6]{adaptive_miness_cdf_good.png}\\[.5in]
+		\includegraphics[scale=0.5]{adaptive_miness_cdf_good.png}\\[.5in]
 				\includegraphics[scale=0.6]{adaptive_miness_cdf_bad.png}\\[.5in]
-			\caption{minESS comparison. \label{fig:miness_cdf}}
+			\caption{Cumulative distribution  of $\mathrm{ESS}_{\min}$ obtained from  $500$ experiments where we ran the SMC algorithm with \note{...?} particles on a fixed dataset. Top: $\eta=1$. Bottom: $\eta=3$. \label{fig:miness_cdf}}
 	\end{center}
 \end{figure}
 
 
-\subsection{Work by Chatterjee \& Diaconis}
-Suggest to look at $Q_{\max}$-statistic. See Figure \ref{fig:maxqn_cdf}. 
- is maximum of the normalised weights. Note that $Q_{\max}\in [0,1]$ and we want it to be small.  
-
+ 
 \begin{figure}
 	\begin{center}
-		\includegraphics[scale=0.6]{adaptive_maxqn_cdf_good.png}\\[.5in]
+		\includegraphics[scale=0.5]{adaptive_maxqn_cdf_good.png}\\[.5in]
 				\includegraphics[scale=0.6]{adaptive_maxqn_cdf_bad.png}\\[.5in]
 			\caption{Max $Q_n$ comparison.\label{fig:maxqn_cdf}}
 	\end{center}
@@ -639,12 +728,9 @@ Suggest to look at $Q_{\max}$-statistic. See Figure \ref{fig:maxqn_cdf}.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Adaptive Choice of $\varepsilon_t^*$}
+\subsection{Adaptive Choice of $\varepsilon_t$}
 
-The following result motivates the adaptive estimator. For a fixed particle
-$x_{t-1}$ and observation $v_t$, under $X_t \sim P^{g_t+\varepsilon}(x_{t-1},\cdot)$, the second moment of the IS weight
-equals
-\[
+From Equation \eqref{eq:m_eps1} we get \[
   m(\varepsilon, x_{t-1}) =
     \bigl(c(x_{t-1})+\varepsilon\bigr)
     \int \frac{h_t(x_1)^2}{g_t(x_1)+\varepsilon}\,P(x_{t-1},dx_1).
@@ -654,29 +740,30 @@ $\{W_{t-1}^n\}$, the population-level second moment is the weighted average
 \[
   \tilde m(\varepsilon) = \sum_{n=1}^N W_{t-1}^n \cdot m(\varepsilon, X_{t-1}^n)
   = \sum_{n=1}^N W_{t-1}^n\,\bigl(c(X_{t-1}^n)+\varepsilon\bigr)
-    \int \frac{h_t(x_1)^2}{g_t(x_1)+\varepsilon}\,P(X_{t-1}^n,dx_1).
-\] So we evaluate $m(\varepsilon)$  by taking the expectation of $x_{t-1}$ over the current particle approximation. 
-The idea is to choose 
-\[ \varepsilon_t^* = \argmin_{\varepsilon \geq 0}\, \tilde m(\varepsilon).\]
-The integral appearing in $\tilde m(\eps)$ can be approximately using numerical quadrature, but in our implementation we approximate it by  drawing 
-$\tilde{X}_t^n \sim P(X_{t-1}^n,\cdot)$ once and computing
+    \int \frac{h_t(x_t)^2}{g_t(x_t)+\epsilon}\,P(X_{t-1}^n,\dd x_t).
+\] So we evaluate $m(\epsilon, x_{t-1})$  by taking the expectation of $x_{t-1}$ over the current particle approximation. 
+The idea for an adaptive choice of $\epsilon_t$ is to choose 
+\[ \epsilon_t^* = \argmin_{\epsilon \geq 0}\, \tilde m(\epsilon).\]
+The integral appearing in $\tilde m(\eps)$ can be approximately using numerical quadrature, but in our implementation we use a Monte Carlo approximation where we independently draw 
+$\tilde{X}_t^n \sim P_t(X_{t-1}^n,\cdot )$, $n=1,\ldots, N$ and set
 \[
-  \hat{m}(\varepsilon) =
+  \hat{m}(\epsilon) =
     \sum_{n=1}^N W_{t-1}^n\,
-    \frac{h_t(\tilde{X}_t^n)^2}{g_t(\tilde{X}_t^n)+\varepsilon}
-    \cdot\bigl(c(X_{t-1}^n)+\varepsilon\bigr).
-\] Thus, this is a  Monte-Carlo estimator for $\tilde m(\varepsilon)$ based on $N$ samples. 
+    \frac{h_t(\tilde{X}_t^n)^2}{g_t(\tilde{X}_t^n)+\epsilon}
+    \cdot\bigl(c(X_{t-1}^n)+ \epsilon\bigr).
+\] Thus, this is a  Monte-Carlo estimator for $\tilde m(\epsilon)$ based on $N$ samples. 
 The analytical derivative with respect to $\eps$ is
 \[
-  \frac{d\hat{m}}{d\varepsilon} =
+  \frac{\dd \hat{m}}{\dd \epsilon} =
     \sum_{n=1}^N W_{t-1}^n\,
     h_t(\tilde{X}_t^n)^2\,
     \frac{g_t(\tilde{X}_t^n) - c(X_{t-1}^n)}
-         {(g_t(\tilde{X}_t^n)+\varepsilon)^2},
+         {(g_t(\tilde{X}_t^n)+\epsilon)^2},
 \]
 which enables gradient-based optimisation. An alternative consists of minimising
 $\hat{m}(\varepsilon)$ over a log-spaced grid $\mathcal{E} =
 \{\varepsilon_1 < \cdots < \varepsilon_K\}$.
+The resulting algorithm is precisely stated as Algorithm \ref{alg:gpf_adaptive}. 
 
 \begin{algorithm}
 \caption{Adaptive GPF with $\varepsilon_t^*$ chosen by weighted grid search}
@@ -709,12 +796,12 @@ $\hat{m}(\varepsilon)$ over a log-spaced grid $\mathcal{E} =
   \EndIf
   \State \textbf{Propose:} for $n=1,\ldots,N$ draw
     $X_t^n \sim P^{g_t+\varepsilon_t^*}\!\left(X_{t-1}^{A_{t-1}^n},\,\cdot\,\right)$
-    by sampling from
-    $P^{g_t}(X_{t-1}^{A_{t-1}^n},\cdot) = \mathcal{N}(\mu^*,\sigma^{*2})$
-    with probability
-    $\alpha^n = c(X_{t-1}^{A_{t-1}^n})/
-      (c(X_{t-1}^{A_{t-1}^n})+\varepsilon_t^*)$,
-    and from $P(X_{t-1}^{A_{t-1}^n},\cdot)$ otherwise
+%    by sampling from
+%    $P^{g_t}(X_{t-1}^{A_{t-1}^n},\cdot) = \mathcal{N}(\mu^*,\sigma^{*2})$
+%    with probability
+%    $\alpha^n = c(X_{t-1}^{A_{t-1}^n})/
+%      (c(X_{t-1}^{A_{t-1}^n})+\varepsilon_t^*)$,
+%    and from $P(X_{t-1}^{A_{t-1}^n},\cdot)$ otherwise
   \State \textbf{Update weights:}
     \[
       w_t^n = \hat{w}_{t-1}^n \cdot G_t\!\left(X_{t-1}^{A_{t-1}^n},\,X_t^n\right),
@@ -723,8 +810,8 @@ $\hat{m}(\varepsilon)$ over a log-spaced grid $\mathcal{E} =
         \frac{h_t(x_t)}{g_t(x_t)+\varepsilon_t^*}
         \cdot\bigl(c(x_{t-1})+\varepsilon_t^*\bigr)
     \]
-  \State \textbf{Likelihood increment} (eq.~10.3 of
-    \citet{chopin2020introduction}):
+  \State \textbf{Likelihood increment} (Eq.~10.3 of
+    \cite{CP}):
     \[
       \ell_t^N :=
       \begin{cases}
@@ -752,15 +839,15 @@ $\hat{m}(\varepsilon)$ over a log-spaced grid $\mathcal{E} =
     untwisted kernel $P$ and discarded after the grid search. Since they do
     not enter the weight update, the likelihood estimator
     $\sum_t \log\ell_t^N$ remains unbiased for $\log p(v_{1:T})$ for any
-    data-dependent choice of $\varepsilon_t^*$.
+    data-dependent choice of $\epsilon_t$.
 
-  \item Using the carry-over weights $W_{t-1}^n$ in $\hat{m}(\varepsilon)$
+  \item Using the carry-over weights $W_{t-1}^n$ in $\hat{m}(\epsilon)$
     is essential when resampling has not occurred recently. After resampling
     all weights equal $1/N$ and the weighted and unweighted averages
     coincide; in steps without resampling the weight distribution can be
     skewed and the unweighted average gives a poorly-targeted
-    $\varepsilon_t^*$. Numerical experiments confirm that the weighted
-    version gives a substantial improvement in both min-ESS and
+    $\epsilon_t$. Numerical experiments confirm that the weighted
+    version gives a substantial improvement in both $\mathrm{ESS}_{\min}$ and
     $Q_{\max}$ diagnostics.
 
   \item The grid $\mathcal{E}$ is log-spaced over $[10^{-6}, 1]$ with $K=50$
@@ -774,102 +861,6 @@ $\hat{m}(\varepsilon)$ over a log-spaced grid $\mathcal{E} =
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Adaptive Choice of $\varepsilon$ via ESS Targeting}
-\note{This does not work; I guess the desired ESS simply cannot be attained.}
-\subsection{Motivation}
-
-The numerical experiments of Section~4 show that the optimal perturbation
-$\varepsilon^*$ varies across time steps and depends on the current particle
-cloud. A fixed $\varepsilon$ cannot be globally optimal. We propose an
-adaptive scheme inspired by tempering methods in SMC
-\cite{neal2001annealed,del2006sequential}, where a tempering parameter is
-chosen at each step so that the ESS after reweighting equals a target
-fraction $\rho N$. The same principle applies here: we choose $\varepsilon_t^*$
-such that the ESS of the IS weights equals $\rho N$.
-
-\subsection{ESS as a Function of $\varepsilon$}
-
-Given proposals $\{x_t^{(i)}\}_{i=1}^N$ drawn from $P(x_{t-1}^{(i)},\cdot)$,
-the ESS of the weights $w^{(i)}(\varepsilon) = h_t(x_t^{(i)})/(g_t(x_t^{(i)})+\varepsilon)$
-is
-\[
-  \mathrm{ESS}(\varepsilon) =
-    \frac{\bigl(\sum_i w^{(i)}(\varepsilon)\bigr)^2}
-         {\sum_i w^{(i)}(\varepsilon)^2}.
-\]
-Two key properties make this suitable for bisection:
-\begin{enumerate}
-  \item $\mathrm{ESS}(\varepsilon)$ is \emph{increasing} in $\varepsilon$:
-    as $\varepsilon\to\infty$, all weights converge to $h_t(x_t^{(i)})/\varepsilon$
-    and become equal, so $\mathrm{ESS}\to N$.
-  \item $\mathrm{ESS}(0)$ may be small or even zero if some $g_t(x_t^{(i)})=0$,
-    reflecting the weight degeneracy in the infinite-variance regime.
-\end{enumerate}
-The target $\varepsilon_t^*$ is therefore the unique solution of
-\[
-  \mathrm{ESS}(\varepsilon_t^*) = \rho N,
-\]
-found by bisection on $\varepsilon \in [0, \varepsilon_{\max}]$. If
-$\mathrm{ESS}(0) \geq \rho N$ already, we set $\varepsilon_t^* = 0$; if even
-$\varepsilon_{\max}$ is insufficient, we set $\varepsilon_t^* = \varepsilon_{\max}$.
-
-\subsection{Connection to $m(\varepsilon)$}
-
-The ESS targeting criterion is closely related to minimising $m(\varepsilon)$.
-Note that
-\[
-  \frac{\mathrm{ESS}(\varepsilon)}{N}
-  \approx \frac{1}{1 + \chi^2(P^h \| P^{g+\varepsilon})}
-  = \frac{c_h(x_0)^2}{m(\varepsilon)},
-\]
-so targeting $\mathrm{ESS}(\varepsilon) = \rho N$ is equivalent to targeting
-$\chi^2(P^h\|P^{g+\varepsilon}) = (1-\rho)/\rho$, i.e.\ a fixed level of the
-$\chi^2$ divergence. Rather than minimising $m(\varepsilon)$ (which requires
-a grid search and gives a different target at each step), ESS targeting gives
-a directly interpretable, step-by-step criterion for particle diversity, and
-bisection finds the solution efficiently without a grid.
-
-
-
-\section{Conclusion}
-
-Figure~\ref{fig:smc_single_run} shows the results of a single SMC run for
-both regimes and both fixed ($\varepsilon=0$) and adaptive $\varepsilon^*$.
-Even for $\eta=3$ the results with $\varepsilon=0$ can be just fine: a single
-run looks almost indistinguishable from the adaptive run in terms of ESS,
-cumulative log-likelihood, and incremental log-likelihood. However, if one
-were to repeat the analysis many times, occasionally this would result in a
-catastrophic drop in ESS. This is precisely the implication of $m(0)=\infty$:
-it does not mean every run fails, but that the variance of the IS weights
-across runs is infinite, so disasters occur with positive probability and
-cannot be ruled out from a single run alone. This is confirmed by the CDF
-plots of Figure~\ref{fig:miness_cdf}, which required $R=200$ independent
-runs to reveal the heavy left tail of the min-ESS distribution at
-$\varepsilon=0$.
-
-Two further observations support this interpretation. First, the incremental
-log-likelihood panel shows a pronounced dip around $t=30$ in both the fixed
-and adaptive runs for $\eta=3$. This dip is driven by a particular difficult
-observation and occurs regardless of $\varepsilon$, suggesting it reflects a
-genuinely hard step in the data rather than an algorithmic failure. In a
-catastrophic run, this dip would be far deeper and the ESS would collapse to
-near 1 at that point. Second, the adaptive $\varepsilon^*$ panel for $\eta=3$
-shows $\varepsilon^*$ spiking upward precisely around $t=30$, at the same
-difficult observation. This confirms that the adaptive scheme is responding
-correctly: it detects the hard step through the empirical minimiser of
-$\hat{m}(\varepsilon)$ and automatically increases $\varepsilon$ to protect
-against weight collapse, without any explicit knowledge of which observations
-are difficult.
-
-\begin{figure}
-	\begin{center}
-		\includegraphics[scale=0.5]{smc_run_adaptive_eta1.0.png}
-		\includegraphics[scale=0.5]{smc_run_adaptive_eta3.0.png}
-		\includegraphics[scale=0.5]{smc_run_fixed_eps0.0_eta1.0.png}
-		\includegraphics[scale=0.5]{smc_run_fixed_eps0.0_eta3.0.png}
-	\end{center}
-	\caption{\label{fig:smc_single_run}}
-\end{figure}
 
 
 
@@ -987,7 +978,7 @@ Numerically, one can verify this by plotting $\bar{m}(\varepsilon)$ for
 decreasing values of $b$: the minimum of $\bar{m}$ increases without bound
 and $\varepsilon^*$ drifts toward larger values as $b \to 0$.
 
-
+\newpage
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Pushing the argument to SDEs}
 
@@ -1188,135 +1179,6 @@ whose effect depends on the dissipativity of $b$ relative to the reference
 drift $\tilde{b}$.
 
 
-\section{Theoretical Properties of $m(\varepsilon)$}
-
-Throughout this section we write $c = c(x_0)$,
-$I(\varepsilon) = \int h(x)^2/(g(x)+\varepsilon)\,dP(x)$, and
-$J(\varepsilon) = \int h(x)^2/(g(x)+\varepsilon)^2\,dP(x)$, so that
-\[
-  m(\varepsilon) = (c+\varepsilon)\,I(\varepsilon), \qquad
-  m'(\varepsilon) = I(\varepsilon) - (c+\varepsilon)\,J(\varepsilon).
-\]
-
-\begin{prop}[Unbiasedness and finite variance]
-\label{prop:unbiased}
-For any $\varepsilon\geq 0$, the IS estimator
-$\hat{p}(v) = \frac{1}{N}\sum_{i=1}^N G_\varepsilon(X^{(i)})$
-with $X^{(i)}\overset{\mathrm{iid}}{\sim} P^{g+\varepsilon}$ is unbiased for
-$p(v)$. If additionally $h\in L^2(P)$, then for every $\varepsilon>0$ the
-variance is finite:
-\[
-  m(\varepsilon) \leq \frac{c+\varepsilon}{\varepsilon}\int h^2\,dP < \infty.
-\]
-\end{prop}
-
-\begin{proof}
-Unbiasedness follows directly from the definition of $G_\varepsilon$ and
-$P^{g+\varepsilon}$. For the variance bound, use $g(x)+\varepsilon\geq\varepsilon$
-uniformly to obtain $I(\varepsilon)\leq \varepsilon^{-1}\int h^2\,dP$.
-\end{proof}
-
-\begin{prop}[Log-convexity of $I$]
-\label{prop:logconvex}
-The function $\varepsilon\mapsto I(\varepsilon)$ is strictly decreasing,
-strictly convex, and log-convex on $[0,\infty)$: for all
-$\varepsilon_1,\varepsilon_2\geq 0$,
-\[
-  I\!\left(\tfrac{\varepsilon_1+\varepsilon_2}{2}\right)
-  \leq \sqrt{I(\varepsilon_1)\cdot I(\varepsilon_2)}.
-\]
-\end{prop}
-
-\begin{proof}
-\emph{Strictly decreasing:} $I'(\varepsilon) = -J(\varepsilon) < 0$.
-
-\emph{Strictly convex:} $I''(\varepsilon) = 2\int h^2/(g+\varepsilon)^3\,dP > 0$.
-
-\emph{Log-convex:} By the AM-GM inequality,
-$g(x)+\frac{\varepsilon_1+\varepsilon_2}{2} \geq \sqrt{(g(x)+\varepsilon_1)(g(x)+\varepsilon_2)}$,
-so
-\[
-  I\!\left(\tfrac{\varepsilon_1+\varepsilon_2}{2}\right)
-  \leq \int \frac{h^2}{\sqrt{(g+\varepsilon_1)(g+\varepsilon_2)}}\,dP
-  = \int \frac{h}{\sqrt{g+\varepsilon_1}}\cdot\frac{h}{\sqrt{g+\varepsilon_2}}\,dP
-  \leq \sqrt{I(\varepsilon_1)\cdot I(\varepsilon_2)},
-\]
-where the last step is Cauchy-Schwarz.
-\end{proof}
-
-\begin{prop}[Boundary behaviour]
-\label{prop:boundary}
-As $\varepsilon\to\infty$, $m(\varepsilon)\to\int h^2\,dP$. The value $m(0)$
-may be finite or infinite:
-\begin{enumerate}
-  \item If $h^2/g\in L^1(P)$ then $m(0) = c\cdot I(0) < \infty$.
-  \item If $h^2/g\notin L^1(P)$ then $m(0) = \infty$, and in this case
-    $m'(\varepsilon)\to-\infty$ as $\varepsilon\downarrow 0$.
-\end{enumerate}
-In case 2, $m(\varepsilon)<\infty$ for all $\varepsilon>0$ by
-Proposition~\ref{prop:unbiased}, so $m$ necessarily has a minimum at some
-$\varepsilon^*\in(0,\infty)$.
-\end{prop}
-
-\begin{proof}
-As $\varepsilon\to\infty$, dominated convergence gives
-$I(\varepsilon)\to 0$ and $(c+\varepsilon)I(\varepsilon)\to\int h^2\,dP$
-by a standard calculation. For case 2, $I(\varepsilon)\uparrow\infty$ as
-$\varepsilon\downarrow 0$ by monotone convergence, while
-$(c+\varepsilon)J(\varepsilon)$ stays bounded, so $m'(\varepsilon)\to-\infty$.
-\end{proof}
-
-\begin{prop}[Unimodality of $m$]
-\label{prop:unimodal}
-$m(\varepsilon)$ has at most one critical point $\varepsilon^*\in(0,\infty)$.
-A sufficient condition is that $\varepsilon\mapsto I(\varepsilon)/J(\varepsilon)$
-is strictly increasing, in which case $m'(\varepsilon)=0$ has at most one
-solution.
-\end{prop}
-
-\begin{proof}
-The critical point equation is $m'(\varepsilon)=0$, i.e.
-$I(\varepsilon) = (c+\varepsilon)J(\varepsilon)$, equivalently
-\begin{equation}\label{eq:crit}
-  \frac{I(\varepsilon)}{J(\varepsilon)} = c + \varepsilon.
-\end{equation}
-The right-hand side is strictly increasing in $\varepsilon$. If
-$\varepsilon\mapsto I(\varepsilon)/J(\varepsilon)$ is also strictly increasing,
-then the left-hand side is strictly increasing and~\eqref{eq:crit} has at
-most one solution.
-\end{proof}
-
-\begin{rem}
-The condition that $I/J$ is strictly increasing is equivalent to
-$I(\varepsilon)J'(\varepsilon) < I'(\varepsilon)J(\varepsilon)$, i.e.
-$d\log(I/J)/d\varepsilon > 0$. Substituting:
-\[
-  \frac{d}{d\varepsilon}\frac{I(\varepsilon)}{J(\varepsilon)}
-  = \frac{-J(\varepsilon)^2 + I(\varepsilon)\cdot 2\int h^2/(g+\varepsilon)^3\,dP}
-         {J(\varepsilon)^2}
-  = 2\,\frac{I(\varepsilon)\int h^2/(g+\varepsilon)^3\,dP - J(\varepsilon)^2}
-            {J(\varepsilon)^2}.
-\]
-By the Cauchy-Schwarz inequality applied to the measure $\nu(dx) = h^2/(g+\varepsilon)^2\,dP(x)$:
-\[
-  J(\varepsilon)^2
-  = \left(\int \frac{1}{g+\varepsilon}\,d\nu\right)^2
-  \leq \left(\int \frac{1}{(g+\varepsilon)^2}\,d\nu\right)\cdot\nu(\mathcal{X})
-  = \int\frac{h^2}{(g+\varepsilon)^3}\,dP \cdot I(\varepsilon),
-\]
-which gives $d(I/J)/d\varepsilon \geq 0$, with equality only when
-$1/(g+\varepsilon)$ is constant $\nu$-a.s., i.e.\ when $g$ is constant
-$P$-a.s.\ on the support of $h$. Hence \emph{$I/J$ is strictly increasing
-whenever $g$ is not $P$-a.s.\ constant on the support of $h$}, confirming
-unimodality of $m(\varepsilon)$ under this mild non-degeneracy condition.
-\end{rem}
-
-\begin{cor}
-Under the non-degeneracy condition of the remark above, $m(\varepsilon)$ is
-strictly unimodal: it has a unique minimiser $\varepsilon^*\in[0,\infty)$,
-where $\varepsilon^*=0$ if and only if $m'(0^+)\geq 0$, and
-$\varepsilon^*\in(0,\infty)$ if and only if $m'(0^+)<0$.
-\end{cor}
 
 %%%%%%%%%%%%%%%%
 
@@ -1454,6 +1316,111 @@ the tuning procedure to the theoretical finiteness condition.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \bibliographystyle{alpha}
 \bibliography{literature.bib}
+
+\appendix
+
+\section{Adaptive Choice of $\varepsilon$ via ESS Targeting}
+\note{This does not work; I guess the desired ESS simply cannot be attained.}
+
+
+\note{Nog uit te zoeken wat met onderstaande te doen.}
+
+\subsection{Motivation}
+
+The numerical experiments of Section~4 show that the optimal perturbation
+$\varepsilon^*$ varies across time steps and depends on the current particle
+cloud. A fixed $\varepsilon$ cannot be globally optimal. We propose an
+adaptive scheme inspired by tempering methods in SMC
+\cite{neal2001annealed,del2006sequential}, where a tempering parameter is
+chosen at each step so that the ESS after reweighting equals a target
+fraction $\rho N$. The same principle applies here: we choose $\varepsilon_t^*$
+such that the ESS of the IS weights equals $\rho N$.
+
+\subsection{ESS as a Function of $\varepsilon$}
+
+Given proposals $\{x_t^{(i)}\}_{i=1}^N$ drawn from $P(x_{t-1}^{(i)},\cdot)$,
+the ESS of the weights $w^{(i)}(\varepsilon) = h_t(x_t^{(i)})/(g_t(x_t^{(i)})+\varepsilon)$
+is
+\[
+  \mathrm{ESS}(\varepsilon) =
+    \frac{\bigl(\sum_i w^{(i)}(\varepsilon)\bigr)^2}
+         {\sum_i w^{(i)}(\varepsilon)^2}.
+\]
+Two key properties make this suitable for bisection:
+\begin{enumerate}
+  \item $\mathrm{ESS}(\varepsilon)$ is \emph{increasing} in $\varepsilon$:
+    as $\varepsilon\to\infty$, all weights converge to $h_t(x_t^{(i)})/\varepsilon$
+    and become equal, so $\mathrm{ESS}\to N$.
+  \item $\mathrm{ESS}(0)$ may be small or even zero if some $g_t(x_t^{(i)})=0$,
+    reflecting the weight degeneracy in the infinite-variance regime.
+\end{enumerate}
+The target $\varepsilon_t^*$ is therefore the unique solution of
+\[
+  \mathrm{ESS}(\varepsilon_t^*) = \rho N,
+\]
+found by bisection on $\varepsilon \in [0, \varepsilon_{\max}]$. If
+$\mathrm{ESS}(0) \geq \rho N$ already, we set $\varepsilon_t^* = 0$; if even
+$\varepsilon_{\max}$ is insufficient, we set $\varepsilon_t^* = \varepsilon_{\max}$.
+
+\subsection{Connection to $m(\varepsilon)$}
+
+The ESS targeting criterion is closely related to minimising $m(\varepsilon)$.
+Note that
+\[
+  \frac{\mathrm{ESS}(\varepsilon)}{N}
+  \approx \frac{1}{1 + \chi^2(P^h \| P^{g+\varepsilon})}
+  = \frac{c_h(x_0)^2}{m(\varepsilon)},
+\]
+so targeting $\mathrm{ESS}(\varepsilon) = \rho N$ is equivalent to targeting
+$\chi^2(P^h\|P^{g+\varepsilon}) = (1-\rho)/\rho$, i.e.\ a fixed level of the
+$\chi^2$ divergence. Rather than minimising $m(\varepsilon)$ (which requires
+a grid search and gives a different target at each step), ESS targeting gives
+a directly interpretable, step-by-step criterion for particle diversity, and
+bisection finds the solution efficiently without a grid.
+
+
+
+\subsection{Conclusion}
+
+Figure~\ref{fig:smc_single_run} shows the results of a single SMC run for
+both regimes and both fixed ($\varepsilon=0$) and adaptive $\varepsilon^*$.
+Even for $\eta=3$ the results with $\varepsilon=0$ can be just fine: a single
+run looks almost indistinguishable from the adaptive run in terms of ESS,
+cumulative log-likelihood, and incremental log-likelihood. However, if one
+were to repeat the analysis many times, occasionally this would result in a
+catastrophic drop in ESS. This is precisely the implication of $m(0)=\infty$:
+it does not mean every run fails, but that the variance of the IS weights
+across runs is infinite, so disasters occur with positive probability and
+cannot be ruled out from a single run alone. This is confirmed by the CDF
+plots of Figure~\ref{fig:miness_cdf}, which required $R=200$ independent
+runs to reveal the heavy left tail of the min-ESS distribution at
+$\varepsilon=0$.
+
+Two further observations support this interpretation. First, the incremental
+log-likelihood panel shows a pronounced dip around $t=30$ in both the fixed
+and adaptive runs for $\eta=3$. This dip is driven by a particular difficult
+observation and occurs regardless of $\varepsilon$, suggesting it reflects a
+genuinely hard step in the data rather than an algorithmic failure. In a
+catastrophic run, this dip would be far deeper and the ESS would collapse to
+near 1 at that point. Second, the adaptive $\varepsilon^*$ panel for $\eta=3$
+shows $\varepsilon^*$ spiking upward precisely around $t=30$, at the same
+difficult observation. This confirms that the adaptive scheme is responding
+correctly: it detects the hard step through the empirical minimiser of
+$\hat{m}(\varepsilon)$ and automatically increases $\varepsilon$ to protect
+against weight collapse, without any explicit knowledge of which observations
+are difficult.
+
+
+\begin{figure}
+	\begin{center}
+		\includegraphics[scale=0.3]{smc_run_adaptive_eta1.0.png}
+		\includegraphics[scale=0.3]{smc_run_adaptive_eta3.0.png}
+		\includegraphics[scale=0.3]{smc_run_fixed_eps0.0_eta1.0.png}
+		\includegraphics[scale=0.3]{smc_run_fixed_eps0.0_eta3.0.png}
+	\end{center}
+	\caption{\label{fig:smc_single_run}}
+\end{figure}
+
 
 
 \end{document}

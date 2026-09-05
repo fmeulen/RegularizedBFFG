@@ -1,5 +1,10 @@
 \begin{thebibliography}{vdMS25}
 
+\bibitem[CD18]{chatterjee2018sample}
+Sourav Chatterjee and Persi Diaconis.
+\newblock The sample size required in importance sampling.
+\newblock {\em Annals of Applied Probability}, 28(2):1099--1135, 2018.
+
 \bibitem[CP20]{CP}
 Nicolas Chopin and Omiros Papaspiliopoulos.
 \newblock {\em An Introduction to Sequential Monte Carlo}.
