@@ -131,24 +131,24 @@
 
 
 \section{Introduction}
-Over the past two decades Sequential Monte Carlo (SMC) methods have gained increasing popularity. In this paper, we are specifically interested in state-space models using the {\it guided particle filter}.  Let  $\{X_t\}$ be the latent Markovian process and $\{Y_t\}$ denote  the  observation process ($t=0,1,2,\ldots$). Algorithm 10.5 in \cite{CP}  (restated here as Algorithm \ref{alg:guided_pf})  provides the steps of the guided particle  filter to approximate the filtering distribution, i.e.\ the distribution of $X_t \mid Y_0,\ldots, Y_t$.  The algorithm relies on choosing  mutation kernels $M_t$ and setting potentials $G_t$ equal to 
+Over the past two decades Sequential Monte Carlo (SMC) methods have gained increasing popularity. In this paper, we are specifically interested in state-space models using the {\it guided particle filter}. A state-space model consists of a  latent Markovian process  $\{X_t\}$ and an observation process $\{Y_t\}$ ($t=0,1,2,\ldots$), where the distribution of $Y_t$ depends on $X_t$. Algorithm 10.5 in \cite{CP}  (restated here as Algorithm \ref{alg:guided_pf})  provides the steps of the guided particle  filter to approximate the filtering distribution, i.e.\ the distribution of $X_t \mid Y_0,\ldots, Y_t$.  The algorithm relies on choosing  mutation kernels $M_t$ and setting potentials $G_t$ equal to 
 \[ G_t(x_{t-1},x_t) = f_t(y_t \mid x_t) \frac{P_t(x_{t-1}, \dd x_t)}{M_t(x_{t-1}, \dd x_t)}, 
-\] where $f_t$ is the emission density at time $t$ (which we assume to exist) and $P_t$ is the Markov transition kernel for the latent process $\{X_t\}$. Implicitly, we assume $M_t$ to be chosen such that the Radon-Nikodym derivative in the preceding display is well defined. The output of the particle filter readily yields an unbiased estimator of the likelihood $\hat L$.
+\] where $f_t$ is the emission density at time $t$ (which we assume to exist) and $P_t$ is the Markov transition kernel for the latent process $\{X_t\}$. Implicitly, we assume $M_t$ to be chosen such that the Radon-Nikodym derivative in the preceding display is well defined. The output of the particle filter readily yields an unbiased estimator of the likelihood, which we will denote by  $\hat L$.
 
 
 
-The Bootstrap filter is a special case where $M_t$ is chosen to equal $P_t$. However, choosing the kernel $M_t$ to take the future observation $y_t$ into account may lead to a more efficient algorithm,  for example quantified by an increased effective sample size (ESS). 
+The Bootstrap filter corresponds to the  special case where $M_t$ is chosen to equal $P_t$. However, choosing the kernel $M_t$ to take the future observation $y_t$ into account may lead to a more efficient algorithm,  for example quantified by an increased effective sample size (ESS). 
 {\it Guiding}, also known as {\it twisting}, provides a generic framework to do so. The basic idea consists of choosing a {\it guiding function} $g_t$ and take $M_t$ equal to $P^g_t$, where
 \[ P_t^{g_t}(x_{t-1}, \dd x_t) = \frac{P_t(x_{t-1}, \dd x_t) g_t(x_t)}{\int P_t(x_{t-1}, \dd x_t) g_t(x_t)} \]
-assuming $g_t$ is such that  the denominator is finite. The Markovian process with these transition kernels will be referred to as the {\it guiding process} induced by $g_t$. Doob's $h$-transform consists of choosing the guiding function such that the guided process is in fact the process conditioned on the observation $y_t$; the corresponding guiding function will be denoted by $h_t$. It is well known that $h_t$ is only known in closed form in a few special cases.   In applications we therefore look for a ``good'' guiding function.  For sampling efficiency, it is advantageous to choose $g_t$ such that sampling from $P^{g_t}_t$ is feasible. It may however be the case that intuitively reasonable choices that facilitate easy sampling lead to the estimator  $\hat L$ having infinite variance, despite being unbiased. In Section 2 we give an example. 
+assuming $g_t$ to be such that  the denominator is finite. The Markovian process with these transition kernels will be referred to as the {\it guiding process} induced by $g_t$. Doob's $h$-transform consists of choosing the guiding function such that the guided process is in fact the exact process conditioned on the observation $y_t$; the corresponding guiding function will be denoted by $h_t$. It is well known that $h_t$ is only known in closed form in a few special cases.   In applications we therefore look for a ``good'' guiding function.  For sampling efficiency, it is advantageous to choose $g_t$ such that sampling from $P^{g_t}_t$ is feasible. It may however be the case that intuitively reasonable choices that facilitate easy sampling result in  the unbiased estimator  $\hat L$ having infinite variance. In Section \ref{sec:stochvol} we give an example. 
 
-In this paper we study safe-guarding the guided particle filter by replacing $g_t$ with $g_t + \epsilon$ for a (small) value of $\epsilon$. This idea has been briefly stated in some works on SMC (\cite{Guarniero2017}, \cite{Lindsten2018graphical}), without much detailed study. In our first part of this paper we consider discrete-time state space models and introduce an algorithm for choosing $\epsilon$ adaptively. We provide theoretical result to assess whether inclusion of a strictly positive $\epsilon$ leads to a decrease in $\chi^2$ divergence between $P^h$ and $P^{g+\epsilon}$ and therefore an increase in ESS. We illustrate this using numerical examples. 
+In this paper we study safe-guarding the guided particle filter by replacing $g_t$ with $g_t + \epsilon$ for a (small) value of $\epsilon$. This idea has been briefly stated in some works on SMC (\cite{Guarniero2017}, \cite{Lindsten2018graphical}), without much detailed study. In our first part of this paper we consider discrete-time state space models and introduce an algorithm for choosing $\epsilon$ adaptively. We provide theoretical result to assess whether inclusion of a strictly positive $\epsilon$ leads to a decrease in $\chi^2$ divergence between $P^h$ and $P^{g+\epsilon}$ and therefore an increase in ESS. We introduce an algorithm for adaptive tuning of $\epsilon$ and  illustrate this using numerical examples. 
 
 In the second part of the paper we extend our results to the setting where the latent process is a continuous time process defined as solution to the stochastic differential equation (SDE)
 \[ \dd X_t = b(t,X_t) \dd t+ q \dd W_t. \]
-A guiding function induces a change of measure from the forward process, say this is denoted by $P$ to the measure $P^g$ of a process called the {\it guided} process. Following  work on exponential change of measure for continuous time stochastic processes (\cite{PalmowskiRolski2002}, \cite{BFFG}), under $P^g$ the process $X$ satisfies the SDE
+A guiding function induces a change of measure from the forward process,  denoted by $P$, to the measure $P^g$ of a process called the {\it guided} process. Following  work on exponential change of measure for continuous time stochastic processes (\cite{PalmowskiRolski2002}, \cite{BFFG}), under $P^g$ the process $X$ satisfies the SDE
  \[ \dd X_t = b(t,X_t) \dd t+ qq^\T r(t,X_t) \dd t + q \dd W^\circ_t, \]
-with $r(t,x)=\nabla_x \log g(t,x)$ and $W^\circ$ a $P^g$-Wiener process. Similar to the discrete-time case we study the effect of changing $g$ to $g+\epsilon$. 
+with $r(t,x)=\nabla_x \log g(t,x)$ and $W^\circ$ a $P^g$-Wiener process. Similar to the discrete-time case we study the effect of changing $g$ to $g+\epsilon$ and give an algorithm for adaptively tuning $\epsilon$. 
 
 
 
@@ -189,23 +189,23 @@ For a Markov kernel $P$ and compatible function $g$ we write $(P g)(x)= \int P(x
 
 
 \section{Stochastic volatility example}\label{sec:stochvol}
-As first illustrative example to motivate our work, we consider the well-known stochastic volatility model. For $t=0,1,\ldots$ define 
+As  illustrative example to motivate our work, we consider the well-known stochastic volatility model. For $t=0,1,\ldots$ define 
 \begin{equation}
 \label{latent}
 \begin{split}
-	R_t &= \exp\left(\frac{X_t}{2}\right) U_t\\
+	R_t &= e^{X_t/2} U_t\\
 	    X_t &= \omega + \psi X_{t - 1} + \eta W_t
 \end{split},
 \end{equation}
 where $\{U_t\}$ and $\{W_t\}$ are independent sequences of independent $\scr{N}(0,1)$-distributed random variables. The process $\{X_t\}$ is latent, while $\{R_t\}$ is observed. 
-We consider the following transformed version of the observation equation 
+The observation equation is equivalent to its log-transformed version given by 
 \begin{equation}\label{v_obs}
     V_i := \log\left(R_i^2\right) = X_i + U'_i, \quad 1 \leq i \leq n,
 \end{equation}
 where $U'_i := \log\left(U_i^2\right)$, $i = 1, \dots, n$.
 
-For simplicity, assume $x_0$ is fixed and we wish to forward propagate a particle at $x_0$ in view of the observation $v_1$ at time $1$.  Let 
-$P(x_0, \dd x_1)$ be the Markov kernel corresponding to  defined by
+Suppose for simplicity that  $x_0$ is fixed and we wish to forward propagate a particle at $x_0$ in view of the observation $v_1$ at time $1$.  Let 
+$P(x_0, \dd x_1)$ be the Markov kernel corresponding to the conditional distribution
 \[
   X_1 \mid X_0=x_0 \;\sim\; \mathcal{N}(\omega + \psi x_0,\; \eta^2).
 \]
@@ -229,30 +229,29 @@ where
 with $f_{\chi^2(1)}$ denoting the density of the $\chi^2(1)$-distribution. 
 %For large $x_1$ it will behave like
 %$\sqrt{e^{v-x_1}}$.  It should also behave this way for large $x_1$.
-
  As sampling from $P^h$ is non-trivial, we use a Gaussian approximation to the distribution of $\log Z^2$ to obtain the guiding function $g$ defined by 
 \[
-  g(x_1) = \phi(v_1;\; \mu + x_1,\; \sigma^2), \] where $\mu := \EE \log Z^2\approx -1.27$ and $\sigma^2 := \var{\log Z^2}= \pi^2/2$. \note{double check}
+  g(x_1) = \phi(v_1;\; \mu + x_1,\; \sigma^2), \] where $\mu := \EE \log Z^2\approx -1.27$ and $\sigma^2 := \var{\log Z^2}= \pi^2/2$. 
 This induces the twisted measure
 \[   P^g(x_0, \dd x_1) = \frac{P(x_0, \dd x_1)\, g(x_1)}{\int P(x_0, \dd x_1)\, g(x_1)}.
 \]
 Contrary to $P^h$, sampling from $P^g$ is easy. A simple calculation reveals that 
-\[ P^g(x_0, \dd x_1) \sim \dN{\mu^\star}{(\sigma^\star)^2}, \]
+\[ P^g(x_0, \dd x_1) \sim \dN{\mu_g}{\sigma_g^2}, \]
 with
-\[ (\sigma^\star)^2=\frac{\eta^2\sigma^2}{\eta^2+\sigma^2} \qquad \text{and} \quad \mu^\star = \frac{\sigma^2(\omega+\psi x_0)+\eta^2(v-\mu)}{\eta^2+\sigma^2}. 
+\[ \sigma_g^2=\frac{\eta^2\sigma^2}{\eta^2+\sigma^2} \qquad \text{and} \quad \mu_g = \frac{\sigma^2(\omega+\psi x_0)+\eta^2(v-\mu)}{\eta^2+\sigma^2}. 
 \]
+\note{earlier denoted by $\mu^\star$ and $\sigma^\star$}
 \note{look up where this has been proposed in the literature and cite this}
 
 
 Suppose $X_1^1,\ldots, X_1^N$ are sampled independently from $P^g(x_0, \dd x_1)$. An unbiased estimator for the likelihood is given by
 \[ \hat{L} := \frac1{N}\sum_{n=1}^N G(x_0, X_1^n), \] 
 where 
-\[ G(x_0, x_1) = h(x_1)\frac{P(x_0, \dd x_1)}{P^g(x_0, \dd x_1)} = h(x_1) \frac{(Pg)(x_0)}{g(x_1)}\]
+\[ G(x_0, x_1) = h(x_1)\frac{P(x_0, \dd x_1)}{P^g(x_0, \dd x_1)} = h(x_1) \frac{(Pg)(x_0)}{g(x_1)}.\]
 Define
 \begin{equation}
 	\label{eq:m0}  m(0) = \mathbb{E}_{P^{g}}\!\left[G(x_0, X_1)\right]^2 ,
 \end{equation}
-
 the notation being chosen such that it matches with more general notation introduced later. 
 \begin{prop}
 \[
@@ -265,9 +264,7 @@ We have
 \begin{align*}
 	m(0) & = [(Pg)(x_0)]^2 \int \left(\frac{h(x_1)}{g(x_1)}\right)^2 P^g(x_0, \dd x_1) \\&= (Pg)(x_0) \int \frac{h(x_1)^2}{g(x_1)}\ P(x_0, \dd x_1)
 \end{align*}
-From \eqref{eq:hx1} we get 	\[
-  h(x_1)^2 = \frac{1}{2\pi}\,e^{-(v_1-x_1)}\,e^{-e^{v_1-x_1}}.
-\]
+From \eqref{eq:hx1} we get 	$h(x_1)^2 = \frac{1}{2\pi}\,e^{-(v_1-x_1)}\,e^{-e^{v_1-x_1}}$.
 Writing $t = x_1 - v_1$, 
 \[
   \frac{h(x_1)^2}{g(x_1)}\,\phi(x_1; \omega+\psi x_0, \eta^2)
@@ -980,42 +977,75 @@ and $\varepsilon^*$ drifts toward larger values as $b \to 0$.
 
 \newpage
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Pushing the argument to SDEs}
+\section{Extension to Continuous Time}
 
-Suppose 
-\begin{equation}\label{eq:X}
-	  \dd X_t = b(t,X_t) \dd t + q \dd W_t,\qquad  X_0=x_0 .
+
+
+Consider the stochastic differential equation
+\begin{equation}\label{eq:SDE}
+  \dd X_t = b(t, X_t)\dd t + q \dd W_t, \qquad X_0 = x_0,
 \end{equation}
-Here, $b\colon \RR_+ \times \RR^d \to \RR^d$ is a (typically nonlinear) map known as the drift function and $q \in  \RR^{d\times d'}$ is the diffusion function. Furthermore, $W$ is a standard Brownian motion process in $\RR^{d'}$.  
-Assume we observe $v$ at time $T$ and let 
-\[ h(x_T)= \mbox{density of v conditional on $X_T=x_T$}. 
-\]
-We can 
-\begin{itemize}
-	\item Make a Gaussian approximation to $h(x_T)$.
-	\item Compute $g(t,x)$ for all $t$. 
-	\item Use guided proposals with not $g$ but $g+\eps$. 
-\end{itemize}
+where $b\colon \mathbb{R}_+\times\mathbb{R}^d\to\mathbb{R}^d$ is a (possibly
+nonlinear) drift, $q\in\mathbb{R}^{d\times d'}$ is the diffusion coefficient,
+and $W$ is a standard Brownian motion in $\mathbb{R}^{d'}$. Let $Q=qq^\top$.
+We denote by $P$ the law of the solution on path space
+$\mathcal{C}([0,T],\mathbb{R}^d)$.
+
+We observe $v$ at time $T$ with likelihood $h(T, x_T)$, so that the marginal
+likelihood is $h(0, x_0) = \mathbb{E}_P[h(T,X_T) \mid X_0=x_0]$. We fix a non-negative function
+$g(t,x)$ that approximates the likelihood at time $t$,
+satisfying $g(T,x)\approx h(T,x)$. \note{explain how we  choose $g$, kolm backw eq,  $\tilde{b}(t,x)$ be the drift of a linear \emph{auxiliary process} .} Let $P^g$ denote the law of the process
+\[ \dd X_t =b(t,X_t) \dd t + Q r(t,X_t) \dd t + q \dd W_t, \]
+with $W$ a $P^g$-Wiener process. Here, the score $r$ is given by  $r(t,x)=\nabla_x \log g(t,x)$. We have
+\[ \frac{\dd P}{\dd P^g}(x)= \frac{g(0,x_0)}{g(T,x_T)}
+  \Psi(x), \]
+  where 
+ \begin{equation}\label{eq:log_psi}
+  \log\Psi(x) = \int_0^T
+    \bigl(b(t,x_t)-\tilde{b}(t,x_t)\bigr)^\top r_\varepsilon(t,x_t)\,\dd t,
+\end{equation}
+which is a purely deterministic functional of the path --- no stochastic
+integral is involved. In the linear case $b=\tilde{b}$, we have $\Psi(x)=1$.
+See for instance \cite{schauer2017guided} and   \cite{BFFG} (in particular Section 7 of the latter). \note{also give RN-derivative in terms of driving Wiener process}
 
 
 
-Rather than $g$, take $g_\epsilon:=g+\epsilon$. Then
+For a given guiding function $g$ we define its safe-guarded version by $g+\epsilon$. Define the safe-guarded score by 
 \begin{align*}
-	r_\eps(t,x):=\nabla_x g_\epsilon(t,x) &= \frac{g^\prime(t,x)}{g(t,x)+\epsilon} = \frac{g(t,x)}{g(t,x)+\epsilon} \nabla_x \log g(t,x) \\ &= s(-\log \epsilon +\log g(t,x)) \nabla_x \log g(t,x), 
-\end{align*} 
-where $s(x)=1/(1+e^{-x})$. Thus we get a damping factor. 
-The measure $P^{g+\epsilon}$ is  the measure (on path space) of the process
-\[ 	  \dd X_t = b(t,X_t) \dd t +Q r_\eps(t,X_t) +q \dd W_t,\qquad  X_0=x_0 .\]
-with $Q=q q^\T$. Now, with $x=(x_t,\in t\in [0,T])$. 
-\[ G_\eps(x) = h(x_T) \frac{d P}{d P^{g+\eps}}(x) .  \]
-Here
-\[ \frac{d P}{d P^{g+\eps}}(x) = \frac{g(x_0)+\eps}{g(x_T)+\eps} \Psi(x), \]
-with
-\[ \log \Psi(x)= \int_0^T (b(t,x_t)-\tilde{b}(t,x_t)) r_\eps(t,x_t) d t. \]
-Thus 
-\begin{align*} m(\eps) &= \EE_{P^{g+\eps}} G_\eps(X)^2 = \int  G_\eps(x)^2 d P^{g+\eps}(x) \\ & = \int  G_\eps(x)^2 \frac{d P^{g+\eps}}{d P}(x) d P(x) \\ & = \int \left(\frac{d P^{g+\eps}}{d P}(x)\right)^{-1} h(x_T)^2 d P(x) \\ & =(g(x_0)+\eps) \int \frac{h(x_T)^2}{g(x_T)+\eps}  \Psi(x)^{-1} d P(x) .
-\end{align*}
-This is to be compared to \eqref{eq:m_eps1}: $c_g$ in that formula is exactly as $g(x_0)$ here. In the discrete-time we assumed linear dynamics and thus $\tilde b=b$ which amounts to $\Psi(x)=1$. \note{I think the nonlinear case is most interesting here, for else filtering at time $T$ boils down to the discrete-time problem.}
+  r_\epsilon(t,x) &= \nabla_x \log(g(t,x)+\epsilon)
+  = \frac{\nabla_x g(t,x)}{g(t,x)+\epsilon} \\& 
+  = \frac{g(t,x)}{g(t,x)+\epsilon}\,\nabla_x \log g(t,x)=s(-\log \epsilon +\log g(t,x)) \nabla_x \log g(t,x),
+ \end{align*} 
+where $s$ denotes the sigmoid function  $s(x)=1/(1+e^{-x})$.
+
+
+The factor $g/(g+\epsilon)\in[0,1)$ is a  damping that suppresses
+the guiding term in regions where $g$ is small relative to $\epsilon$,
+and recovers the standard guided score from \cite{schauer2017guided} --$\nabla_x\log g$-- at $\epsilon=0$.
+
+The \emph{safe-guarded guided proposal} $P^{g+\varepsilon}$ is the law of
+\begin{equation}\label{eq:guided_SDE}
+  \dd X_t = b(t,X_t) \dd t + Q\,r_\varepsilon(t,X_t) \dd t + q \dd W_t,
+  \qquad X_0 = x_0.
+\end{equation}
+ Thus, similar to the discrete-time case, the safe-guarded  process can be viewed as a mixture of the measure $P$ and $P^{g}$. 
+
+\subsection{IS weight and second moment $m(\varepsilon)$}
+The importance sampling (IS) weight for a  $x\sim P^{g+\epsilon}$, path initialised at $x_0$, is
+\[
+  G_\epsilon(x_0,x) = h(T,x_T) \frac{\dd P}{\dd P^{g+\epsilon}}(x)= h(T, x_T)\,\frac{g(0,x_0)+\epsilon}{g(T,x_T)+\epsilon}
+  \cdot\Psi_(x).
+\]
+Note that we added $\epsilon$ as a subscript to $\Psi$ to highlight this dependence. 
+The IS estimator $\hat L = \frac{1}{N}\sum_{n=1}^N G_\epsilon(x_0, X^n_T)$
+with $X^n \sim P^{g+\varepsilon}$ is unbiased for $h(0,x_0)$ for any
+$\epsilon\geq 0$. Its variance is given by \begin{equation}\begin{split}\label{eq:meps_cont} m(\eps) &= \EE_{P^{g+\eps}} G_\eps(X)^2 = \int  G_\eps(x_0,x)^2 \dd P^{g+\eps}(x) \\ & = \int  G_\eps(x_0,x)^2 \frac{\dd P^{g+\eps}}{d P}(x) \dd P(x) \\ & = \int \frac{\dd P}{\dd P^{g+\eps}}(x) h(T, x_T)^2 \dd P(x) \\ & =(g(0, x_0)+\eps) \int \frac{h(T,x_T)^2}{g(T, x_T)+\eps}  \Psi_\epsilon(x) \dd P(x) .
+\end{split}
+\end{equation}
+This is to be compared to \eqref{eq:m_eps1}: $c$ in that formula is exactly as $g(0, x_0)$ here. The term $\Psi(x)$ in the integral is an additional path-space correction.  In the discrete-time we assumed linear dynamics and then   choosing  $\tilde b=b$ results in  $\Psi_\epsilon(x)=1$.
+
+
+\section{Other stuff}
 
 We wish to show that $\epsilon \mapsto m(\epsilon)$ is U-shaped. For that, a starting point would be to show $m^\prime(0)<0$. In general, this seems hard to prove, but in case $\Psi\equiv 1$ we have
 \[ m^\prime(\epsilon) = \int \frac{h(x_T)^2}{g(x_T)+\epsilon} \dd P(x) - (g(x_0)+\epsilon) \int \frac{h(x_T)^2}{(g(x_T)+\epsilon)^2} \dd P(x). \]
@@ -1038,105 +1068,35 @@ Suppose $g(T,x)=\phi(v; \mu, \sigma^2)$ (with $\mu, \sigma$ depending on $v$). I
 \end{lem}
 
 
-\begin{lem} For the diffusion $\dd X_t = -\kappa X_t \dd t + q \dd W_t$, conditional on $g(T,x)=\phi(v-x; \mu, \sigma^2)$, we have
+\begin{ex} For the diffusion $\dd X_t = -\kappa X_t \dd t + q \dd W_t$, conditional on $g(T,x)=\phi(v-x; \mu, \sigma^2)$, we have
 \[ g(t,x)= \phi\left(e^{-\kappa(T-t)} x; v-\mu, \sigma^2 +\frac{q^2}{2\kappa} \left(1-e^{-2\kappa(T-t)}\right) \right). \]
-\end{lem}
+\end{ex}
 Note that for fixed $t$, $x\mapsto g(t,x)$ is not a probability density (except at time $T$). 
 
 
 
 
 
-\section{Extension to Continuous Time}
 
-\subsection{Setup}
+\subsection{Adaptive choice of $\epsilon$}
 
-Consider the stochastic differential equation
-\begin{equation}\label{eq:SDE}
-  dX_t = b(t, X_t)\,dt + q\,dW_t, \qquad X_0 = x_0,
-\end{equation}
-where $b\colon \mathbb{R}_+\times\mathbb{R}^d\to\mathbb{R}^d$ is a (possibly
-nonlinear) drift, $q\in\mathbb{R}^{d\times d'}$ is the diffusion coefficient,
-and $W$ is a standard Brownian motion in $\mathbb{R}^{d'}$. Let $Q=qq^\top$.
-We denote by $P$ the law of the solution on path space
-$\mathcal{C}([0,T],\mathbb{R}^d)$.
-
-We observe $v$ at time $T$ with likelihood $h(x_T)$, so that the marginal
-likelihood is $p(v) = \mathbb{E}_P[h(X_T)]$. We fix a non-negative function
-$g(t,x)$ that approximates the \emph{residual likelihood} at time $t$,
-satisfying $g(T,x)\approx h(x)$.
-
-\subsection{Regularised guided proposal}
-
-Following \citet{schauer2017guided}, we use $g$ to define a guiding term.
-Define the regularised score
+We minimise $m(\epsilon)$ over $\epsilon\geq 0$. Since the integral
+in~\eqref{eq:meps_cont} is under $P$ (not $P^{g+\varepsilon}$), we can estimate $m(\epsilon)$ using 
+$\{X^n\}_{n=1}^N$ drawn from $P$, which are independent of
+$\epsilon$. Weighting by the current normalised particle weights
+$\{W^n\}_{n=1}^{N}$ gives the empirical estimator
 \[
-  r_\varepsilon(t,x) = \nabla_x \log(g(t,x)+\varepsilon)
-  = \frac{\nabla_x g(t,x)}{g(t,x)+\varepsilon}
-  = \frac{g(t,x)}{g(t,x)+\varepsilon}\,\nabla_x \log g(t,x).
+  \hat{m}(\epsilon) = (g(0,x_0)+\epsilon)
+    \sum_{n=1}^{N} W^n
+    \frac{\left(h(T,X_T^n\right)^2}{g(T,X_T^n)+\epsilon}
+    \cdot\Psi_\epsilon(X^n),
 \]
-The factor $g/(g+\varepsilon)\in[0,1)$ is a sigmoid damping that suppresses
-the guiding term in regions where $g$ is small relative to $\varepsilon$,
-and recovers the standard guided score $\nabla_x\log g$ at $\varepsilon=0$.
-
-The \emph{regularised guided proposal} $P^{g+\varepsilon}$ is the law of
-\begin{equation}\label{eq:guided_SDE}
-  dX_t = b(t,X_t)\,dt + Q\,r_\varepsilon(t,X_t)\,dt + q\,dW_t,
-  \qquad X_0 = x_0.
-\end{equation}
-At $\varepsilon=0$ this recovers the guided proposal of
-\citet{schauer2017guided}; as $\varepsilon\to\infty$ the correction vanishes
-and $P^{g+\varepsilon}\to P$.
-
-\subsection{IS weight and second moment $m(\varepsilon)$}
-
-Let $\tilde{b}(t,x)$ be the drift of a linear \emph{reference process} used
-to construct $g$. The Radon-Nikodym derivative $\Psi = dP^{g+\varepsilon}/dP$
-satisfies
-\begin{equation}\label{eq:log_psi}
-  \log\Psi(x) = -\int_0^T
-    \bigl(b(t,x_t)-\tilde{b}(t,x_t)\bigr)^\top r_\varepsilon(t,x_t)\,dt,
-\end{equation}
-which is a purely deterministic functional of the path --- no stochastic
-integral is involved. In the linear case $b=\tilde{b}$, we have $\Psi=1$.
-
-The IS weight for a path $x\sim P^{g+\varepsilon}$ is
-\[
-  G_\varepsilon(x) = h(x_T)\,\frac{g(0,x_0)+\varepsilon}{g(T,x_T)+\varepsilon}
-  \cdot\Psi(x)^{-1}.
-\]
-The IS estimator $\hat{p}(v) = \frac{1}{N}\sum_{i=1}^N G_\varepsilon(x^{(i)})$
-with $x^{(i)}\sim P^{g+\varepsilon}$ is unbiased for $p(v)$ for any
-$\varepsilon\geq 0$. Its variance is finite if and only if
-\begin{equation}\label{eq:m_eps_ct}
-  m(\varepsilon) := \mathbb{E}_{P^{g+\varepsilon}}\!\left[G_\varepsilon(X)^2\right]
-  = (g(0,x_0)+\varepsilon)\int \frac{h(x_T)^2}{g(T,x_T)+\varepsilon}
-    \,\Psi(x)^{-1}\,dP(x) < \infty.
-\end{equation}
-This is the continuous-time analogue of the discrete-time $m(\varepsilon)$
-from Section~2, with $g(0,x_0)$ playing the role of $c(x_0)$ and
-$\Psi^{-1}$ as an additional path-space correction.
-
-\subsection{Adaptive choice of $\varepsilon^*$}
-
-We minimise $m(\varepsilon)$ over $\varepsilon\geq 0$. Since the integral
-in~\eqref{eq:m_eps_ct} is under $P$ (not $P^{g+\varepsilon}$), we can estimate
-it using $N_{\rm aux}$ \emph{unguided} auxiliary paths
-$\{x^{(i)}\}_{i=1}^{N_{\rm aux}}$ drawn from $P$, which are independent of
-$\varepsilon$. Weighting by the current normalised particle weights
-$\{W^{(i)}\}_{i=1}^{N_{\rm aux}}$ gives the empirical estimator
-\[
-  \hat{m}(\varepsilon) = (g(0,x_0)+\varepsilon)
-    \sum_{i=1}^{N_{\rm aux}} W^{(i)}\,
-    \frac{h(x_T^{(i)})^2}{g(T,x_T^{(i)})+\varepsilon}
-    \cdot\Psi(x^{(i)},\varepsilon)^{-1},
-\]
-where $\Psi(x^{(i)},\varepsilon)$ is evaluated by discretising~\eqref{eq:log_psi}
+where $\Psi\epsilon(X^n)$ is evaluated by discretising~\eqref{eq:log_psi}
 along the stored path:
 \[
-  \log\Psi(x^{(i)},\varepsilon) \approx -\sum_{k=0}^{n-1}
-    \bigl(b(t_k,x_{t_k}^{(i)})-\tilde{b}(t_k,x_{t_k}^{(i)})\bigr)^\top
-    r_\varepsilon(t_k,x_{t_k}^{(i)})\,\Delta t.
+  \log\Psi_\epsilon(x^n) \approx -\sum_{k=0}^{n-1}
+    \bigl(b(t_k,x_{t_k}^n)-\tilde{b}(t_k,x_{t_k}^n)\bigr)^\top
+    r_\varepsilon(t_k,x_{t_k}^n)\,\Delta t.
 \]
 Since the paths $x^{(i)}$ and the factor
 $(b-\tilde{b})^\top\nabla_x\log g\cdot\Delta t$ are independent of
@@ -1164,26 +1124,14 @@ either by grid search or, using the analytical derivative
 by Brent's method applied to $d\hat{m}/d\varepsilon = 0$, which is
 significantly faster in practice.
 
-\subsection{Connection to discrete time}
-
-In the linear case $b=\tilde{b}$, $\Psi=1$ and~\eqref{eq:m_eps_ct} reduces to
-\[
-  m(\varepsilon) = (g(0,x_0)+\varepsilon)
-    \int \frac{h(x_T)^2}{g(T,x_T)+\varepsilon}\,dP(x),
-\]
-which is exactly the discrete-time formula with the single-step transition
-kernel replaced by the full path-space measure $P$. The finiteness condition
-and the structure of $\varepsilon^*$ therefore carry over from Section~3
-directly. In the nonlinear case, $\Psi^{-1}$ acts as a path-space correction
-whose effect depends on the dissipativity of $b$ relative to the reference
-drift $\tilde{b}$.
 
 
 
 %%%%%%%%%%%%%%%%
 
-\section{Theoretical Guarantees for the Adaptive Scheme}
+\section{Theoretical guarantees for the adaptive scheme (discrete-time case)}
 
+\note{All of this needs checking.}
 Throughout this section we fix $x_0$ and write $c = c(x_0)$,
 $p = p(v) = c_h(x_0)$, and assume $h \in L^2(P)$ so that
 $m(\varepsilon) < \infty$ for all $\varepsilon > 0$ by

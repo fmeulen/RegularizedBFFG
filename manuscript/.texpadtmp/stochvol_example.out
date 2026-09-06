@@ -12,17 +12,14 @@
 \BOOKMARK [2][-]{subsection.5.1}{5.1. Setup}{section.5}% 12
 \BOOKMARK [2][-]{subsection.5.2}{5.2. Tail analysis of m\(0\)}{section.5}% 13
 \BOOKMARK [2][-]{subsection.5.3}{5.3. The limit b 0}{section.5}% 14
-\BOOKMARK [1][-]{section.6}{6. Pushing the argument to SDEs}{}% 15
-\BOOKMARK [1][-]{section.7}{7. Extension to Continuous Time}{}% 16
-\BOOKMARK [2][-]{subsection.7.1}{7.1. Setup}{section.7}% 17
-\BOOKMARK [2][-]{subsection.7.2}{7.2. Regularised guided proposal}{section.7}% 18
-\BOOKMARK [2][-]{subsection.7.3}{7.3. IS weight and second moment m\(\)}{section.7}% 19
-\BOOKMARK [2][-]{subsection.7.4}{7.4. Adaptive choice of *}{section.7}% 20
-\BOOKMARK [2][-]{subsection.7.5}{7.5. Connection to discrete time}{section.7}% 21
-\BOOKMARK [1][-]{section.8}{8. Theoretical Guarantees for the Adaptive Scheme}{}% 22
-\BOOKMARK [1][-]{section*.2}{References}{}% 23
-\BOOKMARK [1][-]{appendix.A}{Appendix A. Adaptive Choice of \040via ESS Targeting}{}% 24
-\BOOKMARK [2][-]{subsection.A.1}{A.1. Motivation}{appendix.A}% 25
-\BOOKMARK [2][-]{subsection.A.2}{A.2. ESS as a Function of }{appendix.A}% 26
-\BOOKMARK [2][-]{subsection.A.3}{A.3. Connection to m\(\)}{appendix.A}% 27
-\BOOKMARK [2][-]{subsection.A.4}{A.4. Conclusion}{appendix.A}% 28
+\BOOKMARK [1][-]{section.6}{6. Extension to Continuous Time}{}% 15
+\BOOKMARK [2][-]{subsection.6.1}{6.1. IS weight and second moment m\(\)}{section.6}% 16
+\BOOKMARK [1][-]{section.7}{7. Other stuff}{}% 17
+\BOOKMARK [2][-]{subsection.7.1}{7.1. Adaptive choice of }{section.7}% 18
+\BOOKMARK [1][-]{section.8}{8. Theoretical guarantees for the adaptive scheme \(discrete-time case\)}{}% 19
+\BOOKMARK [1][-]{section*.2}{References}{}% 20
+\BOOKMARK [1][-]{appendix.A}{Appendix A. Adaptive Choice of \040via ESS Targeting}{}% 21
+\BOOKMARK [2][-]{subsection.A.1}{A.1. Motivation}{appendix.A}% 22
+\BOOKMARK [2][-]{subsection.A.2}{A.2. ESS as a Function of }{appendix.A}% 23
+\BOOKMARK [2][-]{subsection.A.3}{A.3. Connection to m\(\)}{appendix.A}% 24
+\BOOKMARK [2][-]{subsection.A.4}{A.4. Conclusion}{appendix.A}% 25
