@@ -3,23 +3,18 @@
 \BOOKMARK [2][-]{subsection.1.2}{1.2. Outline}{section.1}% 3
 \BOOKMARK [2][-]{subsection.1.3}{1.3. Frequently used notation}{section.1}% 4
 \BOOKMARK [1][-]{section.2}{2. Stochastic volatility example}{}% 5
-\BOOKMARK [1][-]{section.3}{3. Safe guarding \(discrete time case\)}{}% 6
-\BOOKMARK [2][-]{subsection.3.1}{3.1. Importance sampling quality: KL and 2 divergences}{section.3}% 7
-\BOOKMARK [2][-]{subsection.3.2}{3.2. Theoretical Properties of m\(\)}{section.3}% 8
-\BOOKMARK [1][-]{section.4}{4. Numerical Experiment: Effect of \040on SMC Performance}{}% 9
-\BOOKMARK [2][-]{subsection.4.1}{4.1. Adaptive Choice of t}{section.4}% 10
-\BOOKMARK [1][-]{section.5}{5. Laplace Observation Scheme}{}% 11
-\BOOKMARK [2][-]{subsection.5.1}{5.1. Setup}{section.5}% 12
-\BOOKMARK [2][-]{subsection.5.2}{5.2. Tail analysis of m\(0\)}{section.5}% 13
-\BOOKMARK [2][-]{subsection.5.3}{5.3. The limit b 0}{section.5}% 14
-\BOOKMARK [1][-]{section.6}{6. Extension to Continuous Time}{}% 15
-\BOOKMARK [2][-]{subsection.6.1}{6.1. IS weight and second moment m\(\)}{section.6}% 16
-\BOOKMARK [1][-]{section.7}{7. Other stuff}{}% 17
-\BOOKMARK [2][-]{subsection.7.1}{7.1. Adaptive choice of }{section.7}% 18
-\BOOKMARK [1][-]{section.8}{8. Theoretical guarantees for the adaptive scheme \(discrete-time case\)}{}% 19
-\BOOKMARK [1][-]{section*.2}{References}{}% 20
-\BOOKMARK [1][-]{appendix.A}{Appendix A. Adaptive Choice of \040via ESS Targeting}{}% 21
-\BOOKMARK [2][-]{subsection.A.1}{A.1. Motivation}{appendix.A}% 22
-\BOOKMARK [2][-]{subsection.A.2}{A.2. ESS as a Function of }{appendix.A}% 23
-\BOOKMARK [2][-]{subsection.A.3}{A.3. Connection to m\(\)}{appendix.A}% 24
-\BOOKMARK [2][-]{subsection.A.4}{A.4. Conclusion}{appendix.A}% 25
+\BOOKMARK [1][-]{section.3}{3. Safeguarding \(discrete time case\)}{}% 6
+\BOOKMARK [2][-]{subsection.3.1}{3.1. Connection to 2 divergence and effective sample size}{section.3}% 7
+\BOOKMARK [1][-]{section.4}{4. Choice of }{}% 8
+\BOOKMARK [2][-]{subsection.4.1}{4.1. Adaptive Choice of t}{section.4}% 9
+\BOOKMARK [1][-]{section.5}{5. Laplace Observation Scheme}{}% 10
+\BOOKMARK [2][-]{subsection.5.1}{5.1. Setup}{section.5}% 11
+\BOOKMARK [2][-]{subsection.5.2}{5.2. The limit b 0}{section.5}% 12
+\BOOKMARK [1][-]{section.6}{6. Theoretical results}{}% 13
+\BOOKMARK [2][-]{subsection.6.1}{6.1. Theoretical Properties of m\(\)}{section.6}% 14
+\BOOKMARK [2][-]{subsection.6.2}{6.2. Theoretical guarantees for the adaptive scheme \(discrete-time case\)}{section.6}% 15
+\BOOKMARK [1][-]{section.7}{7. Safeguarding \(continuous time case\)}{}% 16
+\BOOKMARK [2][-]{subsection.7.1}{7.1. IS weight and second moment m\(\)}{section.7}% 17
+\BOOKMARK [2][-]{subsection.7.2}{7.2. Adaptive choice of }{section.7}% 18
+\BOOKMARK [1][-]{section*.3}{References}{}% 19
+\BOOKMARK [1][-]{appendix.A}{Appendix A. Adaptive Choice of \040via ESS Targeting}{}% 20

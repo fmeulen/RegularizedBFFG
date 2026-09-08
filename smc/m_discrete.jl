@@ -116,27 +116,81 @@ function main(εs, p)
     m_vals    = [m(ε, p)     for ε in εs]
     mbar_vals = [m_bar(ε, p) for ε in εs]
 
-    p1 = plot(collect(εs), mbar_vals,
-              xlabel="ε", ylabel="mbar",
-              title="m̄(ε), η=$(η)",
-              lw=2, legend=false)
-
-    savefig(p1, "figs/mbar_plot_$(η).png")
-    println("Plot saved to mbar_plot_$(η).png")
-
     return m_vals, mbar_vals
 end
 
 # ── Run ───────────────────────────────────────────────────────────────────────
 
-p = Para()
+# p = Para()
 
-for η_val in [1.0, 3.0]
-    if η_val<1.1
-        εs = range(0.00, .05, length=200)
+# pl =[]
+# for η_val in [1.0, 3.0]
+#     if η_val<1.1
+#     #    εs = range(0.00, .05, length=200)
+#         εs = range(0.00, .25, length=200)
+#     else
+#         εs = exp.(range(log(1e-12), log(.001), length=200))
+#     end
+#     #p = Para(η=η_val, v=0.0)
+#     p = Para(η=η_val, v=-0.3)
+#     _, _, fig = main(εs, p)
+#     push!(pl, fig)
+# end
+
+# plot(pl[1], pl[2])
+  
+
+
+using RCall
+
+# ── Build data for both eta values ────────────────────────────────────────────
+df_rows = []
+
+for η_val in [1.0, 4.0]
+    if η_val < 1.1
+        #εs = range(0.00, 0.3, length=200)
+        εs = range(0.00, 3.3, length=400)
     else
-        εs = exp.(range(log(1e-12), log(.001), length=200))
+        #εs = exp.(range(log(1e-12), log(0.0025), length=200))
+        εs = exp.(range(log(1e-12), log(1.25), length=400))
     end
-    p = Para(η=η_val)
-    main(εs, p)
+    p = Para(η=η_val, v=-0.3)
+    mv = [m(ε, p) for ε in εs]
+    for (ε, mval) in zip(εs, mv)
+        push!(df_rows, (eps=ε, m_val=mval, eta=η_val))
+    end
 end
+
+eps_vec = [r.eps   for r in df_rows]
+m_vec   = [r.m_val for r in df_rows]
+eta_vec = [r.eta   for r in df_rows]
+
+# ── Pass to R and plot ────────────────────────────────────────────────────────
+
+@rput eps_vec m_vec eta_vec
+
+R"""
+library(ggplot2)
+
+df <- data.frame(
+  eps  = eps_vec,
+  m    = m_vec,
+  eta  = factor(eta_vec, labels = c("eta == 1", "eta == 4"))
+)
+
+p <- ggplot(df, aes(x = eps, y = m)) +
+  geom_line(linewidth = 0.8, colour = "steelblue") +
+  facet_wrap(~ eta, scales = "free", labeller = label_parsed) +
+  labs(
+    x = expression(epsilon),
+    y = expression(m(epsilon))
+  ) +
+  theme_bw(base_size = 12) +
+  theme(
+    strip.background = element_blank(),
+    strip.text       = element_text(size = 12),
+    panel.grid.minor = element_blank()
+  )
+
+ggsave("figs/m_facet.pdf", p, width = 7, height = 3.5)
+"""
