@@ -14,9 +14,9 @@
 \contentsline {subsection}{\tocsubsection {}{5.2}{The limit $b \downarrow 0$}}{13}{subsection.5.2}%
 \contentsline {section}{\tocsection {}{6}{Theoretical results}}{14}{section.6}%
 \contentsline {subsection}{\tocsubsection {}{6.1}{Theoretical Properties of $m(\varepsilon )$}}{14}{subsection.6.1}%
-\contentsline {subsection}{\tocsubsection {}{6.2}{Theoretical guarantees for the adaptive scheme (discrete-time case)}}{15}{subsection.6.2}%
-\contentsline {section}{\tocsection {}{7}{Safeguarding (continuous time case)}}{17}{section.7}%
-\contentsline {subsection}{\tocsubsection {}{7.1}{IS weight and second moment $m(\varepsilon )$}}{18}{subsection.7.1}%
-\contentsline {subsection}{\tocsubsection {}{7.2}{Adaptive choice of $\epsilon $}}{18}{subsection.7.2}%
-\contentsline {section}{\tocsection {}{}{References}}{19}{section*.3}%
-\contentsline {section}{\tocsection {Appendix}{A}{Adaptive Choice of $\varepsilon $ via ESS Targeting}}{19}{appendix.A}%
+\contentsline {subsection}{\tocsubsection {}{6.2}{Theoretical guarantees for the adaptive scheme (discrete-time case)}}{16}{subsection.6.2}%
+\contentsline {section}{\tocsection {}{7}{Safeguarding (continuous time case)}}{18}{section.7}%
+\contentsline {subsection}{\tocsubsection {}{7.1}{IS weight and second moment $m(\varepsilon )$}}{19}{subsection.7.1}%
+\contentsline {subsection}{\tocsubsection {}{7.2}{Adaptive choice of $\epsilon $}}{19}{subsection.7.2}%
+\contentsline {section}{\tocsection {}{}{References}}{20}{section*.3}%
+\contentsline {section}{\tocsection {Appendix}{A}{Adaptive Choice of $\varepsilon $ via ESS Targeting}}{22}{appendix.A}%

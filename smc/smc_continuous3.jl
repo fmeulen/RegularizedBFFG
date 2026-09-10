@@ -5,9 +5,10 @@ using Distributions
 using Random
 using Statistics
 using StatsBase
-using Plots
+using RCall
 using Parameters
 using UnPack
+using Optim
 
 mkpath("figs")
 
@@ -139,14 +140,13 @@ function log_weight_segment(xT, log_psi, x0, ε, v, T_obs, p)
     if hT <= 0.0 || gT + ε <= 0.0 || g0 + ε <= 0.0
         return -Inf
     end
-    return log(hT) + log(g0 + ε) - log(gT + ε) - log_psi
+    return log(hT) + log(g0 + ε) - log(gT + ε) + log_psi
 end
 
-# ── m̂(ε) and its derivative ───────────────────────────────────────────────────
+# ── m̂(ε) ─────────────────────────────────────────────────────────────────────
 
-function mhat_and_deriv(ε, precomp, x0s, hTs, gTs, Ws, v, T_obs, p)
-    m  = 0.0
-    dm = 0.0
+function mhat_eps(ε, precomp, x0s, hTs, gTs, Ws, v, T_obs, p)
+    m = 0.0
     for n in eachindex(precomp)
         hT = hTs[n]
         gT = gTs[n]
@@ -160,133 +160,38 @@ function mhat_and_deriv(ε, precomp, x0s, hTs, gTs, Ws, v, T_obs, p)
         if isnan(lp)
             continue
         end
-        Ψ_inv = exp(-lp)
-        if !isfinite(Ψ_inv)
-            continue
-        end
+        Ψ = exp(lp)
+        # if !isfinite(Ψ_inv)
+        #     continue
+        # end
 
-        # ∂_ε log Ψ = -Σ_i db_score_i · g_i / (g_i+ε)²
-        dlp = 0.0
-        @inbounds for i in eachindex(gvals)
-            dlp -= db_score[i] * gvals[i] / (gvals[i] + ε)^2
-        end
-
-        denom = gT + ε
-        g0ε   = g0 + ε
-        core  = h2 / denom * Ψ_inv
-
-        # m̂ contribution
-        contrib = g0ε * core
+        denom   = gT + ε
+        g0ε     = g0 + ε
+        contrib = g0ε * h2 / denom * Ψ
         if isfinite(contrib)
             m += Ws[n] * contrib
         end
-
-        # dm̂/dε contribution
-        # = core·(1 - g0ε/denom - g0ε·dlp)
-        dcontrib = core * (1.0 - g0ε/denom - g0ε*dlp)
-        if isfinite(dcontrib)
-            dm += Ws[n] * dcontrib
-        end
     end
-    return m, dm
+    return m
 end
 
-# ── Brent's method for zero of dm̂/dε ─────────────────────────────────────────
+# ── Find ε* by univariate optimisation (Optim.jl, Brent's method) ────────────
 
-function brent_eps_star(precomp, x0s, hTs, gTs, Ws, v, T_obs, p;
-                        ε_lo=1e-10, ε_hi=1.0, tol=1e-8, maxiter=100)
-    _, d_lo = mhat_and_deriv(ε_lo, precomp, x0s, hTs, gTs, Ws, v, T_obs, p)
-    _, d_hi = mhat_and_deriv(ε_hi, precomp, x0s, hTs, gTs, Ws, v, T_obs, p)
-
-    # no sign change → return boundary with smaller m̂
-    if d_lo * d_hi > 0
-        m_lo, _ = mhat_and_deriv(ε_lo, precomp, x0s, hTs, gTs, Ws, v, T_obs, p)
-        m_hi, _ = mhat_and_deriv(ε_hi, precomp, x0s, hTs, gTs, Ws, v, T_obs, p)
-        return m_lo < m_hi ? ε_lo : ε_hi
-    end
-
-    # Brent's method on dm̂/dε = 0
-    a, b_  = ε_lo, ε_hi
-    fa, fb = d_lo, d_hi
-    c, fc  = a, fa
-    d_b    = b_ - a
-    e_b    = d_b
-
-    for _ in 1:maxiter
-        if fb * fc > 0
-            c, fc = a, fa
-            d_b   = b_ - a
-            e_b   = d_b
-        end
-        if abs(fc) < abs(fb)
-            a, b_, c   = b_, c, b_
-            fa, fb, fc = fb, fc, fb
-        end
-        tol1 = 2eps(Float64)*abs(b_) + 0.5*tol
-        xm   = 0.5*(c - b_)
-        if abs(xm) <= tol1 || fb == 0
-            return b_
-        end
-        if abs(e_b) >= tol1 && abs(fa) > abs(fb)
-            s = fb / fa
-            if a ≈ c
-                p_b = 2*xm*s
-                q_b = 1 - s
-            else
-                q_b = fa/fc
-                r_b = fb/fc
-                p_b = s*(2*xm*q_b*(q_b - r_b) - (b_ - a)*(r_b - 1))
-                q_b = (q_b - 1)*(r_b - 1)*(s - 1)
-            end
-            if p_b > 0
-                q_b = -q_b
-            else
-                p_b = -p_b
-            end
-            if 2*p_b < min(3*xm*q_b - abs(tol1*q_b), abs(e_b*q_b))
-                e_b = d_b
-                d_b = p_b/q_b
-            else
-                d_b = xm
-                e_b = d_b
-            end
-        else
-            d_b = xm
-            e_b = d_b
-        end
-        a, fa = b_, fb
-        b_ += abs(d_b) > tol1 ? d_b : (xm > 0 ? tol1 : -tol1)
-        _, fb = mhat_and_deriv(b_, precomp, x0s, hTs, gTs, Ws, v, T_obs, p)
-    end
-    return b_
-end
-
-# ── Find ε* by both grid search and Brent's method ───────────────────────────
-
-function find_eps_star(precomp, x0s, hTs, gTs, Ws, v, T_obs, p, ε_grid)
-    K    = length(ε_grid)
-    mhat = zeros(K)
-
-    for (k, ε) in enumerate(ε_grid)
-        m, _ = mhat_and_deriv(ε, precomp, x0s, hTs, gTs, Ws, v, T_obs, p)
-        mhat[k] = m
-    end
-
-    ε_star_grid  = ε_grid[argmin(mhat)]
-    ε_star_brent = brent_eps_star(precomp, x0s, hTs, gTs, Ws, v, T_obs, p;
-                                   ε_lo=ε_grid[1], ε_hi=ε_grid[end])
-
-    return ε_star_grid, ε_star_brent, mhat
+function find_eps_star(precomp, x0s, hTs, gTs, Ws, v, T_obs, p;
+                        ε_lo=1e-8, ε_hi=1.0)
+    obj = ε -> mhat_eps(ε, precomp, x0s, hTs, gTs, Ws, v, T_obs, p)
+    res = optimize(obj, ε_lo, ε_hi, Brent())
+    return Optim.minimizer(res)
 end
 
 # ── Adaptive particle filter ──────────────────────────────────────────────────
 
 function adaptive_pf(vs, T_seg, p;
-                     N        = 500,
-                     seed     = 42,
-                     ε_grid   = exp.(range(log(1e-8), log(1.0), length=50)),
-                     ε_fix    = nothing,   # fixed ε; nothing → adaptive
-                     use_brent = true)     # true → Brent, false → grid
+                     N     = 500,
+                     seed  = 42,
+                     ε_lo  = 1e-8,
+                     ε_hi  = 1.0,
+                     ε_fix = nothing)   # fixed ε; nothing → adaptive (Optim)
 
     rng    = MersenneTwister(seed)
     n_obs  = length(vs)
@@ -325,13 +230,10 @@ function adaptive_pf(vs, T_seg, p;
         precomp = [precompute_path(xs_aux[n], v, T_seg, p) for n in 1:N]
 
         # find ε*
-        if isnothing(ε_fix)
-            ε_star_grid, ε_star_brent, _ = find_eps_star(
-                precomp, xs, hTs_aux, gTs_aux, Ws, v, T_seg, p, ε_grid)
-            ε_star = use_brent ? ε_star_brent : ε_star_grid
-        else
-            ε_star = ε_fix
-        end
+        ε_star = isnothing(ε_fix) ?
+            find_eps_star(precomp, xs, hTs_aux, gTs_aux, Ws, v, T_seg, p;
+                          ε_lo=ε_lo, ε_hi=ε_hi) :
+            ε_fix
         push!(eps_t, ε_star)
 
         # propose guided segments and update weights
@@ -378,32 +280,23 @@ function simulate_data(n_obs, T_seg, p; seed=1)
     return vs
 end
 
-# ── Main ──────────────────────────────────────────────────────────────────────
 
-function main()
-    T_seg = 1.0
-    ψ     = 0.9
-    n_obs = 50
-    N     = 500
-    R     = 100
+# ── Generic experiment runner: takes configs of (p, label, title) ────────────
 
-    configs = [
-        (η=1.0, α=0.0, label="eta1_lin"),
-        (η=3.0, α=0.0, label="eta3_lin"),
-        (η=3.0, α=0.5, label="eta3_nln"),
-    ]
-
-    ε_grid = exp.(range(log(1e-8), log(1.0), length=50))
+function run_configs(configs; N=500, R=10, T_seg=1.0, n_obs=50)
+    all_labels  = String[]
+    all_methods = String[]
+    all_minESS  = Float64[]
 
     for cfg in configs
         println("\n=== $(cfg.label) ===")
-        p  = ParaCT(ψ, cfg.η, cfg.α, T_seg)
+        p = cfg.p
+        @show p
         vs = simulate_data(n_obs, T_seg, p; seed=1)
 
         results = Dict(
-            "adaptive (grid)"  => (ε_fix=nothing, use_brent=false),
-            "adaptive (Brent)" => (ε_fix=nothing, use_brent=true),
-            "fixed ε=0"        => (ε_fix=0.0,     use_brent=false),
+            "adaptive"   => (ε_fix=nothing,),
+            "fixed ε=0"  => (ε_fix=0.0,),
         )
 
         minESS_all = Dict(k => Float64[] for k in keys(results))
@@ -413,9 +306,7 @@ function main()
             r % 10 == 0 && print("  run $r/$R\r")
             for (label, opts) in results
                 ll, ess, _ = adaptive_pf(vs, T_seg, p; N=N, seed=r,
-                                          ε_grid=ε_grid,
-                                          ε_fix=opts.ε_fix,
-                                          use_brent=opts.use_brent)
+                                          ε_fix=opts.ε_fix)
                 push!(ll_all[label], ll)
                 push!(minESS_all[label], minimum(ess))
             end
@@ -427,56 +318,73 @@ function main()
                     "mean minESS=$(round(mean(minESS_all[label]),digits=1))")
         end
 
-        colors = ["adaptive (grid)" => :blue,
-                  "adaptive (Brent)" => :green,
-                  "fixed ε=0" => :red]
-        plt = plot(xlabel="min ESS", ylabel="P(min ESS ≤ x)",
-                   title="min ESS CDF — $(cfg.label) (N=$N, R=$R)")
-        for (label, col) in colors
-            vals = sort(minESS_all[label])
-            plot!(plt, vals, (1:R)./R, label=label, lw=2, color=col)
+        for (label, vals) in minESS_all
+            append!(all_labels,  fill(cfg.label, length(vals)))
+            append!(all_methods, fill(label, length(vals)))
+            append!(all_minESS,  vals)
         end
-        savefig(plt, "figs/ct_pf_$(cfg.label).png")
-        println("  Saved figs/ct_pf_$(cfg.label).png")
     end
+
+    facet_levels = [cfg.label for cfg in configs]
+    facet_titles = [cfg.title for cfg in configs]
+
+    return all_labels, all_methods, all_minESS, facet_levels, facet_titles
 end
 
-main()
+# ── Basic (native) experiment: fixed q, 2×2 grid of (κ, α) ───────────────────
 
+function main_qκα(q, κ_vals::AbstractVector, α_vals::AbstractVector;
+                   R=10, T_seg=1.0, n_obs=50, N=500)
+    length(κ_vals) == 2 || throw(ArgumentError("κ_vals must have length 2"))
+    length(α_vals) == 2 || throw(ArgumentError("α_vals must have length 2"))
 
+    configs = vec([(p     = ParaCT(κ=κ, q=q, α=α),
+                     label = "kappa$(i)_alpha$(j)",
+                     title = "alpha == $(α) * ',' ~ kappa == $(κ)")
+                    for (i, κ) in enumerate(κ_vals), (j, α) in enumerate(α_vals)])
 
-# for grid optimisation, benchmark whether grid search or Brent is faster
-
-using BenchmarkTools
-ψ = 0.9
-p  = ParaCT(ψ, 3.0, 0.0, 1.0)
-vs = simulate_data(50, 1.0, p; seed=1)
-v  = vs[1]
-
-rng     = MersenneTwister(42)
-xs      = fill(p.x0, 500)
-xs_aux  = [simulate_unguided_segment(xs[n], 1.0, p, rng) for n in 1:500]
-xTs_aux = [xs_aux[n][end] for n in 1:500]
-hTs_aux = [h_ct(xTs_aux[n], v) for n in 1:500]
-gTs_aux = [g_ct(1.0, xTs_aux[n], v, 1.0, p) for n in 1:500]
-precomp = [precompute_path(xs_aux[n], v, 1.0, p) for n in 1:500]
-Ws      = fill(1.0/500, 500)
-ε_grid  = exp.(range(log(1e-8), log(1.0), length=50))
-
-
-# grid search only
-@btime begin
-    K    = length($ε_grid)
-    mhat = zeros(K)
-    for (k, ε) in enumerate($ε_grid)
-        m, _ = mhat_and_deriv(ε, $precomp, $xs, $hTs_aux, $gTs_aux, $Ws, $v, 1.0, $p)
-        mhat[k] = m
-    end
-    $ε_grid[argmin(mhat)]
+    return run_configs(configs; N=N, R=R, T_seg=T_seg, n_obs=n_obs)
 end
 
-# Brent only
-@btime brent_eps_star($precomp, $xs, $hTs_aux, $gTs_aux, $Ws, $v, 1.0, $p;
-                       ε_lo=$ε_grid[1], ε_hi=$ε_grid[end])
+# ── Reparametrised version: a (ψ_ref, η_ref) reference pair pins q; κ_vals and
+#    α_vals are still supplied directly (κ is NOT derived from ψ_ref) ────────
 
-# so Brent is about 3 times faster and moreover more accurate
+function main_ψη(ψ_ref, η_ref, κ_vals::AbstractVector, α_vals::AbstractVector;
+                  R=10, T_seg=1.0, n_obs=50, N=500)
+    κ_ref = -log(ψ_ref) / T_seg
+    q     = sqrt(2κ_ref * η_ref^2 / (1 - ψ_ref^2))
+    return main_qκα(q, κ_vals, α_vals; R=R, T_seg=T_seg, n_obs=n_obs, N=N)
+end
+
+function plotting(all_labels, all_methods, all_minESS, facet_levels, facet_titles)
+    @rput all_labels all_methods all_minESS facet_levels facet_titles
+    R"""
+    library(ggplot2)
+    df <- data.frame(label = factor(all_labels, levels = facet_levels),
+                      method = all_methods,
+                      minESS = all_minESS)
+    label_map <- setNames(facet_titles, facet_levels)
+    p <- ggplot(df, aes(x = minESS, color = method)) +
+        stat_ecdf(linewidth = 1) +
+        facet_wrap(~ label, nrow = 2, ncol = 2,
+                   labeller = as_labeller(label_map, default = label_parsed)) +
+        labs(x = "min ESS", y = "P(min ESS <= x)", color = "Method") +
+        theme_bw() + theme(legend.position="bottom")
+    ggsave("figs/ct_pf_facet.pdf", p, width = 9, height = 7, dpi = 150)
+    """
+    println("  Saved figs/ct_pf_facet.pdf")
+end
+
+
+labels, methods, minESS, levels, titles = main_qκα(.4, [0.5, 3.0], [0.0, 4.0]; R=100)
+plotting(labels, methods, minESS, levels, titles)
+
+labels, methods, minESS, levels, titles = main_qκα(2.8, [0.5, 3.0], [0.0, 4.0]; R=100)
+plotting(labels, methods, minESS, levels, titles)
+
+
+# or, reparametrized:
+labels, methods, minESS, levels, titles = main_ψη(0.9, 1.0, [0.5, 3.0], [0.0, 1.5])
+plotting(labels, methods, minESS, levels, titles)
+
+

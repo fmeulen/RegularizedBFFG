@@ -646,8 +646,9 @@ is already satisfactory, though also in this case a more refined choice of $\eps
 From Equation \eqref{eq:m_eps1} we get \[
   m(\varepsilon, x_{t-1}) =
     \bigl(c(x_{t-1})+\varepsilon\bigr)
-    \int \frac{h_t(x_1)^2}{g_t(x_1)+\varepsilon}\,P(x_{t-1},dx_1).
+    \int \frac{h_t(x_1)^2}{g_t(x_1)+\varepsilon}\,P(x_{t-1},\dd x_1),
 \]
+where $c(x)=(Pg)(x)$. 
 Given the particle cloud $\{X_{t-1}^n\}$ with normalised weights
 $\{W_{t-1}^n\}$, the population-level second moment is the weighted average
 \[
@@ -847,7 +848,7 @@ becomes.  In the degenerate case, even our safeguarding proposal $P^{g+\epsilon}
 
 %%%%%%%%%%%%%%%%
 
-\section{Theoretical results} \note{Work to be done here.}
+\section{Theoretical results} \note{Work to be done here. Some inspiration from AI: all is non-satisfactory. }
 \subsection{Theoretical Properties of $m(\varepsilon)$}
 
 Throughout this section $x_0$ is fixed and therefore omitted in some notation. Let 
@@ -970,7 +971,41 @@ $\varepsilon^*\in(0,\infty)$ if and only if $m'(0^+)<0$.
 \end{cor}
 
 
+\note{
+For $c \ge 0$, define $m(\varepsilon) := (c+\varepsilon)\,I(\varepsilon)$ for $\varepsilon \ge 0$, and recall
+$M_0 := \int h^2\,dP = \sigma([0,\infty))$, $M_1 := \int g\,h^2\,dP$, and
+$J(\varepsilon) := -I'(\varepsilon) = \int h^2/(g+\varepsilon)^2\,dP$.
 
+\begin{prop}\label{prop:m-shape}
+The function $m$ is continuous on $[0,\infty)$ and differentiable on $(0,\infty)$, with
+\[
+m(\varepsilon) \;\longrightarrow\; M_0 \qquad \text{as } \varepsilon \to \infty,
+\]
+and derivative
+\[
+m'(\varepsilon) \;=\; \int \frac{g(x)-c}{(g(x)+\varepsilon)^2}\,h(x)^2\,dP(x).
+\]
+In particular:
+\begin{enumerate}
+\item[(i)] If $c \le I(0)/J(0)$, then $m'(\varepsilon) \ge 0$ for all $\varepsilon \ge 0$, so $m$ is non-decreasing and $\varepsilon^\ast = 0$ is a global minimizer.
+\item[(ii)] If $c \ge M_1/M_0$, then $m'(\varepsilon) \le 0$ for all $\varepsilon \ge 0$ for which the limit below applies, so $m$ is non-increasing and $\inf_{\varepsilon\ge0} m(\varepsilon) = M_0$ is approached only as $\varepsilon \to \infty$.
+\item[(iii)] If $I(0)/J(0) < c < M_1/M_0$, then $m'(0) < 0$ and $\varepsilon^2 m'(\varepsilon) \to M_1 - cM_0 > 0$ as $\varepsilon\to\infty$; by the intermediate value theorem there exists $\varepsilon^\ast \in (0,\infty)$ with $m'(\varepsilon^\ast) = 0$.
+\end{enumerate}
+Unlike $I$, $m$ is in general neither monotone nor convex on $[0,\infty)$.
+\end{prop}
+
+\begin{proof}
+Write $I(\varepsilon) = \int (g+\varepsilon)^{-1} h^2\,dP$. Then
+$m'(\varepsilon) = I(\varepsilon) + (c+\varepsilon) I'(\varepsilon) = \int \big[(g+\varepsilon)^{-1} - (c+\varepsilon)(g+\varepsilon)^{-2}\big] h^2\,dP$,
+which simplifies to the stated expression. Continuity of $m$ and the limit $m(\varepsilon)\to M_0$ follow from dominated convergence, since $(c+\varepsilon)/(g(x)+\varepsilon) \to 1$ pointwise and is bounded by $\max(1, c/g(x))$-type constants uniformly once $\varepsilon$ exceeds any fixed threshold. Evaluating $m'$ at $\varepsilon=0$ gives $m'(0) = I(0) - cJ(0)$, which is $\ge 0$ iff $c \le I(0)/J(0)$, giving (i). For (ii)--(iii), multiply through by $\varepsilon^2$ and let $\varepsilon\to\infty$: $\varepsilon^2 m'(\varepsilon) \to \int g\,h^2\,dP - c\int h^2\,dP = M_1 - cM_0$, which is $\le 0$ iff $c \ge M_1/M_0$. Case (iii) then follows from the intermediate value theorem applied to the continuous function $m'$.
+\end{proof}
+
+\begin{rem}[The U-shaped case]
+Say $m$ is \emph{U-shaped} if there exists $\varepsilon^\ast \in (0,\infty)$ such that $m$ is strictly decreasing on $[0,\varepsilon^\ast)$ and strictly increasing on $(\varepsilon^\ast,\infty)$; equivalently, $m'$ changes sign exactly once on $(0,\infty)$, from negative to positive. This is a strictly stronger requirement than case (iii) above, which only guarantees that $m'$ has \emph{at least one} zero: (iii) is necessary but not sufficient for $m$ to be U-shaped, since $m$ need not be convex and $m'$ could in principle vanish an odd number of times greater than one.
+
+When $m$ \emph{is} U-shaped, $\varepsilon^\ast$ is automatically the unique global minimizer of $m$ on $[0,\infty)$ --- this requires no second-order or convexity argument, only the sign pattern of $m'$ itself. In the particle (empirical measure) setting, $\sigma$ is a finite sum of point masses at $g_1,\dots,g_N$, so $m'(\varepsilon) = \sum_i w_i h_i^2 (g_i-c)/(g_i+\varepsilon)^2$ is a rational function of $\varepsilon$ with at most $N-1$ sign changes in general; a sufficient condition for a \emph{single} sign change (hence a genuine U-shape) is that $\{g_i\}$ splits into two groups relative to $c$ whose combined effect is monotone in $\varepsilon$ --- e.g. when $\sigma$ is supported on only two distinct values $g^- < c < g^+$, $m'$ is easily checked to have exactly one root. For general $\sigma$, U-shapedness is an empirical property to verify numerically (as in your simulation experiments) rather than one guaranteed by Proposition~\ref{prop:m-shape} alone.
+\end{rem}
+}
 
 %%%%%
 \subsection{Theoretical guarantees for the adaptive scheme (discrete-time case)}
@@ -1140,10 +1175,10 @@ Let $P^g$ denote the law of the process
 \[ \dd X_t =b(t,X_t) \dd t + Q r(t,X_t) \dd t + q \dd W_t, \]
 with $W$ a $P^g$-Wiener process. Here, the score $r$ is given by  $r(t,x)=\nabla_x \log g(t,x)$. We have
 \[ \frac{\dd P}{\dd P^g}(x)= \frac{g(0,x_0)}{g(T,x_T)}
-  \Psi(x), \]
+  \Psi_\epsilon(x), \]
   where 
  \begin{equation}\label{eq:log_psi}
-  \log\Psi(x) = \int_0^T
+  \log\Psi_\epsilon(x) = \int_0^T
     \bigl(b(t,x_t)-\tilde{b}(t,x_t)\bigr)^\top r_\varepsilon(t,x_t)\,\dd t,
 \end{equation}
 which is a purely deterministic functional of the path --- no stochastic
@@ -1170,40 +1205,40 @@ The \emph{safe-guarded guided proposal} $P^{g+\varepsilon}$ is the law of
   \dd X_t = b(t,X_t) \dd t + Q\,r_\varepsilon(t,X_t) \dd t + q \dd W_t,
   \qquad X_0 = x_0.
 \end{equation}
- Thus, similar to the discrete-time case, the safe-guarded  process can be viewed as a mixture of the measure $P$ and $P^{g}$. 
+ Thus, similar to the discrete-time case, the safe-guarded  process can be viewed as a mixture of the measure $P$ and $P^{g}$, with $\epsilon$ determining the relative contribution of both measures. 
 
 \subsection{IS weight and second moment $m(\varepsilon)$}
-The importance sampling (IS) weight for a  $x\sim P^{g+\epsilon}$, path initialised at $x_0$, is
+The importance sampling (IS) weight for   $x\sim P^{g+\epsilon}$, a path initialised at $x_0$, is
 \[
-  G_\epsilon(x_0,x) = h(T,x_T) \frac{\dd P}{\dd P^{g+\epsilon}}(x)= h(T, x_T)\,\frac{g(0,x_0)+\epsilon}{g(T,x_T)+\epsilon}
-  \cdot\Psi_(x).
+  G_\epsilon(x) = h(T,x_T) \frac{\dd P}{\dd P^{g+\epsilon}}(x)= h(T, x_T)\,\frac{g(0,x_0)+\epsilon}{g(T,x_T)+\epsilon}
+\Psi_\epsilon(x).
 \]
 Note that we added $\epsilon$ as a subscript to $\Psi$ to highlight this dependence. 
-The IS estimator $\hat L = \frac{1}{N}\sum_{n=1}^N G_\epsilon(x_0, X^n_T)$
-with $X^n \sim P^{g+\varepsilon}$ is unbiased for $h(0,x_0)$ for any
-$\epsilon\geq 0$. Its variance is given by \begin{equation}\begin{split}\label{eq:meps_cont} m(\eps) &= \EE_{P^{g+\eps}} G_\eps(X)^2 = \int  G_\eps(x_0,x)^2 \dd P^{g+\eps}(x) \\ & = \int  G_\eps(x_0,x)^2 \frac{\dd P^{g+\eps}}{d P}(x) \dd P(x) \\ & = \int \frac{\dd P}{\dd P^{g+\eps}}(x) h(T, x_T)^2 \dd P(x) \\ & =(g(0, x_0)+\eps) \int \frac{h(T,x_T)^2}{g(T, x_T)+\eps}  \Psi_\epsilon(x) \dd P(x) .
+The IS estimator $\hat L = \frac{1}{N}\sum_{n=1}^N G_\epsilon(X^n_T)$
+with $X^n \sim P^{g+\epsilon}$ is unbiased for $h(0,x_0)$ for any
+$\epsilon\geq 0$. Its variance is given by \begin{equation}\begin{split}\label{eq:meps_cont} m(\eps) &= \EE_{P^{g+\eps}} G_\eps(X)^2 = \int  G_\eps(x)^2 \dd P^{g+\eps}(x) \\ & = \int  G_\eps(x)^2 \frac{\dd P^{g+\eps}}{\dd P}(x) \dd P(x) \\ & = \int \frac{\dd P}{\dd P^{g+\eps}}(x) h(T, x_T)^2 \dd P(x) \\ & =(g(0, x_0)+\eps) \int \frac{h(T,x_T)^2}{g(T, x_T)+\eps}  \Psi_\epsilon(x) \dd P(x) .
 \end{split}
 \end{equation}
-This is to be compared to \eqref{eq:m_eps1}: $c$ in that formula is exactly as $g(0, x_0)$ here. The term $\Psi(x)$ in the integral is an additional path-space correction.  In the discrete-time we assumed linear dynamics and then   choosing  $\tilde b=b$ results in  $\Psi_\epsilon(x)=1$.
+This is to be compared to \eqref{eq:m_eps1}: $c$ in that formula is exactly as $g(0, x_0)$ here. The term $\Psi_\epsilon(x)$ in the integral is an additional path-space correction.  In the discrete-time we assumed linear dynamics and then   choosing  $\tilde b=b$ results in  $\Psi_\epsilon(x)=1$.
 
 
 \subsection{Adaptive choice of $\epsilon$}
 
-We minimise $m(\epsilon)$ over $\epsilon\geq 0$. Since the integral
+In the following $X_i^n$ denotes a path over time $[t_{i-1}, t_i]$. Suppose we have the particle collection $\{X_{i-1}^{n}\}_{n=1}^N$ with weights $\{W_{i-1}^{n}\}_{n=1}^N$
+We aim to determine $\epsilon_i$ that  minimises $m(\epsilon)$ over $\epsilon\geq 0$. Since the integral
 in~\eqref{eq:meps_cont} is under $P$ (not $P^{g+\varepsilon}$), we can estimate $m(\epsilon)$ using 
-$\{X^n\}_{n=1}^N$ drawn from $P$, which are independent of
-$\epsilon$. Weighting by the current normalised particle weights
-$\{W^n\}_{n=1}^{N}$ gives the empirical estimator
-\[
-  \hat{m}(\epsilon) = (g(0,x_0)+\epsilon)
-    \sum_{n=1}^{N} W^n
-    \frac{h\left(T,X_T^n\right)^2}{g(T,X_T^n)+\epsilon}
-    \cdot\Psi_\epsilon(X^n),
+$\{\tilde X^n_i\}_{n=1}^N$ drawn from $P$, with the $n$-th run initialised at the endpoint of $X_{i-1}^{n}$: $\tilde X_i^n(t_{i-1}):= X_{i-1}^n(t_{i-1})$. Note that 
+$\{\tilde X^n_i\}_{n=1}^N$ are independent of $\epsilon$. 
+Just as in the discrete time case we propose to determine $\epsilon_i$ by minimising an empirical version that estimates $m(\epsilon)$. Thus, define \[
+  \hat{m}(\epsilon) = 
+    \sum_{n=1}^{N} W_{i-1}^n (g(t_{i-1},\tilde X_{i}^n(t_{i-1}))+\epsilon)
+    \frac{h(t_i,\tilde X_i^n(t_i))^2}{g(t_i,\tilde X_i^n(t_i))+\epsilon}
+    \cdot\Psi_\epsilon(\tilde X^n),
 \]
 where $\Psi\epsilon(X^n)$ is evaluated by discretising~\eqref{eq:log_psi}
 along the stored path:
 \[
-  \log\Psi_\epsilon(X) \approx -\sum_{\ell=0}^{L}
+  \log\Psi_\epsilon(X) \approx \sum_{\ell=0}^{L}
     \bigl(b(t_\ell,X_{t_\ell})-\tilde{b}(t_\ell,X_{t_\ell})\bigr)^\T
     r_\epsilon(t_\ell,X_{t_\ell})\,\Delta t.
 \]
@@ -1221,10 +1256,10 @@ r_0(t_\ell,X_{t_\ell}^n)\,\Delta t,
 \]
 so that $\log\Psi_\epsilon(X^n) = -\sum_\ell \delta_\ell^n\,
 g_\ell^n/(g_\ell^n+\epsilon)$. The optimal $\epsilon^*$ is found
-either by grid search or, using the analytical derivative \note{double check}
+ using the analytical derivative \note{double check, indices are for sure wrong}
 \[
   \frac{\dd\hat{m}}{\dd\epsilon}(\epsilon) =
-    \sum_{n=1}^{N_{\rm aux}} W^{n}\,
+    \sum_{n=1}^{N} W^{n}\,
     \frac{h(T,x_T^n)^2\,\Psi_\epsilon(x^n)}{g(T,x_T^n)+\epsilon}
     \left(1 - \frac{g(0,x_0)+\epsilon}{g(T,x_T^n)+\epsilon}
     - (g(0,x_0)+\epsilon)\frac{\dd\log\Psi_\epsilon}{\dd\epsilon}\right),
@@ -1238,7 +1273,20 @@ significantly faster in practice.
 
 
 
+\begin{figure}
+	\begin{center}
+		\includegraphics[scale=0.6]{ct_pf_facet_q0,4.pdf}
+	\end{center}
+	\caption{Illustration of continuous time case for $\dd X_t=-\kappa X_t \dd t+ \alpha \sin(X_t) \dd t + q \dd W_t$ with $q=0.4$. }
+\end{figure}
 
+
+\begin{figure}
+	\begin{center}
+		\includegraphics[scale=0.6]{ct_pf_facet.pdf}
+	\end{center}
+	\caption{Illustration of continuous time case for $\dd X_t=-\kappa X_t \dd t+ \alpha \sin(X_t) \dd t + q \dd W_t$ with $q=2.8$. }
+\end{figure}
 
 
 
